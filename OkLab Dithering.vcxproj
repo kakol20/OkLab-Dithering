@@ -24,6 +24,7 @@
     <ProjectGuid>{617950b8-bde2-4ceb-82a3-1b3d098bb35d}</ProjectGuid>
     <RootNamespace>VisualStudioTemplateConsole</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>OkLab Dithering</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
