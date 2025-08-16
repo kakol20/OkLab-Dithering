@@ -62,19 +62,6 @@ Image& Image::operator=(const Image& other) {
 
 	memcpy(m_data, other.m_data, m_size);
 
-	return *this; if (&other == this) return *this;
-
-	stbi_image_free(m_data);
-
-	m_w = other.m_w;
-	m_h = other.m_h;
-	m_channels = other.m_channels;
-	m_size = other.m_size;
-
-	m_data = new uint8_t[m_size];
-
-	memcpy(m_data, other.m_data, m_size);
-
 	return *this;
 }
 
@@ -84,12 +71,12 @@ Image::ImageType Image::GetFileType(const char* file) {
 	if (ext != nullptr) {
 		if (strcmp(ext, ".png") == 0) {
 			return ImageType::PNG;
-		} else if (strcmp(ext, ".jpg") == 0 || 
-			strcmp(ext, ".jpeg") == 0 || 
+		} else if (strcmp(ext, ".jpg") == 0 ||
+			strcmp(ext, ".jpeg") == 0 ||
 			strcmp(ext, ".jpe") == 0 ||
 			strcmp(ext, ".jif") == 0 ||
 			strcmp(ext, ".jfif") == 0 ||
-			strcmp(ext, ".jfi") == 0){
+			strcmp(ext, ".jfi") == 0) {
 			return ImageType::JPG;
 		} else if (strcmp(ext, ".bmp") == 0 || strcmp(ext, ".dib") == 0) {
 			return ImageType::BMP;
