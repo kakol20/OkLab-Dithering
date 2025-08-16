@@ -62,19 +62,6 @@ Image& Image::operator=(const Image& other) {
 
 	memcpy(m_data, other.m_data, m_size);
 
-	return *this; if (&other == this) return *this;
-
-	stbi_image_free(m_data);
-
-	m_w = other.m_w;
-	m_h = other.m_h;
-	m_channels = other.m_channels;
-	m_size = other.m_size;
-
-	m_data = new uint8_t[m_size];
-
-	memcpy(m_data, other.m_data, m_size);
-
 	return *this;
 }
 
