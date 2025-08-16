@@ -7,19 +7,15 @@
 using json = nlohmann::json;
 
 #include "image/Image.h"
-
-/*
-	TODO:
-		Replace iostream with Log class
-*/
+#include "wrapper/Log.h"
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
 	std::ifstream settingsLoc("data/settings.json");
 	if (!(settingsLoc)) {
-		std::cout << "JSON not found\n";
-		std::cin.ignore();
-
+		Log::WriteOneLine("JSON not found");
+		Log::Save();
+		Log::HoldConsole();
 		return -1;
 	}
 	json settings = json::parse(settingsLoc);
@@ -27,9 +23,9 @@ int main(int argc, char* argv[]) {
 	std::string imageLoc = "data/suzanne.png";
 	Image::ImageType imageType = Image::GetFileType("data/suzanne.png");
 	if (imageType == Image::ImageType::NA) {
-		std::cout << "Image not found\n";
-		std::cin.ignore();
-
+		Log::WriteOneLine("Image not found");
+		Log::Save();
+		Log::HoldConsole();
 		return -1;
 	}
 #else
@@ -38,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 	// ========== GET SETTINGS ==========
 
-	std::cout << "===== GETTING SETINGS =====\n";
+	Log::WriteOneLine("===== GETTING SETINGS =====");
 	std::array<std::string, 4> required = {
 		"dither",
 		"grayscale",
@@ -48,18 +44,35 @@ int main(int argc, char* argv[]) {
 	bool allFound = true;
 	for (const auto& key : required) {
 		if (!settings.contains(key)) {
-			std::cout << "JSON setting not found: " << key << '\n';
+			Log::WriteOneLine("JSON setting not found: " + key);
 			allFound = false;
 		} else {
-			std::cout << key << ": " << (bool)settings[key] << '\n';
+			Log::WriteOneLine(key + ": " + Log::ToString((bool)settings[key]));
 		}
 	}
 
 	if (!allFound) {
+		Log::Save();
+		Log::HoldConsole();
 		return -1;
 	}
 
-	std::cout << "Press a key to exit...\n";
-	std::cin.ignore();
+	// ========== GET IMAGE ==========
+	Log::EndLine();
+	Log::WriteOneLine("===== GETTING IMAGE =====");
+
+	Image image;
+	if (!image.Read(imageLoc.c_str())) {
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+
+	// Test save
+	image.Clear();
+	image.Write("data/output.png");
+
+	Log::Save();
+	Log::HoldConsole();
 	return 0;
 }
