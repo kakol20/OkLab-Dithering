@@ -21,9 +21,15 @@
     <ClCompile Include="src\image\Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\wrapper\Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\image\Image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wrapper\Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
