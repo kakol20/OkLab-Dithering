@@ -8,6 +8,8 @@
 #include "../../ext/stb/stb_image.h"
 #include "../../ext/stb/stb_image_write.h"
 
+#include "../wrapper/Log.h"
+
 Image::Image() {
 	m_h = 0;
 	m_w = 0;
@@ -17,12 +19,7 @@ Image::Image() {
 }
 
 Image::Image(const char* file, const int forceChannels) {
-	// temp
-	m_h = 0;
-	m_w = 0;
-	m_channels = 0;
-	m_size = 0;
-	m_data = nullptr;
+	Image::Read(file, forceChannels);
 }
 
 Image::Image(const Image& other) {
@@ -105,4 +102,88 @@ Image::ImageType Image::GetFileType(const char* file) {
 	}
 
 	return ImageType::NA;
+}
+
+bool Image::Read(const char* file, const int forceChannels) {
+	Log::StartLine();
+	if (forceChannels > 0 && forceChannels <= 4) {
+		m_data = stbi_load(file, &m_w, &m_h, &m_channels, forceChannels);
+	} else {
+		m_data = stbi_load(file, &m_w, &m_h, &m_channels, 0);
+	}
+
+	if (m_data != NULL) {
+		Log::Write("Read success ");
+	} else {
+		Log::Write("Read failed ");
+	}
+
+	m_size = (size_t)(m_w * m_h * m_channels);
+
+	Log::Write(file);
+	Log::EndLine();
+
+	return m_data != NULL;
+}
+
+bool Image::Write(const char* file) {
+	Image::ImageType type = Image::GetFileType(file);
+	int success = 0;
+
+	switch (type) {
+	case Image::ImageType::PNG:
+		success = stbi_write_png(file, m_w, m_h, m_channels, m_data, m_w * m_channels);
+		break;
+	case Image::ImageType::JPG:
+		success = stbi_write_jpg(file, m_w, m_h, m_channels, m_data, 100);
+		break;
+	case Image::ImageType::BMP:
+		success = stbi_write_bmp(file, m_w, m_h, m_channels, m_data);
+		break;
+	case Image::ImageType::TGA:
+		success = stbi_write_tga(file, m_w, m_h, m_channels, m_data);
+		break;
+	case Image::ImageType::NA:
+		//std::cout << "File type not supported\nPNG, JPG, BMP or TGA";
+		Log::StartLine();
+		Log::Write("File type not supported - PNG, JPG, BMP or TGA");
+		Log::EndLine();
+		success = 0;
+		break;
+	default:
+		Log::StartLine();
+		Log::Write("File type not supported - PNG, JPG, BMP or TGA");
+		Log::EndLine();
+		success = 0;
+		break;
+	}
+
+	Log::StartLine();
+	if (success != 0) {
+		//std::cout << "Write success " << file << '\n';
+		Log::Write("Write success ");
+		Log::Write(file);
+	} else {
+		//std::cout << "Write fail " << file << '\n';
+		Log::Write("Write fail ");
+		Log::Write(file);
+	}
+	Log::EndLine();
+
+	return success != 0;
+}
+
+size_t Image::GetIndex(const int x, const int y) const {
+	if (x < 0 || x >= m_w || y < 0 || y >= m_h) return (size_t)NAN;
+	return size_t((x + y * m_w) * m_channels);
+}
+
+size_t Image::GetIndex_s(const int x, const int y, const int width, const int channels) {
+	return size_t((x + y * width) * channels);
+}
+
+void Image::Clear() {
+	for (size_t i = 0; i < m_size; i++) {
+		m_data[i] = 0;
+	}
 }
