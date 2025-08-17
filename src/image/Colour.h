@@ -41,17 +41,30 @@ public:
 	// ========== ARITHMETIC ==========
 
 	/// <summary>
+	/// NOTE: Will not update other colour space when maths is done - must call UPDATE functions
+	/// </summary>
 	/// <param name="sRGB">Maths is treated like the values are 0 to 1</param>
 	/// <param name="Oklab"></param>
 	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
-	/// </summary>
 	enum class MathMode { sRGB, OkLab, OkLab_Lightness };
+
+	/// <summary>
+	/// <para>Clamp value based on m_mathMode</para>
+	/// <para>NOTE: Will not update other colour space - must call UPDATE functions</para>
+	/// </summary>
+	void Clamp();
 
 	Colour& operator/=(const Colour& other);
 	Colour& operator*=(const Colour& other);
 	Colour& operator+=(const Colour& other);
 	Colour& operator-=(const Colour& other);
 	Colour& operator*=(const double scalar);
+
+	Colour operator/(const Colour& other) const;
+	Colour operator*(const Colour& other) const;
+	Colour operator+(const Colour& other) const;
+	Colour operator-(const Colour& other) const;
+	Colour operator*(const double scalar) const;
 
 private:
 	struct sRGB {
@@ -74,6 +87,9 @@ private:
 	//static OkLab sRGBtoOkLab(const sRGB val);
 
 	static MathMode m_mathMode;
+	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
+
+	void OkLabFallback();
 
 public:
 	sRGB GetsRGB() const { return m_srgb; };

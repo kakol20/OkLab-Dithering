@@ -86,6 +86,8 @@ int main(int argc, char* argv[]) {
 
 	// ========== GET PALETTE ==========
 
+	// FOR TESTING
+#ifdef _DEBUG
 	Colour sRGB_t = Colour::FromsRGB(133, 172, 255);
 	Colour OkLab_t = Colour::FromOkLab(0.75, -0.01, -0.13);
 
@@ -94,6 +96,8 @@ int main(int argc, char* argv[]) {
 	// Test save
 	image.Clear();
 	image.Write("data/output.png");
+#endif // _NDEBUG
+
 
 	Log::Save();
 	Log::HoldConsole();

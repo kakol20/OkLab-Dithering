@@ -2,7 +2,6 @@
 
 #include "../wrapper/Maths.hpp"
 
-
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
 Colour::Colour() {
@@ -90,15 +89,8 @@ void Colour::UpdatesRGB() {
 
 		// to sRGB - can skip "to Linear RGB" conversion
 		r = r <= limit ? scalar * r : (Maths::NRoot(r, 2.4) * 1.055) - 0.055;
-		r *= 255.;
 
-		// clamp value
-		r = r > 255. ? 255. : r;
-		r = r < 0. ? 0. : r;
-
-		const double r_int = (double)r;
-
-		m_srgb = { r_int, r_int, r_int };
+		m_srgb = { r, r, r };
 	} else {
 		double r1 = m_oklab.l;
 		double g1 = m_oklab.a;
@@ -125,24 +117,7 @@ void Colour::UpdatesRGB() {
 		g2 = g2 <= limit ? scalar * g2 : (Maths::NRoot(g2, 2.4) * 1.055) - 0.055;
 		b2 = b2 <= limit ? scalar * b2 : (Maths::NRoot(b2, 2.4) * 1.055) - 0.055;
 
-		r2 *= 255.;
-		g2 *= 255.;
-		b2 *= 255.;
-
-		// clamp values
-		r2 = r2 >= 255. ? 255. : r2;
-		g2 = g2 >= 255. ? 255. : g2;
-		b2 = b2 >= 255. ? 255. : b2;
-
-		r2 = r2 <= 0. ? 0. : r2;
-		g2 = g2 <= 0. ? 0. : g2;
-		b2 = b2 <= 0. ? 0. : b2;
-
-		const double r_int = double(std::round(r2));
-		const double g_int = double(std::round(g2));
-		const double b_int = double(std::round(b2));
-
-		m_srgb = { r_int, g_int, b_int };
+		m_srgb = { r2, g2, b2 };
 	}
 }
 
@@ -164,6 +139,183 @@ Colour Colour::FromOkLab(const double l, const double a, const double b, const d
 
 	out.UpdatesRGB();
 	return out;
+}
+
+void Colour::Clamp() {
+	if (m_mathMode == MathMode::sRGB) {
+		m_srgb.r = m_srgb.r > 1. ? 1. : m_srgb.r;
+		m_srgb.r = m_srgb.r < 0. ? 0. : m_srgb.r;
+
+		m_srgb.g = m_srgb.g > 1. ? 1. : m_srgb.g;
+		m_srgb.g = m_srgb.g < 0. ? 0. : m_srgb.g;
+
+		m_srgb.b = m_srgb.b > 1. ? 1. : m_srgb.b;
+		m_srgb.b = m_srgb.b < 0. ? 0. : m_srgb.b;
+	} else {
+		OkLabFallback();
+	}
+}
+
+Colour& Colour::operator/=(const Colour& other) {
+	switch (m_mathMode) {
+	case MathMode::sRGB:
+		m_srgb.r /= other.m_srgb.r;
+		m_srgb.g /= other.m_srgb.g;
+		m_srgb.b /= other.m_srgb.b;
+		break;
+	case MathMode::OkLab:
+		m_oklab.l /= other.m_oklab.l;
+		m_oklab.a /= other.m_oklab.a;
+		m_oklab.b /= other.m_oklab.b;
+		break;
+	case MathMode::OkLab_Lightness:
+		m_oklab.l /= other.m_oklab.l;
+		break;
+	}
+}
+
+Colour& Colour::operator*=(const Colour& other) {
+	switch (m_mathMode) {
+	case MathMode::sRGB:
+		m_srgb.r *= other.m_srgb.r;
+		m_srgb.g *= other.m_srgb.g;
+		m_srgb.b *= other.m_srgb.b;
+		break;
+	case MathMode::OkLab:
+		m_oklab.l *= other.m_oklab.l;
+		m_oklab.a *= other.m_oklab.a;
+		m_oklab.b *= other.m_oklab.b;
+		break;
+	case MathMode::OkLab_Lightness:
+		m_oklab.l *= other.m_oklab.l;
+		break;
+	}
+}
+
+Colour& Colour::operator+=(const Colour& other) {
+	switch (m_mathMode) {
+	case MathMode::sRGB:
+		m_srgb.r += other.m_srgb.r;
+		m_srgb.g += other.m_srgb.g;
+		m_srgb.b += other.m_srgb.b;
+		break;
+	case MathMode::OkLab:
+		m_oklab.l += other.m_oklab.l;
+		m_oklab.a += other.m_oklab.a;
+		m_oklab.b += other.m_oklab.b;
+		break;
+	case MathMode::OkLab_Lightness:
+		m_oklab.l += other.m_oklab.l;
+		break;
+	}
+}
+
+Colour& Colour::operator-=(const Colour& other) {
+	switch (m_mathMode) {
+	case MathMode::sRGB:
+		m_srgb.r -= other.m_srgb.r;
+		m_srgb.g -= other.m_srgb.g;
+		m_srgb.b -= other.m_srgb.b;
+		break;
+	case MathMode::OkLab:
+		m_oklab.l -= other.m_oklab.l;
+		m_oklab.a -= other.m_oklab.a;
+		m_oklab.b -= other.m_oklab.b;
+		break;
+	case MathMode::OkLab_Lightness:
+		m_oklab.l -= other.m_oklab.l;
+		break;
+	}
+}
+
+Colour& Colour::operator*=(const double scalar) {
+	switch (m_mathMode) {
+	case MathMode::sRGB:
+		m_srgb.r *= scalar;
+		m_srgb.g *= scalar;
+		m_srgb.b *= scalar;
+		break;
+	case MathMode::OkLab:
+		m_oklab.l *= scalar;
+		m_oklab.a *= scalar;
+		m_oklab.b *= scalar;
+		break;
+	case MathMode::OkLab_Lightness:
+		m_oklab.l *= scalar;
+		break;
+	}
+}
+
+Colour Colour::operator/(const Colour& other) const {
+	Colour out(*this);
+	out /= other;
+	return out;
+}
+
+Colour Colour::operator*(const Colour& other) const {
+	Colour out(*this);
+	out *= other;
+	return out;
+}
+
+Colour Colour::operator+(const Colour& other) const {
+	Colour out(*this);
+	out += other;
+	return out;
+}
+
+Colour Colour::operator-(const Colour& other) const {
+	Colour out(*this);
+	out -= other;
+	return out;
+}
+
+Colour Colour::operator*(const double scalar) const {
+	Colour out(*this);
+	out *= scalar;
+	return out;
+}
+
+void Colour::OkLabFallback() {
+	const int maxIter = 24;
+	struct LCH { double l, c, h; };
+
+	Colour s0 = Colour::FromOkLab(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha);
+
+	auto inGamut = [](const Colour& s) {
+		return s.m_srgb.r >= 0. && s.m_srgb.r <= 1. &&
+			s.m_srgb.g >= 0. && s.m_srgb.g <= 1. &&
+			s.m_srgb.b >= 0. && s.m_srgb.b <= 1.;
+	};
+
+	if (inGamut(s0)) return;
+
+	LCH lch = {
+		m_oklab.l,
+		std::sqrt(m_oklab.a * m_oklab.a + m_oklab.b * m_oklab.b),
+		std::atan2(m_oklab.b, m_oklab.a)
+	};
+
+	auto LChToLab = [](const LCH& v) {
+		OkLab out = { v.l, v.c * std::cos(v.h), v.c * std::sin(v.h) };
+		return out;
+		};
+
+	double lo = 0., hi = lch.c;
+	for (int i = 0; i < maxIter; i++) {
+		double mid = 0.5 * (lo + hi);
+		OkLab test = LChToLab({ lch.l, mid, lch.h });
+
+		Colour s = FromOkLab(test.l, test.a, test.b);
+
+		if (inGamut(s)) {
+			lo = mid;
+		} else {
+			hi = mid;
+		}
+	}
+
+	m_oklab = LChToLab({ lch.l, lo, lch.h });
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
