@@ -28,6 +28,14 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+
+	std::ifstream paletteLoc("data / minecraft_map_sc.palette");
+	if (!(paletteLoc)) {
+		Log::WriteOneLine("Palette not found");
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
 #else
 	// TODO: add
 #endif // _DEBUG
