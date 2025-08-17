@@ -148,11 +148,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\image\Colour.cpp" />
+    <ClCompile Include="src\image\Palette.cpp" />
     <ClCompile Include="src\wrapper\Log.cpp" />
     <ClCompile Include="src\image\Image.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\image\Colour.h" />
+    <ClInclude Include="src\image\Palette.h" />
     <ClInclude Include="src\wrapper\Log.h" />
     <ClInclude Include="src\image\Image.h" />
   </ItemGroup>

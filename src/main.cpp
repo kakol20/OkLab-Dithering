@@ -6,8 +6,15 @@
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
 
+#include "image/Colour.h"
 #include "image/Image.h"
 #include "wrapper/Log.h"
+#include "wrapper/Maths.hpp"
+
+//const double Maths::Pi = 3.1415926535;
+//const double Maths::Tau = 6.283185307;
+//const double Maths::RadToDeg = 180. / Maths::Pi;
+//const double Maths::DegToRad = Maths::Pi / 180.;
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
@@ -24,6 +31,14 @@ int main(int argc, char* argv[]) {
 	Image::ImageType imageType = Image::GetFileType("data/suzanne.png");
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+
+	std::ifstream paletteLoc("data/minecraft_map_sc.palette");
+	if (!(paletteLoc)) {
+		Log::WriteOneLine("Palette not found");
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
@@ -58,6 +73,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// ========== GET IMAGE ==========
+
 	Log::EndLine();
 	Log::WriteOneLine("===== GETTING IMAGE =====");
 
@@ -68,9 +84,36 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	// ========== GET PALETTE ==========
+
+	// FOR TESTING
+#ifdef _DEBUG
+	Colour sRGB_t = Colour::FromsRGB(133, 172, 255);
+	Colour OkLab_t = Colour::FromOkLab(0.75, -0.01, -0.13);
+
+	sRGB_t.SetsRGB(128, 128, 255);
+
+	Colour beforeFallback = Colour::FromOkLab(0.5, 0.5, 0.5);
+
+	Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
+
+	Colour afterFallBack = beforeFallback;
+	afterFallBack.Clamp();
+	afterFallBack.UpdatesRGB();
+
+	double threshold = (16. + 0.5) / (8 * 8) - 0.5;
+	Colour threshold_c = Colour::FromOkLab(threshold, threshold, threshold);
+	threshold_c *= 1. / 8.;
+
+	Colour dithered = afterFallBack + threshold_c;
+	afterFallBack.Clamp();
+	afterFallBack.UpdatesRGB();
+	Colour::sRGB_UInt ditheredInt = dithered.GetsRGB_UInt();
+
 	// Test save
 	image.Clear();
 	image.Write("data/output.png");
+#endif // _NDEBUG
 
 	Log::Save();
 	Log::HoldConsole();
