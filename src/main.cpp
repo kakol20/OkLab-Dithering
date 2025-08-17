@@ -100,14 +100,15 @@ int main(int argc, char* argv[]) {
 	Colour afterFallBack = beforeFallback;
 	afterFallBack.Clamp();
 	afterFallBack.UpdatesRGB();
+	Colour::sRGB_UInt fallbackInt = afterFallBack.GetsRGB_UInt();
 
-	double threshold = (16. + 0.5) / (8 * 8) - 0.5;
+	double threshold = (255. + 0.5) / 256. - 0.5;
 	Colour threshold_c = Colour::FromOkLab(threshold, threshold, threshold);
-	threshold_c *= 1. / 8.;
+	threshold_c *= 1. / 16.;
 
 	Colour dithered = afterFallBack + threshold_c;
-	afterFallBack.Clamp();
-	afterFallBack.UpdatesRGB();
+	dithered.Clamp();
+	dithered.UpdatesRGB();
 	Colour::sRGB_UInt ditheredInt = dithered.GetsRGB_UInt();
 
 	// Test save
