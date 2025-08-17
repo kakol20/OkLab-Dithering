@@ -152,6 +152,8 @@ void Colour::Clamp() {
 		m_srgb.b = m_srgb.b > 1. ? 1. : m_srgb.b;
 		m_srgb.b = m_srgb.b < 0. ? 0. : m_srgb.b;
 	} else {
+		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
+		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
 		OkLabFallback();
 	}
 }
@@ -172,6 +174,7 @@ Colour& Colour::operator/=(const Colour& other) {
 		m_oklab.l /= other.m_oklab.l;
 		break;
 	}
+	return *this;
 }
 
 Colour& Colour::operator*=(const Colour& other) {
@@ -190,6 +193,7 @@ Colour& Colour::operator*=(const Colour& other) {
 		m_oklab.l *= other.m_oklab.l;
 		break;
 	}
+	return *this;
 }
 
 Colour& Colour::operator+=(const Colour& other) {
@@ -208,6 +212,7 @@ Colour& Colour::operator+=(const Colour& other) {
 		m_oklab.l += other.m_oklab.l;
 		break;
 	}
+	return *this;
 }
 
 Colour& Colour::operator-=(const Colour& other) {
@@ -226,6 +231,7 @@ Colour& Colour::operator-=(const Colour& other) {
 		m_oklab.l -= other.m_oklab.l;
 		break;
 	}
+	return *this;
 }
 
 Colour& Colour::operator*=(const double scalar) {
@@ -244,6 +250,7 @@ Colour& Colour::operator*=(const double scalar) {
 		m_oklab.l *= scalar;
 		break;
 	}
+	return *this;
 }
 
 Colour Colour::operator/(const Colour& other) const {
@@ -277,7 +284,7 @@ Colour Colour::operator*(const double scalar) const {
 }
 
 void Colour::OkLabFallback() {
-	const int maxIter = 24;
+	const int maxIter = 12;
 	struct LCH { double l, c, h; };
 
 	Colour s0 = Colour::FromOkLab(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha);

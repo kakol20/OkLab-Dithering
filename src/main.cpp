@@ -93,11 +93,18 @@ int main(int argc, char* argv[]) {
 
 	sRGB_t.SetsRGB(128, 128, 255);
 
+	Colour beforeFallback = Colour::FromOkLab(0.5, 0.5, 0.5);
+
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+
+	Colour afterFallBack = beforeFallback;
+	afterFallBack.Clamp();
+	afterFallBack.UpdatesRGB();
+
 	// Test save
 	image.Clear();
 	image.Write("data/output.png");
 #endif // _NDEBUG
-
 
 	Log::Save();
 	Log::HoldConsole();

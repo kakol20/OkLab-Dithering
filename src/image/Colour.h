@@ -66,20 +66,21 @@ public:
 	Colour operator-(const Colour& other) const;
 	Colour operator*(const double scalar) const;
 
-private:
+	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
+
 	struct sRGB {
 		double r;
 		double g;
 		double b;
 	};
-	
-	sRGB m_srgb;
-
 	struct OkLab {
 		double l;
 		double a;
 		double b;
 	};
+
+private:
+	sRGB m_srgb;
 	OkLab m_oklab;
 
 	double m_alpha;
@@ -87,7 +88,6 @@ private:
 	//static OkLab sRGBtoOkLab(const sRGB val);
 
 	static MathMode m_mathMode;
-	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
 
 	void OkLabFallback();
 
