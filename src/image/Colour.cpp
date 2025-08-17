@@ -28,11 +28,11 @@ Colour& Colour::operator=(const Colour& other) {
 
 void Colour::UpdateOkLab() {
 	// black or white
-	if (m_srgb.r == 255 || m_srgb.g == 255 || m_srgb.b == 255) {
+	if (m_srgb.r == 255 && m_srgb.g == 255 && m_srgb.b == 255) {
 		m_oklab = { 1., 0., 0. };
 		return;
 	}
-	if (m_srgb.r == 0 || m_srgb.g == 0 || m_srgb.b == 0) {
+	if (m_srgb.r == 0 && m_srgb.g == 0 && m_srgb.b == 0) {
 		m_oklab = { 0., 0., 0. };
 		return;
 	}
@@ -83,6 +83,86 @@ void Colour::UpdateOkLab() {
 	}
 }
 
+void Colour::UpdatesRGB() {
+	if (m_oklab.l >= 1.) {
+		m_srgb = { 255, 255, 255 };
+		return;
+	}
+	if (m_oklab.l <= 0.) {
+		m_srgb = { 0, 0, 0 };
+		return;
+	}
+
+	const double scalar = 387916. / 30017.;
+	const double limit = 285. / 93752.;
+
+	if (m_oklab.a == 0 && m_oklab.b == 0) {
+		// if graycale - can skip some conversions
+
+		double r = m_oklab.l;
+
+		// to Linear LMS - can skip "to LMS" conversion
+
+		r = r * r * r;
+
+		// to sRGB - can skip "to Linear RGB" conversion
+		r = r <= limit ? scalar * r : (Maths::NRoot(r, 2.4) * 1.055) - 0.055;
+		r *= 255.;
+
+		// clamp value
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		const uint8_t r_int = (uint8_t)r;
+
+		m_srgb = { r_int, r_int, r_int };
+	} else {
+		double r1 = m_oklab.l;
+		double g1 = m_oklab.a;
+		double b1 = m_oklab.b;
+
+		// to LMS
+
+		double r2 = r1 + 0.396337792278 * g1 + 0.215803757471 * b1;
+		double g2 = r1 - 0.105561342920 * g1 - 0.063854171399 * b1;
+		double b2 = r1 - 0.089484185764 * g1 - 1.291485517099 * b1;
+
+		// to Linear LMS
+		r1 = r2 * r2 * r2;
+		g1 = g2 * g2 * g2;
+		b1 = b2 * b2 * b2;
+
+		// to Linear RGB
+		r2 = 4.076741661667 * r1 - 3.307711590572 * g1 + 0.230969928905 * b1;
+		g2 = -1.268438004344 * r1 + 2.609757400792 * g1 - 0.341319396448 * b1;
+		b2 = -0.004196086474 * r1 - 0.703418614494 * g1 + 1.707614700968 * b1;
+
+		// to sRGB
+		r2 = r2 <= limit ? scalar * r2 : (Maths::NRoot(r2, 2.4) * 1.055) - 0.055;
+		g2 = g2 <= limit ? scalar * g2 : (Maths::NRoot(g2, 2.4) * 1.055) - 0.055;
+		b2 = b2 <= limit ? scalar * b2 : (Maths::NRoot(b2, 2.4) * 1.055) - 0.055;
+
+		r2 *= 255.;
+		g2 *= 255.;
+		b2 *= 255.;
+
+		// clamp values
+		r2 = r2 >= 255. ? 255. : r2;
+		g2 = g2 >= 255. ? 255. : g2;
+		b2 = b2 >= 255. ? 255. : b2;
+
+		r2 = r2 <= 0. ? 0. : r2;
+		g2 = g2 <= 0. ? 0. : g2;
+		b2 = b2 <= 0. ? 0. : b2;
+
+		const uint8_t r_int = uint8_t(std::round(r2));
+		const uint8_t g_int = uint8_t(std::round(g2));
+		const uint8_t b_int = uint8_t(std::round(b2));
+
+		m_srgb = { r_int, g_int, b_int };
+	}
+}
+
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
 	Colour out;
 
@@ -93,7 +173,12 @@ Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const
 	return out;
 }
 
-//Colour::OkLab Colour::sRGBtoOkLab(const sRGB val) {
-//
-//	return OkLab();
-//}
+Colour Colour::FromOkLab(const double l, const double a, const double b, const double alpha) {
+	Colour out;
+
+	out.m_oklab = { l, a, b };
+	out.m_alpha = 1.;
+
+	out.UpdatesRGB();
+	return out;
+}

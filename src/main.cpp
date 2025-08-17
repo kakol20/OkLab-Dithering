@@ -6,6 +6,7 @@
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
 
+#include "image/Colour.h"
 #include "image/Image.h"
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
@@ -72,6 +73,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// ========== GET IMAGE ==========
+
 	Log::EndLine();
 	Log::WriteOneLine("===== GETTING IMAGE =====");
 
@@ -81,6 +83,11 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+
+	// ========== GET PALETTE ==========
+
+	Colour sRGB_t = Colour::FromsRGB(133, 172, 255);
+	Colour OkLab_t = Colour::FromOkLab(0.75, -0.01, -0.13);
 
 	// Test save
 	image.Clear();
