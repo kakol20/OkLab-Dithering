@@ -3,6 +3,8 @@
 #include "../wrapper/Maths.hpp"
 
 
+Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
+
 Colour::Colour() {
 	m_srgb = { 0, 0, 0 };
 	m_oklab = { 0., 0., 0. };
@@ -27,23 +29,13 @@ Colour& Colour::operator=(const Colour& other) {
 }
 
 void Colour::UpdateOkLab() {
-	// black or white
-	if (m_srgb.r == 255 && m_srgb.g == 255 && m_srgb.b == 255) {
-		m_oklab = { 1., 0., 0. };
-		return;
-	}
-	if (m_srgb.r == 0 && m_srgb.g == 0 && m_srgb.b == 0) {
-		m_oklab = { 0., 0., 0. };
-		return;
-	}
-
 	const double scalar = 387916. / 30017.;
 	const double limit = 11. / 280.;
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
 
-		double l = double(m_srgb.r) / 255.;
+		double l = m_srgb.r;
 
 		// to Linear RGB
 		l = l <= limit ? l / scalar : std::pow((l + 0.055) / 1.055, 2.4);
@@ -54,9 +46,9 @@ void Colour::UpdateOkLab() {
 		// can skip "to OkLab" conversion
 		m_oklab = { l, 0., 0. };
 	} else {
-		double l1 = double(m_srgb.r) / 255.;
-		double a1 = double(m_srgb.g) / 255.;
-		double b1 = double(m_srgb.b) / 255.;
+		double l1 = m_srgb.r;
+		double a1 = m_srgb.g;
+		double b1 = m_srgb.b;
 
 		// to Linear RGB
 		l1 = l1 <= limit ? l1 / scalar : std::pow((l1 + 0.055) / 1.055, 2.4);
@@ -84,15 +76,6 @@ void Colour::UpdateOkLab() {
 }
 
 void Colour::UpdatesRGB() {
-	if (m_oklab.l >= 1.) {
-		m_srgb = { 255, 255, 255 };
-		return;
-	}
-	if (m_oklab.l <= 0.) {
-		m_srgb = { 0, 0, 0 };
-		return;
-	}
-
 	const double scalar = 387916. / 30017.;
 	const double limit = 285. / 93752.;
 
@@ -113,7 +96,7 @@ void Colour::UpdatesRGB() {
 		r = r > 255. ? 255. : r;
 		r = r < 0. ? 0. : r;
 
-		const uint8_t r_int = (uint8_t)r;
+		const double r_int = (double)r;
 
 		m_srgb = { r_int, r_int, r_int };
 	} else {
@@ -155,9 +138,9 @@ void Colour::UpdatesRGB() {
 		g2 = g2 <= 0. ? 0. : g2;
 		b2 = b2 <= 0. ? 0. : b2;
 
-		const uint8_t r_int = uint8_t(std::round(r2));
-		const uint8_t g_int = uint8_t(std::round(g2));
-		const uint8_t b_int = uint8_t(std::round(b2));
+		const double r_int = double(std::round(r2));
+		const double g_int = double(std::round(g2));
+		const double b_int = double(std::round(b2));
 
 		m_srgb = { r_int, g_int, b_int };
 	}
@@ -166,7 +149,7 @@ void Colour::UpdatesRGB() {
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
 	Colour out;
 
-	out.m_srgb = { r, g, b };
+	out.m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	out.m_alpha = (double)a / 255.;
 
 	out.UpdateOkLab();
@@ -184,7 +167,7 @@ Colour Colour::FromOkLab(const double l, const double a, const double b, const d
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	m_srgb = { r, g, b };
+	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;
 
 	UpdateOkLab();
