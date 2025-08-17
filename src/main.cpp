@@ -8,6 +8,12 @@ using json = nlohmann::json;
 
 #include "image/Image.h"
 #include "wrapper/Log.h"
+#include "wrapper/Maths.hpp"
+
+//const double Maths::Pi = 3.1415926535;
+//const double Maths::Tau = 6.283185307;
+//const double Maths::RadToDeg = 180. / Maths::Pi;
+//const double Maths::DegToRad = Maths::Pi / 180.;
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
@@ -29,7 +35,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::ifstream paletteLoc("data / minecraft_map_sc.palette");
+	std::ifstream paletteLoc("data/minecraft_map_sc.palette");
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
 		Log::Save();

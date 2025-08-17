@@ -113,7 +113,7 @@ bool Image::Read(const char* file, const int forceChannels) {
 	return m_data != NULL;
 }
 
-bool Image::Write(const char* file) {
+bool Image::Write(const char* file) const {
 	Image::ImageType type = Image::GetFileType(file);
 	int success = 0;
 

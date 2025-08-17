@@ -9,6 +9,11 @@ public:
 	Colour& operator=(const Colour& other);
 
 	/// <summary>
+	/// Update OkLab from sRGB
+	/// </summary>
+	void UpdateOkLab();
+
+	/// <summary>
 	/// Assign Colour based on sRGB values
 	/// </summary>
 	/// <param name="r">0 to 255</param>
@@ -26,6 +31,15 @@ private:
 	};
 	sRGB m_srgb;
 
+	struct OkLab {
+		double l;
+		double a;
+		double b;
+	};
+	OkLab m_oklab;
+
 	double m_alpha;
+
+	//static OkLab sRGBtoOkLab(const sRGB val);
 };
 
