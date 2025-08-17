@@ -95,9 +95,17 @@ int main(int argc, char* argv[]) {
 
 	Colour beforeFallback = Colour::FromOkLab(0.5, 0.5, 0.5);
 
-	Colour::SetMathMode(Colour::MathMode::OkLab);
+	Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
 
 	Colour afterFallBack = beforeFallback;
+	afterFallBack.Clamp();
+	afterFallBack.UpdatesRGB();
+
+	double threshold = (16. + 0.5) / (8 * 8) - 0.5;
+	Colour threshold_c = Colour::FromOkLab(threshold, threshold, threshold);
+	threshold_c *= 1. / 8.;
+
+	Colour dithered = afterFallBack + threshold_c;
 	afterFallBack.Clamp();
 	afterFallBack.UpdatesRGB();
 
