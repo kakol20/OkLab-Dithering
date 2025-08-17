@@ -177,8 +177,22 @@ Colour Colour::FromOkLab(const double l, const double a, const double b, const d
 	Colour out;
 
 	out.m_oklab = { l, a, b };
-	out.m_alpha = 1.;
+	out.m_alpha = alpha;
 
 	out.UpdatesRGB();
 	return out;
+}
+
+void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+	m_srgb = { r, g, b };
+	m_alpha = (double)a / 255.;
+
+	UpdateOkLab();
+}
+
+void Colour::SetOkLab(const double l, const double a, const double b, const double alpha) {
+	m_alpha = alpha;
+	m_oklab = { l, a, b };
+
+	UpdatesRGB();
 }

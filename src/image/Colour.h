@@ -44,6 +44,7 @@ private:
 		uint8_t g;
 		uint8_t b;
 	};
+	
 	sRGB m_srgb;
 
 	struct OkLab {
@@ -56,5 +57,12 @@ private:
 	double m_alpha;
 
 	//static OkLab sRGBtoOkLab(const sRGB val);
+
+public:
+	sRGB GetsRGB() const { return m_srgb; };
+	OkLab GetOkLab() const { return m_oklab; };
+
+	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
+	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
 };
 
