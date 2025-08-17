@@ -108,6 +108,7 @@ int main(int argc, char* argv[]) {
 	Colour dithered = afterFallBack + threshold_c;
 	afterFallBack.Clamp();
 	afterFallBack.UpdatesRGB();
+	Colour::sRGB_UInt ditheredInt = dithered.GetsRGB_UInt();
 
 	// Test save
 	image.Clear();

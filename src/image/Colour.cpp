@@ -325,6 +325,22 @@ void Colour::OkLabFallback() {
 	m_oklab = LChToLab({ lch.l, lo, lch.h });
 }
 
+Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
+	double r = std::round(m_srgb.r * 255.);
+	double g = std::round(m_srgb.g * 255.);
+	double b = std::round(m_srgb.b * 255.);
+
+	r = r > 255. ? 255. : r;
+	g = g > 255. ? 255. : g;
+	b = b > 255. ? 255. : b;
+
+	r = r < 0. ? 0. : r;
+	g = g < 0. ? 0. : g;
+	b = b < 0. ? 0. : b;
+
+	return { (uint8_t)r, (uint8_t)g, (uint8_t)b };
+}
+
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
 	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;

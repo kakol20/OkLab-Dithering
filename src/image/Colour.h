@@ -68,16 +68,9 @@ public:
 
 	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
 
-	struct sRGB {
-		double r;
-		double g;
-		double b;
-	};
-	struct OkLab {
-		double l;
-		double a;
-		double b;
-	};
+	struct sRGB { double r, g, b; };
+	struct sRGB_UInt { uint8_t r, g, b; };
+	struct OkLab { double l, a, b; };
 
 private:
 	sRGB m_srgb;
@@ -94,6 +87,7 @@ private:
 public:
 	sRGB GetsRGB() const { return m_srgb; };
 	OkLab GetOkLab() const { return m_oklab; };
+	sRGB_UInt GetsRGB_UInt() const;
 
 	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
