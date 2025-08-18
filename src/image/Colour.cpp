@@ -1,7 +1,7 @@
 #include "Colour.h"
 
+#include "../wrapper/Log.h"
 #include "../wrapper/Maths.hpp"
-#include <string>
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
@@ -295,6 +295,20 @@ Colour Colour::operator*(const double scalar) const {
 	Colour out(*this);
 	out *= scalar;
 	return out;
+}
+
+std::string Colour::OkLabDebug() const {
+	std::string lStr = Log::LeadingCharacter(Log::ToString(m_oklab.l, 4), 7, ' ');
+	std::string aStr = Log::LeadingCharacter(Log::ToString(m_oklab.a, 4), 7, ' ');
+	std::string bStr = Log::LeadingCharacter(Log::ToString(m_oklab.b, 4), 7, ' ');
+	return lStr + ' ' + aStr + ' ' + bStr;
+}
+
+std::string Colour::sRGBUintDebug() const {
+	sRGB_UInt srgb_int = GetsRGB_UInt();
+	return Log::ToString((unsigned int)srgb_int.r, 3, ' ') + ' ' +
+		Log::ToString((unsigned int)srgb_int.g, 3, ' ') + ' ' +
+		Log::ToString((unsigned int)srgb_int.b, 3, ' ');
 }
 
 void Colour::OkLabFallback() {

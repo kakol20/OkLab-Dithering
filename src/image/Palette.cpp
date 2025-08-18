@@ -12,7 +12,7 @@ Palette::Palette(const char* file) {
 		std::string hex;
 		while (std::getline(p, hex)) {
 			if (hex.size() < 6) {
-				Log::WriteOneLine(hex + ": is not a valid colour code");
+				Log::WriteOneLine(Log::LeadingCharacter(hex, 6, ' ') + ": is not a valid colour code");
 				break;
 			}
 			hex.resize(6);
@@ -22,9 +22,13 @@ Palette::Palette(const char* file) {
 			m_colours.push_back(col);
 
 			std::string hexOut = '#' + hex;
+			std::string rgbOut = "rgb(" + col.sRGBUintDebug() + ')';
+			std::string labOut = "oklab(" + col.OkLabDebug() + ')';
+
+			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut);
 		}
 	}
-
+	Log::WriteOneLine("Palette Size: " + Log::ToString(m_size));
 }
 
 Palette::~Palette() {

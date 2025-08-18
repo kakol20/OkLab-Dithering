@@ -88,9 +88,10 @@ int main(int argc, char* argv[]) {
 
 	// ========== GET PALETTE ==========
 
+	Log::EndLine();
+	Log::WriteOneLine("===== GETTING PALETTE =====");
 	Palette palette(paletteLocStr.c_str());
 	
-
 	Log::Save();
 	Log::HoldConsole();
 	return 0;

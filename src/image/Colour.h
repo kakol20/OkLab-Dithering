@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 class Colour {
 public:
 	Colour();
@@ -84,6 +85,11 @@ public:
 	struct sRGB { double r, g, b; };
 	struct sRGB_UInt { uint8_t r, g, b; };
 	struct OkLab { double l, a, b; };
+
+	// ========== DEBUGGING ==========
+
+	std::string OkLabDebug() const;
+	std::string sRGBUintDebug() const;
 
 private:
 	sRGB m_srgb;

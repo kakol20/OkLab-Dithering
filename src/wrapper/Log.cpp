@@ -181,6 +181,6 @@ void Log::Sound(const long long duration) {
 }
 
 void Log::HoldConsole() {
-	std::cout << "\nPress any key to exit...";
+	std::cout << "\a\nPress any key to exit...";
 	std::cin.ignore();
 }
