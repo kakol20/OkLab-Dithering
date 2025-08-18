@@ -8,6 +8,7 @@ using json = nlohmann::json;
 
 #include "image/Colour.h"
 #include "image/Image.h"
+#include "image/Palette.h"
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
 
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 #else
 	// TODO: add
 #endif // _DEBUG
@@ -86,35 +88,8 @@ int main(int argc, char* argv[]) {
 
 	// ========== GET PALETTE ==========
 
-	// FOR TESTING
-#ifdef _DEBUG
-	Colour sRGB_t = Colour::FromsRGB(133, 172, 255);
-	Colour OkLab_t = Colour::FromOkLab(0.75, -0.01, -0.13);
-
-	sRGB_t.SetsRGB(128, 128, 255);
-
-	Colour beforeFallback = Colour::FromOkLab(-0.5, 0.5, -0.5);
-
-	Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
-
-	Colour afterFallBack = beforeFallback;
-	afterFallBack.Clamp();
-	afterFallBack.UpdatesRGB();
-	Colour::sRGB_UInt fallbackInt = afterFallBack.GetsRGB_UInt();
-
-	double threshold = (255. + 0.5) / 256. - 0.5;
-	Colour threshold_c = Colour::FromOkLab(threshold, threshold, threshold);
-	threshold_c *= 1. / 16.;
-
-	Colour dithered = afterFallBack + threshold_c;
-	dithered.Clamp();
-	dithered.UpdatesRGB();
-	Colour::sRGB_UInt ditheredInt = dithered.GetsRGB_UInt();
-
-	// Test save
-	image.Clear();
-	image.Write("data/output.png");
-#endif // _NDEBUG
+	Palette palette(paletteLocStr.c_str());
+	
 
 	Log::Save();
 	Log::HoldConsole();

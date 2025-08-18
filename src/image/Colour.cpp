@@ -1,6 +1,7 @@
 #include "Colour.h"
 
 #include "../wrapper/Maths.hpp"
+#include <string>
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
@@ -139,6 +140,19 @@ Colour Colour::FromOkLab(const double l, const double a, const double b, const d
 
 	out.UpdatesRGB();
 	return out;
+}
+
+Colour Colour::FromHex(const char* hex) {
+	const unsigned int hexInt = std::stoi(hex, 0, 16);
+
+	const unsigned int rMask = 0xFF0000;
+	const unsigned int gMask = 0x00FF00;
+	const unsigned int bMask = 0x0000FF;
+
+	const uint8_t r = uint8_t((hexInt & rMask) >> 16);
+	const uint8_t g = uint8_t((hexInt & gMask) >> 8);
+	const uint8_t b = uint8_t(hexInt & bMask);
+	return FromsRGB(r, g, b, 255);
 }
 
 void Colour::Clamp() {

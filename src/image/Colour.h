@@ -38,6 +38,13 @@ public:
 	/// <returns></returns>
 	static Colour FromOkLab(const double l, const double a, const double b, const double alpha = 1.);
 
+	/// <summary>
+	/// Get Colour hex value
+	/// </summary>
+	/// <param name="hex"></param>
+	/// <returns></returns>
+	static Colour FromHex(const char* hex);
+
 	// ========== ARITHMETIC ==========
 
 	/// <summary>
