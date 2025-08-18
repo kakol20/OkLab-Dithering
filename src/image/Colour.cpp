@@ -326,9 +326,13 @@ void Colour::OkLabFallback() {
 }
 
 Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
-	double r = std::round(m_srgb.r * 255.);
-	double g = std::round(m_srgb.g * 255.);
-	double b = std::round(m_srgb.b * 255.);
+	double r = m_srgb.r * 255.;
+	double g = m_srgb.g * 255.;
+	double b = m_srgb.b * 255.;
+
+	r = std::round(r);
+	g = std::round(g);
+	b = std::round(b);
 
 	r = r > 255. ? 255. : r;
 	g = g > 255. ? 255. : g;

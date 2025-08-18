@@ -21,10 +21,10 @@ public:
 	/// <summary>
 	/// Assign Colour based on sRGB values
 	/// </summary>
-	/// <param name="r">0 to 1</param>
-	/// <param name="g">0 to 1</param>
-	/// <param name="b">0 to 1</param>
-	/// <param name="a">0 to 1</param>
+	/// <param name="r">0 to 255</param>
+	/// <param name="g">0 to 255</param>
+	/// <param name="b">0 to 255</param>
+	/// <param name="a">0 to 255</param>
 	/// <returns></returns>
 	static Colour FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 
@@ -66,6 +66,12 @@ public:
 	Colour operator-(const Colour& other) const;
 	Colour operator*(const double scalar) const;
 
+	/// <summary>
+	/// NOTE: Will not update other colour space when maths is done - must call UPDATE functions
+	/// </summary>
+	/// <param name="sRGB">Maths is treated like the values are 0 to 1</param>
+	/// <param name="Oklab"></param>
+	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
 	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
 
 	struct sRGB { double r, g, b; };

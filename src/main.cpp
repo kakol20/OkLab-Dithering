@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
 	sRGB_t.SetsRGB(128, 128, 255);
 
-	Colour beforeFallback = Colour::FromOkLab(0.5, 0.5, 0.5);
+	Colour beforeFallback = Colour::FromOkLab(-0.5, 0.5, -0.5);
 
 	Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
 
