@@ -6,8 +6,16 @@
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
 
+#include "image/Colour.h"
 #include "image/Image.h"
+#include "image/Palette.h"
 #include "wrapper/Log.h"
+#include "wrapper/Maths.hpp"
+
+//const double Maths::Pi = 3.1415926535;
+//const double Maths::Tau = 6.283185307;
+//const double Maths::RadToDeg = 180. / Maths::Pi;
+//const double Maths::DegToRad = Maths::Pi / 180.;
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
@@ -28,6 +36,15 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+
+	std::ifstream paletteLoc("data/minecraft_map_sc.palette");
+	if (!(paletteLoc)) {
+		Log::WriteOneLine("Palette not found");
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 #else
 	// TODO: add
 #endif // _DEBUG
@@ -58,6 +75,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// ========== GET IMAGE ==========
+
 	Log::EndLine();
 	Log::WriteOneLine("===== GETTING IMAGE =====");
 
@@ -68,10 +86,12 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	// Test save
-	image.Clear();
-	image.Write("data/output.png");
+	// ========== GET PALETTE ==========
 
+	Log::EndLine();
+	Log::WriteOneLine("===== GETTING PALETTE =====");
+	Palette palette(paletteLocStr.c_str());
+	
 	Log::Save();
 	Log::HoldConsole();
 	return 0;
