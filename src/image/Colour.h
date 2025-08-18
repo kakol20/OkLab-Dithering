@@ -30,6 +30,16 @@ public:
 	static Colour FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 
 	/// <summary>
+	/// Assign Colour based on sRGB values
+	/// </summary>
+	/// <param name="r">0 to 1</param>
+	/// <param name="g">0 to 1</param>
+	/// <param name="b">0 to 1</param>
+	/// <param name="a">0 to 1</param>
+	/// <returns></returns>
+	static Colour FromsRGB_D(const double r, const double g, const double b, const double a = 1.);
+
+	/// <summary>
 	/// Assign Colour based on OkLab values
 	/// </summary>
 	/// <param name="l"></param>
@@ -81,6 +91,7 @@ public:
 	/// <param name="Oklab"></param>
 	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
 	static void SetMathMode(MathMode mode) { m_mathMode = mode; };
+	static MathMode GetMathMode() { return m_mathMode; };
 
 	struct sRGB { double r, g, b; };
 	struct sRGB_UInt { uint8_t r, g, b; };

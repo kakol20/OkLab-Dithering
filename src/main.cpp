@@ -1,12 +1,14 @@
-#include <iostream>
-#include <fstream>
-#include <string>
 #include <array>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
 
 #include "image/Colour.h"
+#include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
@@ -16,6 +18,8 @@ using json = nlohmann::json;
 //const double Maths::Tau = 6.283185307;
 //const double Maths::RadToDeg = 180. / Maths::Pi;
 //const double Maths::DegToRad = Maths::Pi / 180.;
+
+std::string NoExtension(const std::string loc);
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
@@ -29,7 +33,7 @@ int main(int argc, char* argv[]) {
 	json settings = json::parse(settingsLoc);
 
 	std::string imageLoc = "data/suzanne.png";
-	Image::ImageType imageType = Image::GetFileType("data/suzanne.png");
+	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
 		Log::Save();
@@ -37,14 +41,14 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::ifstream paletteLoc("data/minecraft_map_sc.palette");
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
 	}
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 #else
 	// TODO: add
 #endif // _DEBUG
@@ -92,10 +96,26 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== GETTING PALETTE =====");
 	Palette palette(paletteLocStr.c_str());
 
-	Colour::SetMathMode(Colour::MathMode::OkLab);
-	double magSq = palette[0].MagSq(palette[palette.size() - 1]);
+	// ========== DITHERING ==========
+
+	Log::EndLine();
+	Log::WriteOneLine("===== DITHERING =====");
+
+	Dither::OrderedDither(image, palette);
+
+	// ===== Generate Output Path =====
+	
+	const std::string outputLoc = NoExtension(imageLoc) + "_out.png";
+
+	image.Write(outputLoc.c_str());
 	
 	Log::Save();
 	Log::HoldConsole();
 	return 0;
+}
+
+std::string NoExtension(const std::string loc) {
+	std::filesystem::path p = loc;
+	std::filesystem::path noExt = p.parent_path() / p.stem();
+	return noExt.string();
 }

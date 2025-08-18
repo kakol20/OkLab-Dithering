@@ -132,6 +132,14 @@ Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const
 	return out;
 }
 
+Colour Colour::FromsRGB_D(const double r, const double g, const double b, const double a) {
+	Colour out;
+	out.m_srgb = { r, g, b };
+	out.m_alpha = a;
+	out.UpdateOkLab();
+	return out;
+}
+
 Colour Colour::FromOkLab(const double l, const double a, const double b, const double alpha) {
 	Colour out;
 
