@@ -91,6 +91,9 @@ int main(int argc, char* argv[]) {
 	Log::EndLine();
 	Log::WriteOneLine("===== GETTING PALETTE =====");
 	Palette palette(paletteLocStr.c_str());
+
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+	double magSq = palette[0].MagSq(palette[palette.size() - 1]);
 	
 	Log::Save();
 	Log::HoldConsole();

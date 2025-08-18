@@ -24,6 +24,8 @@ public:
 		return std::fmod(std::fmod(numer, denom) + denom, denom);
 	}
 
+	static inline double Pow2(const double a) { return a * a; };
+
 	//static const double Pi;
 	//static const double Tau;
 	//static const double RadToDeg;

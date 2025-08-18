@@ -91,6 +91,18 @@ public:
 	std::string OkLabDebug() const;
 	std::string sRGBUintDebug() const;
 
+	// ========== OTHER ==========
+
+	/// <summary>
+	/// <para>The squared distance between colours</para>
+	/// </summary>
+	/// <param name="other"></param>
+	/// <returns>
+	/// <para>NOTE: if MathMode == OkLab_Lightness - the absoulute difference</para>
+	/// <para>between L values will be outputted instead</para>
+	/// </returns>
+	double MagSq(const Colour& other) const;
+
 private:
 	sRGB m_srgb;
 	OkLab m_oklab;

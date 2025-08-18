@@ -311,6 +311,22 @@ std::string Colour::sRGBUintDebug() const {
 		Log::ToString((unsigned int)srgb_int.b, 3, ' ');
 }
 
+double Colour::MagSq(const Colour& other) const {
+	switch (m_mathMode) {
+		case MathMode::sRGB:
+			return Maths::Pow2(m_srgb.r - other.m_srgb.r) + 
+				Maths::Pow2(m_srgb.g - other.m_srgb.g) + 
+				Maths::Pow2(m_srgb.b - other.m_srgb.b);
+		case MathMode::OkLab:
+			return Maths::Pow2(m_oklab.l - other.m_oklab.l) +
+				Maths::Pow2(m_oklab.a - other.m_oklab.a) +
+				Maths::Pow2(m_oklab.b - other.m_oklab.b);
+		case MathMode::OkLab_Lightness:
+			return std::abs(m_oklab.l - other.m_oklab.l);
+	}
+	return 0.0;
+}
+
 void Colour::OkLabFallback() {
 	const int maxIter = 12;
 	struct LCH { double l, c, h; };
