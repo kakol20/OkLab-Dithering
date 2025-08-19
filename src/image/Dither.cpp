@@ -27,9 +27,7 @@ bool Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 
 	Log::StartTime();
 
-	//Log::EndLine();
-	Log::StartLine();
-	Log::Write("Ordered Dither...");
+	Log::WriteOneLine("Ordered Dither...");
 	for (int x = 0; x < imgWidth; x++) {
 		for (int y = 0; y < imgHeight; y++) {
 			const size_t index = image.GetIndex(x, y);
@@ -78,17 +76,12 @@ bool Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 				std::string outStr = Log::ToString(progress, 6);
 				outStr = Log::LeadingCharacter(outStr, 9);
 
-				Log::EndLine();
-				Log::StartLine();
-				Log::Write("  ");
-				Log::Write(outStr);
-				Log::Write("%");
+				Log::WriteOneLine("\t" + outStr + "%");
 
 				Log::StartTime();
 			}
 		}
 	}
-	Log::EndLine();
 
 	return true;
 }
