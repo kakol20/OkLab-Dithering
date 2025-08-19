@@ -109,7 +109,7 @@ bool Log::CheckTimeSeconds(const double seconds) {
 }
 
 std::string Log::ToString(const bool value) {
-	return value ? "TRUE" : "FALSE";
+	return value ? "true" : "false";
 }
 
 std::string Log::ToString(const double value, const unsigned int precision) {

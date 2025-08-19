@@ -122,12 +122,28 @@ void Colour::UpdatesRGB() {
 	}
 }
 
+void Colour::Update() {
+	if (m_mathMode == MathMode::sRGB) {
+		UpdateOkLab();
+	} else {
+		UpdatesRGB();
+	}
+}
+
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
 	Colour out;
 
 	out.m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	out.m_alpha = (double)a / 255.;
 
+	out.UpdateOkLab();
+	return out;
+}
+
+Colour Colour::FromsRGB_D(const double r, const double g, const double b, const double a) {
+	Colour out;
+	out.m_srgb = { r, g, b };
+	out.m_alpha = a;
 	out.UpdateOkLab();
 	return out;
 }

@@ -1,12 +1,17 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <algorithm>
 #include <array>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <unordered_map>
 
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
 
 #include "image/Colour.h"
+#include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
@@ -16,6 +21,8 @@ using json = nlohmann::json;
 //const double Maths::Tau = 6.283185307;
 //const double Maths::RadToDeg = 180. / Maths::Pi;
 //const double Maths::DegToRad = Maths::Pi / 180.;
+
+std::string NoExtension(const std::string loc);
 
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
@@ -28,8 +35,8 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/suzanne.png";
-	Image::ImageType imageType = Image::GetFileType("data/suzanne.png");
+	std::string imageLoc = "data/test.png";
+	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
 		Log::Save();
@@ -37,14 +44,14 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::ifstream paletteLoc("data/minecraft_map_sc.palette");
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
 	}
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 #else
 	// TODO: add
 #endif // _DEBUG
@@ -52,23 +59,60 @@ int main(int argc, char* argv[]) {
 	// ========== GET SETTINGS ==========
 
 	Log::WriteOneLine("===== GETTING SETINGS =====");
-	std::array<std::string, 4> required = {
-		"dither",
-		"grayscale",
-		"dist_lightness",
-		"ordered_dither"
+	std::unordered_map<std::string, json::value_t> required = {
+		{ "grayscale", json::value_t::boolean },
+		{ "dist_lightness", json::value_t::boolean },
+		{ "ditherType", json::value_t::string },
+		{ "distanceMode", json::value_t::string },
+		{ "mathMode", json::value_t::string },
 	};
 	bool allFound = true;
-	for (const auto& key : required) {
-		if (!settings.contains(key)) {
-			Log::WriteOneLine("JSON setting not found: " + key);
+	for (auto it = required.begin(); it != required.end(); it++) {
+		if (!settings.contains(it->first)) {
+			Log::WriteOneLine("JSON setting not found: " + it->first);
 			allFound = false;
-		} else {
-			Log::WriteOneLine(key + ": " + Log::ToString((bool)settings[key]));
+		} else if (settings[it->first].type() != it->second) {
+			Log::WriteOneLine("Wrong value type: " + it->first);
+			allFound = false;
+		} else if (it->second == json::value_t::boolean) {
+			Log::WriteOneLine(it->first + ": " + Log::ToString((bool)settings[it->first]));
+		} else if (it->second == json::value_t::string) {
+			std::string value = settings[it->first];
+			std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+			settings[it->first] = value;
+			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
 		}
 	}
 
 	if (!allFound) {
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+	bool invalidType = false;
+	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
+		settings["ditherType"] == "steinberg" || settings["ditherType"] == "fs") {
+		settings["ditherType"] = "fs";
+	} else if (settings["ditherType"] == "ordered" || settings["ditherType"] == "bayer") {
+		settings["ditherType"] = "ordered";
+	} else if (settings["ditherType"] == "none") {
+		settings["ditherType"] = "none";
+	} else {
+		Log::WriteOneLine("Invalid ditherType: " + settings["ditherType"]);
+		invalidType = true;
+	}
+
+	if (settings["distanceMode"] != "srgb" && settings["distanceMode"] != "oklab") {
+		Log::WriteOneLine("Invalid distanceMode: " + settings["distanceMode"]);
+		invalidType = true;
+	}
+
+	if (settings["mathMode"] != "srgb" && settings["mathMode"] != "oklab") {
+		Log::WriteOneLine("Invalid mathMode: " + settings["distanceMode"]);
+		invalidType = true;
+	}
+
+	if (invalidType) {
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
@@ -92,10 +136,47 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== GETTING PALETTE =====");
 	Palette palette(paletteLocStr.c_str());
 
-	Colour::SetMathMode(Colour::MathMode::OkLab);
-	double magSq = palette[0].MagSq(palette[palette.size() - 1]);
-	
+	// ========== DITHERING ==========
+
+	Log::EndLine();
+	Log::WriteOneLine("===== DITHERING =====");
+
+	if (settings["ditherType"] == "ordered") {
+		Dither::OrderedDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+	} else if (settings["ditherType"] == "fs") {
+		Dither::FloydDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+	} else {
+		Dither::NoDither(image, palette, settings["distanceMode"]);
+	}
+
+
+	// ===== Generate Output Path =====
+
+	const std::string folder = NoExtension(imageLoc);
+	std::filesystem::create_directories(folder);
+
+	std::string outputLoc;
+
+	if (settings["ditherType"] == "none") {
+		outputLoc = folder + "\\" +
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + ".png";
+	} else {
+		outputLoc = folder + "\\" +
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + "-" +
+			(std::string)settings["mathMode"] + ".png";
+	}
+
+	image.Write(outputLoc.c_str());
+
 	Log::Save();
-	Log::HoldConsole();
+	//Log::HoldConsole();
 	return 0;
+}
+
+std::string NoExtension(const std::string loc) {
+	std::filesystem::path p = loc;
+	std::filesystem::path noExt = p.parent_path() / p.stem();
+	return noExt.string();
 }
