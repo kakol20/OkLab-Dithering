@@ -2,5 +2,6 @@
   "grayscale": false,
   "dist_lightness": false,
   "ditherType": "ordered",
-  "distanceMode": "oklab"
+  "distanceMode": "srgb",
+  "mathMode": "srgb"
 }

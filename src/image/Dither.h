@@ -13,8 +13,15 @@ public:
 	/// </summary>
 	/// <param name="image"></param>
 	/// <param name="palette"></param>
-	/// <returns>Success</returns>
-	static bool OrderedDither(Image& image, const Palette& palette, const std::string distanceType = "ordered");
+	static void OrderedDither(Image& image, const Palette& palette, const std::string distanceType = "oklab", const std::string mathMode = "srgb");
+
+	/// <summary>
+	/// Floyd-Steinberg Dithering
+	/// </summary>
+	/// <param name="image"></param>
+	/// <param name="palette"></param>
+	/// <param name="distanceType"></param>
+	static void FloydDither(Image& image, const Palette& palette, const std::string distanceType = "oklab", const std::string mathMode = "srgb");
 
 private:
 	static std::array<uint8_t, 256> m_bayer16;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_map>
 
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/suzanne.png";
+	std::string imageLoc = "data/test.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -58,11 +59,12 @@ int main(int argc, char* argv[]) {
 	// ========== GET SETTINGS ==========
 
 	Log::WriteOneLine("===== GETTING SETINGS =====");
-	std::map<std::string, json::value_t> required = {
+	std::unordered_map<std::string, json::value_t> required = {
 		{ "grayscale", json::value_t::boolean },
 		{ "dist_lightness", json::value_t::boolean },
 		{ "ditherType", json::value_t::string },
 		{ "distanceMode", json::value_t::string },
+		{ "mathMode", json::value_t::string },
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); it++) {
@@ -83,6 +85,18 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (!allFound) {
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+
+	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
+		settings["ditherType"] == "steinberg" || settings["ditherType"] == "fs") {
+		settings["ditherType"] = "fs";
+	} else if (settings["ditherType"] == "ordered" || settings["ditherType"] == "bayer") {
+		settings["ditherType"] = "ordered";
+	} else {
+		Log::WriteOneLine("Invalid ditherType: " + settings["ditherType"]);
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
@@ -111,18 +125,28 @@ int main(int argc, char* argv[]) {
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
 
-	Dither::OrderedDither(image, palette, (std::string)settings["distanceMode"]);
+	if (settings["ditherType"] == "ordered") {
+		Dither::OrderedDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+	} else if (settings["ditherType"] == "fs") {
+		Dither::FloydDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+	}
+
+	
 
 	// ===== Generate Output Path =====
 
-	const std::string outputLoc = NoExtension(imageLoc) + "_" + 
+	const std::string folder = NoExtension(imageLoc);
+	std::filesystem::create_directories(folder);
+
+	const std::string outputLoc = folder + "\\" +
 		(std::string)settings["ditherType"] + "-" + 
-		(std::string)settings["distanceMode"] + ".png";
+		(std::string)settings["distanceMode"] + "-" +
+		(std::string)settings["mathMode"] + ".png";
 
 	image.Write(outputLoc.c_str());
 
 	Log::Save();
-	Log::HoldConsole();
+	//Log::HoldConsole();
 	return 0;
 }
 

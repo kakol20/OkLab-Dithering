@@ -122,6 +122,14 @@ void Colour::UpdatesRGB() {
 	}
 }
 
+void Colour::Update() {
+	if (m_mathMode == MathMode::sRGB) {
+		UpdateOkLab();
+	} else {
+		UpdatesRGB();
+	}
+}
+
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
 	Colour out;
 

@@ -20,6 +20,12 @@ public:
 	void UpdatesRGB();
 
 	/// <summary>
+	/// Choose update function based on mathMode
+	/// </summary>
+	/// <param name="mathMode"></param>
+	void Update();
+
+	/// <summary>
 	/// Assign Colour based on sRGB values
 	/// </summary>
 	/// <param name="r">0 to 255</param>

@@ -2,7 +2,7 @@
 
 #include "../wrapper/Log.h"
 
-std::array<uint8_t, 256> Dither::m_bayer16 {
+std::array<uint8_t, 256> Dither::m_bayer16{
 		 0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255,
 	 128,  64, 176, 112, 140,  76, 188, 124, 131,  67, 179, 115, 143,  79, 191, 127,
 		32, 224,  16, 208,  44, 236,  28, 220,  35, 227,  19, 211,  47, 239,  31, 223,
@@ -21,7 +21,7 @@ std::array<uint8_t, 256> Dither::m_bayer16 {
 	 170, 106, 154,  90, 166, 102, 150,  86, 169, 105, 153,  89, 165, 101, 149,  85
 };
 
-bool Dither::OrderedDither(Image& image, const Palette& palette, const std::string distanceType) {
+void Dither::OrderedDither(Image& image, const Palette& palette, const std::string distanceType, const std::string mathMode) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
@@ -36,10 +36,15 @@ bool Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 				image.GetData(index + 2));
 
 			// ===== APPLY DITHER =====
-			Colour::SetMathMode(Colour::MathMode::sRGB);
+			if (mathMode == "oklab") {
+				Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			}
+
 			double threshold = (double)m_bayer16[BayerIndex(x % 16, y % 16)];
 			threshold = ((threshold + 0.5) / 256.) - 0.5;
-			
+
 			Colour threshold_c;
 			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
 				threshold_c = Colour::FromsRGB_D(threshold, threshold, threshold);
@@ -49,12 +54,7 @@ bool Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 
 			Colour dithered = pixel + (threshold_c * (1. / 16.));
 			dithered.Clamp();
-			
-			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
-				dithered.UpdateOkLab();
-			} else {
-				dithered.UpdatesRGB();
-			}
+			dithered.Update();
 
 			if (distanceType == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab);
@@ -82,8 +82,112 @@ bool Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 			}
 		}
 	}
+}
 
-	return true;
+void Dither::FloydDither(Image& image, const Palette& palette, const std::string distanceType, const std::string mathMode) {
+	const int imgWidth = image.GetWidth();
+	const int imgHeight = image.GetHeight();
+
+	// Create a copy of of image in Colour form
+	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
+	std::vector<Colour> colours;
+	colours.reserve(coloursSize);
+
+	Log::StartTime();
+	Log::WriteOneLine("Floyd-Steinberg Dither...");
+
+	for (int y = 0; y < imgHeight; y++) {
+		for (int x = 0; x < imgWidth; x++) {
+			const size_t index = image.GetIndex(x, y);
+			Colour pixel = Colour::FromsRGB(image.GetData(index + 0),
+				image.GetData(index + 1),
+				image.GetData(index + 2));
+
+			colours.push_back(pixel);
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
+				progress *= 100.;
+
+				std::string outStr = Log::ToString(progress, 6);
+				outStr = Log::LeadingCharacter(outStr, 9);
+
+				Log::WriteOneLine("\t" + outStr + "%");
+
+				Log::StartTime();
+			}
+		}
+	}
+
+	// Dither
+	for (int y = 0; y < imgHeight; y++) {
+		for (int x = 0; x < imgWidth; x++) {
+			const size_t indexCol = size_t(x + y * imgWidth);
+			const size_t index = image.GetIndex(x, y);
+
+			Colour oldPixel = colours[indexCol];
+
+			if (distanceType == "oklab") {
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			}
+			Colour newPixel = ClosestColour(oldPixel, palette);
+			Colour::sRGB_UInt newPixel_int = newPixel.GetsRGB_UInt();
+
+			image.SetData(index + 0, newPixel_int.r);
+			image.SetData(index + 1, newPixel_int.g);
+			image.SetData(index + 2, newPixel_int.b);
+
+			if (mathMode == "oklab") {
+				Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			}
+			Colour quantError = oldPixel - newPixel;
+
+			if (x + 1 < imgWidth) {
+				const size_t neighbourIndex = size_t((x + 1) + y * imgWidth);
+				colours[neighbourIndex] = colours[neighbourIndex] + (quantError * (7. / 16.));
+				colours[neighbourIndex].Clamp();
+				colours[neighbourIndex].Update();
+			}
+
+			if (y + 1 < imgHeight) {
+				if (x - 1 >= 0) {
+					const size_t neighbourIndex = size_t((x - 1) + (y + 1) * imgWidth);
+					colours[neighbourIndex] = colours[neighbourIndex] + (quantError * (3. / 16.));
+					colours[neighbourIndex].Clamp();
+					colours[neighbourIndex].Update();
+				}
+				if (x + 1 < imgWidth) {
+					const size_t neighbourIndex = size_t((x + 1) + (y + 1) * imgWidth);
+					colours[neighbourIndex] = colours[neighbourIndex] + (quantError * (1. / 16.));
+					colours[neighbourIndex].Clamp();
+					colours[neighbourIndex].Update();
+				}
+
+				const size_t neighbourIndex = size_t(x + (y + 1) * imgWidth);
+				colours[neighbourIndex] = colours[neighbourIndex] + (quantError * (5. / 16.));
+				colours[neighbourIndex].Clamp();
+				colours[neighbourIndex].Update();
+			}
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
+				progress *= 100.;
+
+				std::string outStr = Log::ToString(progress, 6);
+				outStr = Log::LeadingCharacter(outStr, 9);
+
+				Log::WriteOneLine("\t" + outStr + "%");
+
+				Log::StartTime();
+			}
+		}
+	}
 }
 
 Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
