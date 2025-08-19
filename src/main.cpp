@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/suzanne.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -59,7 +59,6 @@ int main(int argc, char* argv[]) {
 
 	Log::WriteOneLine("===== GETTING SETINGS =====");
 	std::map<std::string, json::value_t> required = {
-		{ "dither", json::value_t::boolean },
 		{ "grayscale", json::value_t::boolean },
 		{ "dist_lightness", json::value_t::boolean },
 		{ "ditherType", json::value_t::string },
@@ -116,7 +115,9 @@ int main(int argc, char* argv[]) {
 
 	// ===== Generate Output Path =====
 
-	const std::string outputLoc = NoExtension(imageLoc) + "_out.png";
+	const std::string outputLoc = NoExtension(imageLoc) + "_" + 
+		(std::string)settings["ditherType"] + "-" + 
+		(std::string)settings["distanceMode"] + ".png";
 
 	image.Write(outputLoc.c_str());
 
