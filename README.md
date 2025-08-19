@@ -24,7 +24,8 @@ Comments in settings.json not supported
 
 ### `ditherType`
 `ordered` or `bayer` for ordered dithering  
-`floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering
+`floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
+`none` for no dithering
 
 ### `distanceMode` and `mathMode`
 `srgb` or `oklab`

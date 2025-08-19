@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/suzanne.png";
+	std::string imageLoc = "data/test.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -89,14 +89,30 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
-
+	bool invalidType = false;
 	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
 		settings["ditherType"] == "steinberg" || settings["ditherType"] == "fs") {
 		settings["ditherType"] = "fs";
 	} else if (settings["ditherType"] == "ordered" || settings["ditherType"] == "bayer") {
 		settings["ditherType"] = "ordered";
+	} else if (settings["ditherType"] == "none") {
+		settings["ditherType"] = "none";
 	} else {
 		Log::WriteOneLine("Invalid ditherType: " + settings["ditherType"]);
+		invalidType = true;
+	}
+
+	if (settings["distanceMode"] != "srgb" && settings["distanceMode"] != "oklab") {
+		Log::WriteOneLine("Invalid distanceMode: " + settings["distanceMode"]);
+		invalidType = true;
+	}
+
+	if (settings["mathMode"] != "srgb" && settings["mathMode"] != "oklab") {
+		Log::WriteOneLine("Invalid mathMode: " + settings["distanceMode"]);
+		invalidType = true;
+	}
+
+	if (invalidType) {
 		Log::Save();
 		Log::HoldConsole();
 		return -1;
@@ -129,19 +145,28 @@ int main(int argc, char* argv[]) {
 		Dither::OrderedDither(image, palette, settings["distanceMode"], settings["mathMode"]);
 	} else if (settings["ditherType"] == "fs") {
 		Dither::FloydDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+	} else {
+		Dither::NoDither(image, palette, settings["distanceMode"]);
 	}
 
-	
 
 	// ===== Generate Output Path =====
 
 	const std::string folder = NoExtension(imageLoc);
 	std::filesystem::create_directories(folder);
 
-	const std::string outputLoc = folder + "\\" +
-		(std::string)settings["ditherType"] + "-" + 
-		(std::string)settings["distanceMode"] + "-" +
-		(std::string)settings["mathMode"] + ".png";
+	std::string outputLoc;
+
+	if (settings["ditherType"] == "none") {
+		outputLoc = folder + "\\" +
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + ".png";
+	} else {
+		outputLoc = folder + "\\" +
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + "-" +
+			(std::string)settings["mathMode"] + ".png";
+	}
 
 	image.Write(outputLoc.c_str());
 

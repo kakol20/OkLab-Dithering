@@ -23,6 +23,8 @@ public:
 	/// <param name="distanceType"></param>
 	static void FloydDither(Image& image, const Palette& palette, const std::string distanceType = "oklab", const std::string mathMode = "srgb");
 
+	static void NoDither(Image& image, const Palette& palette, const std::string distanceType = "oklab");
+
 private:
 	static std::array<uint8_t, 256> m_bayer16;
 

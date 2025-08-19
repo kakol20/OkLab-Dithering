@@ -1,7 +1,7 @@
 {
   "grayscale": false,
   "dist_lightness": false,
-  "ditherType": "fs",
+  "ditherType": "none",
   "distanceMode": "oklab",
-  "mathMode": "oklab"
+  "mathMode": "srgb"
 }

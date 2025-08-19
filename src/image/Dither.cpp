@@ -190,6 +190,48 @@ void Dither::FloydDither(Image& image, const Palette& palette, const std::string
 	}
 }
 
+void Dither::NoDither(Image& image, const Palette& palette, const std::string distanceType) {
+	const int imgWidth = image.GetWidth();
+	const int imgHeight = image.GetHeight();
+
+	Log::StartTime();
+	Log::WriteOneLine("No Dither...");
+	for (int x = 0; x < imgWidth; x++) {
+		for (int y = 0; y < imgHeight; y++) {
+			const size_t index = image.GetIndex(x, y);
+			Colour pixel = Colour::FromsRGB(image.GetData(index + 0),
+				image.GetData(index + 1),
+				image.GetData(index + 2));
+
+			if (distanceType == "oklab") {
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			}
+
+			pixel = ClosestColour(pixel, palette);
+			Colour::sRGB_UInt pixel_int = pixel.GetsRGB_UInt();
+
+			image.SetData(index + 0, pixel_int.r);
+			image.SetData(index + 1, pixel_int.g);
+			image.SetData(index + 2, pixel_int.b);
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				double progress = double(image.GetIndex(x, y)) / double(image.GetSize());
+				progress *= 100.;
+
+				std::string outStr = Log::ToString(progress, 6);
+				outStr = Log::LeadingCharacter(outStr, 9);
+
+				Log::WriteOneLine("\t" + outStr + "%");
+
+				Log::StartTime();
+			}
+		}
+	}
+}
+
 Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
 	Colour closest = palette.GetIndex(0);
 
