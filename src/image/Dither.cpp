@@ -21,7 +21,7 @@ std::array<uint8_t, 256> Dither::m_bayer16 {
 	 170, 106, 154,  90, 166, 102, 150,  86, 169, 105, 153,  89, 165, 101, 149,  85
 };
 
-bool Dither::OrderedDither(Image& image, const Palette& palette) {
+bool Dither::OrderedDither(Image& image, const Palette& palette, const std::string distanceType) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
@@ -58,7 +58,11 @@ bool Dither::OrderedDither(Image& image, const Palette& palette) {
 				dithered.UpdatesRGB();
 			}
 
-			Colour::SetMathMode(Colour::MathMode::OkLab);
+			if (distanceType == "oklab") {
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			}
 			Colour nearest = ClosestColour(dithered, palette);
 			Colour::sRGB_UInt nearest_int = nearest.GetsRGB_UInt();
 

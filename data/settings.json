@@ -2,5 +2,6 @@
   "dither": true,
   "grayscale": false,
   "dist_lightness": false,
-  "ordered_dither":  true
+  "ditherType": "ordered",
+  "distanceMode": "OkLab"
 }

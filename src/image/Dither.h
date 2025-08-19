@@ -14,7 +14,7 @@ public:
 	/// <param name="image"></param>
 	/// <param name="palette"></param>
 	/// <returns>Success</returns>
-	static bool OrderedDither(Image& image, const Palette& palette);
+	static bool OrderedDither(Image& image, const Palette& palette, const std::string distanceType = "ordered");
 
 private:
 	static std::array<uint8_t, 256> m_bayer16;

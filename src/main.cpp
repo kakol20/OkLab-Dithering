@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 
 #include "../ext/json/json.hpp"
@@ -32,7 +34,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/suzanne.png";
+	std::string imageLoc = "data/test.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -56,19 +58,28 @@ int main(int argc, char* argv[]) {
 	// ========== GET SETTINGS ==========
 
 	Log::WriteOneLine("===== GETTING SETINGS =====");
-	std::array<std::string, 4> required = {
-		"dither",
-		"grayscale",
-		"dist_lightness",
-		"ordered_dither"
+	std::map<std::string, json::value_t> required = {
+		{ "dither", json::value_t::boolean },
+		{ "grayscale", json::value_t::boolean },
+		{ "dist_lightness", json::value_t::boolean },
+		{ "ditherType", json::value_t::string },
+		{ "distanceMode", json::value_t::string },
 	};
 	bool allFound = true;
-	for (const auto& key : required) {
-		if (!settings.contains(key)) {
-			Log::WriteOneLine("JSON setting not found: " + key);
+	for (auto it = required.begin(); it != required.end(); it++) {
+		if (!settings.contains(it->first)) {
+			Log::WriteOneLine("JSON setting not found: " + it->first);
 			allFound = false;
-		} else {
-			Log::WriteOneLine(key + ": " + Log::ToString((bool)settings[key]));
+		} else if (settings[it->first].type() != it->second) {
+			Log::WriteOneLine("Wrong value type: " + it->first);
+			allFound = false;
+		} else if (it->second == json::value_t::boolean) {
+			Log::WriteOneLine(it->first + ": " + Log::ToString((bool)settings[it->first]));
+		} else if (it->second == json::value_t::string) {
+			std::string value = settings[it->first];
+			std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+			settings[it->first] = value;
+			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
 		}
 	}
 
@@ -101,14 +112,14 @@ int main(int argc, char* argv[]) {
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
 
-	Dither::OrderedDither(image, palette);
+	Dither::OrderedDither(image, palette, (std::string)settings["distanceMode"]);
 
 	// ===== Generate Output Path =====
-	
+
 	const std::string outputLoc = NoExtension(imageLoc) + "_out.png";
 
 	image.Write(outputLoc.c_str());
-	
+
 	Log::Save();
 	Log::HoldConsole();
 	return 0;
