@@ -22,6 +22,7 @@ using json = nlohmann::json;
 //const double Maths::RadToDeg = 180. / Maths::Pi;
 //const double Maths::DegToRad = Maths::Pi / 180.;
 
+std::string Extension(const std::string loc);
 std::string NoExtension(const std::string loc);
 
 int main(int argc, char* argv[]) {
@@ -53,7 +54,54 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 #else
-	// TODO: add
+	if (argc < 4) {
+		Log::WriteOneLine("Drag and drop an image file, a .palette file and a .json file");
+		Log::WriteOneLine("Note: Only PNG, JPG, BMP or TGA image files are supported");
+
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
+
+	json settings;
+	std::string paletteLocStr;
+	std::string imageLoc;
+	for (int i = 0; i < argc; i++) {
+		Log::WriteOneLine(argv[i]);
+		std::string extension = Extension(argv[i]);
+
+		if (extension == ".exe") {
+			continue;
+		} else if (extension == ".json") {
+			std::ifstream settingsLoc(argv[i]);
+			if (!(settingsLoc)) {
+				Log::WriteOneLine("JSON not found");
+				Log::Save();
+				Log::HoldConsole();
+				return -1;
+			}
+			settings = json::parse(settingsLoc);
+		} else if (extension == ".palette") {
+			paletteLocStr = argv[i];
+			std::ifstream paletteLoc(paletteLocStr);
+			if (!(paletteLoc)) {
+				Log::WriteOneLine("Palette not found");
+				Log::Save();
+				Log::HoldConsole();
+				return -1;
+			}
+		} else {
+			imageLoc = argv[i];
+			Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
+			if (imageType == Image::ImageType::NA) {
+				Log::WriteOneLine("Image not found");
+				Log::Save();
+				Log::HoldConsole();
+				return -1;
+			}
+		}
+	}
+	Log::EndLine();
 #endif // _DEBUG
 
 	// ========== GET SETTINGS ==========
@@ -173,6 +221,11 @@ int main(int argc, char* argv[]) {
 	Log::Save();
 	//Log::HoldConsole();
 	return 0;
+}
+
+std::string Extension(const std::string loc) {
+	std::filesystem::path p = loc;
+	return p.extension().string();
 }
 
 std::string NoExtension(const std::string loc) {
