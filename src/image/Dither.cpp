@@ -42,7 +42,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 				Colour::SetMathMode(Colour::MathMode::sRGB);
 			}
 
-			double threshold = (double)m_bayer16[BayerIndex(x % 16, y % 16)];
+			double threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16)];
 			threshold = ((threshold + 0.5) / 256.) - 0.5;
 
 			Colour threshold_c;
