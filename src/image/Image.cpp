@@ -174,3 +174,15 @@ void Image::Clear() {
 		m_data[i] = 0;
 	}
 }
+
+void Image::HideSemiTransparent(const int threshold) {
+	if (m_channels == 2 || m_channels == 4) {
+		for (size_t i = (size_t)m_channels - 1; i < m_size; i += m_channels) {
+			if (m_data[i] < threshold) {
+				m_data[i] = 0;
+			} else {
+				m_data[i] = 255;
+			}
+		}
+	}
+}

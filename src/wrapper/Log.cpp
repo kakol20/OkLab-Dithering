@@ -119,6 +119,27 @@ std::string Log::ToString(const double value, const unsigned int precision) {
 	return out.str();
 }
 
+std::string Log::ToString(const int value, const unsigned int precision, const char lead) {
+	const bool isNegative = value < 0;
+	
+	std::string out = std::to_string(std::abs(value));
+
+	if (precision > 0) {
+		const int delta = (int)precision - (int)out.size();
+
+		if (delta >= 1) {
+			std::string leading = "";
+			for (int i = 0; i < delta; ++i) {
+				leading += lead;
+			}
+
+			out = leading + out;
+		}
+	}
+
+	return isNegative ? '-' + out : ' ' + out;
+}
+
 std::string Log::ToString(const size_t value, const unsigned int precision, const char lead) {
 	std::string out = std::to_string(value);
 

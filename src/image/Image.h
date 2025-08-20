@@ -45,6 +45,8 @@ public:
 	/// </summary>
 	void Clear();
 
+	void HideSemiTransparent(const int threshold = 128);
+
 private:
 	uint8_t* m_data;
 	size_t m_size = 0;

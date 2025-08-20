@@ -1,7 +1,7 @@
 {
-  "grayscale": false,
-  "dist_lightness": false,
-  "ditherType": "none",
+  "ditherType": "ordered",
   "distanceMode": "oklab",
-  "mathMode": "srgb"
+  "mathMode": "srgb",
+  "hideSemiTransparent": true,
+  "hideThreshold": 255
 }

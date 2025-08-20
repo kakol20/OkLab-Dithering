@@ -9,18 +9,13 @@ Comments in settings.json not supported
 
 ```json
 {
-  "grayscale": false,
-  "dist_lightness": false,
   "ditherType": "ordered",
-  "distanceMode": "srgb",
-  "mathMode": "srgb"
+  "distanceMode": "oklab",
+  "mathMode": "srgb",
+  "hideSemiTransparent": true,
+  "hideThreshold": 255
 }
 ```
-#### `grayscale`
-`true` or `false`
-
-#### `dist_lightness`
-`true` or `false`
 
 #### `ditherType`
 `ordered` or `bayer` for ordered dithering  
@@ -29,6 +24,12 @@ Comments in settings.json not supported
 
 #### `distanceMode` and `mathMode`
 `srgb` or `oklab`
+
+#### `hideSemiTransparent`
+`true` or `false`
+
+#### `hideThreshold`
+An unsigned integer between `0` and `255`  
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
