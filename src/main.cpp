@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 	json settings;
 	std::string paletteLocStr;
 	std::string imageLoc;
-	for (int i = 0; i < argc; i++) {
+	for (int i = 0; i < argc; ++i) {
 		Log::WriteOneLine(argv[i]);
 		std::string extension = Extension(argv[i]);
 
@@ -108,14 +108,16 @@ int main(int argc, char* argv[]) {
 
 	Log::WriteOneLine("===== GETTING SETINGS =====");
 	std::unordered_map<std::string, json::value_t> required = {
-		{ "grayscale", json::value_t::boolean },
-		{ "dist_lightness", json::value_t::boolean },
+		//{ "grayscale", json::value_t::boolean },
+		//{ "dist_lightness", json::value_t::boolean },
 		{ "ditherType", json::value_t::string },
 		{ "distanceMode", json::value_t::string },
 		{ "mathMode", json::value_t::string },
+		{ "hideSemiTransparent", json::value_t::boolean },
+		{ "hideThreshold", json::value_t::number_unsigned }
 	};
 	bool allFound = true;
-	for (auto it = required.begin(); it != required.end(); it++) {
+	for (auto it = required.begin(); it != required.end(); ++it) {
 		if (!settings.contains(it->first)) {
 			Log::WriteOneLine("JSON setting not found: " + it->first);
 			allFound = false;
@@ -129,6 +131,8 @@ int main(int argc, char* argv[]) {
 			std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 			settings[it->first] = value;
 			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
+		} else if (it->second == json::value_t::number_unsigned) {
+			Log::WriteOneLine(it->first + ": " + Log::ToString((unsigned int)settings[it->first]));
 		}
 	}
 
@@ -177,6 +181,9 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
+
+	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
 
 	// ========== GET PALETTE ==========
 
@@ -220,6 +227,7 @@ int main(int argc, char* argv[]) {
 
 	Log::Save();
 	//Log::HoldConsole();
+	Log::Sound(2);
 	return 0;
 }
 

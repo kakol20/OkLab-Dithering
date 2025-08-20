@@ -126,6 +126,8 @@ private:
 
 	double m_alpha;
 
+	bool m_isGrayscale;
+
 	//static OkLab sRGBtoOkLab(const sRGB val);
 
 	static MathMode m_mathMode;
@@ -136,6 +138,8 @@ public:
 	sRGB GetsRGB() const { return m_srgb; };
 	OkLab GetOkLab() const { return m_oklab; };
 	sRGB_UInt GetsRGB_UInt() const;
+
+	bool IsGrayscale() const { return m_isGrayscale; };
 
 	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
