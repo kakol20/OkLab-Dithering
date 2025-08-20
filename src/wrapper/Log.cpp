@@ -127,7 +127,7 @@ std::string Log::ToString(const size_t value, const unsigned int precision, cons
 
 		if (delta >= 1) {
 			std::string leading = "";
-			for (int i = 0; i < delta; i++) {
+			for (int i = 0; i < delta; ++i) {
 				leading += lead;
 			}
 
@@ -146,7 +146,7 @@ std::string Log::ToString(const unsigned int value, const unsigned int precision
 
 		if (delta >= 1) {
 			std::string leading = "";
-			for (int i = 0; i < delta; i++) {
+			for (int i = 0; i < delta; ++i) {
 				leading += lead;
 			}
 
@@ -164,7 +164,7 @@ std::string Log::LeadingCharacter(const std::string value, const unsigned int am
 
 		if (delta >= 1) {
 			std::string leading = "";
-			for (int i = 0; i < delta; i++) {
+			for (int i = 0; i < delta; ++i) {
 				leading += lead;
 			}
 

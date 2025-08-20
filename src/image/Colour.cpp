@@ -369,7 +369,7 @@ void Colour::OkLabFallback() {
 		};
 
 	double lo = 0., hi = lch.c;
-	for (int i = 0; i < maxIter; i++) {
+	for (int i = 0; i < maxIter; ++i) {
 		double mid = 0.5 * (lo + hi);
 		OkLab test = LChToLab({ lch.l, mid, lch.h });
 

@@ -28,8 +28,8 @@ void Dither::OrderedDither(Image& image, const Palette& palette, const std::stri
 	Log::StartTime();
 
 	Log::WriteOneLine("Ordered Dither...");
-	for (int x = 0; x < imgWidth; x++) {
-		for (int y = 0; y < imgHeight; y++) {
+	for (int x = 0; x < imgWidth; ++x) {
+		for (int y = 0; y < imgHeight; ++y) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = Colour::FromsRGB(image.GetData(index + 0),
 				image.GetData(index + 1),
@@ -96,8 +96,8 @@ void Dither::FloydDither(Image& image, const Palette& palette, const std::string
 	Log::StartTime();
 	Log::WriteOneLine("Floyd-Steinberg Dither...");
 
-	for (int y = 0; y < imgHeight; y++) {
-		for (int x = 0; x < imgWidth; x++) {
+	for (int y = 0; y < imgHeight; ++y) {
+		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = Colour::FromsRGB(image.GetData(index + 0),
 				image.GetData(index + 1),
@@ -121,8 +121,8 @@ void Dither::FloydDither(Image& image, const Palette& palette, const std::string
 	}
 
 	// Dither
-	for (int y = 0; y < imgHeight; y++) {
-		for (int x = 0; x < imgWidth; x++) {
+	for (int y = 0; y < imgHeight; ++y) {
+		for (int x = 0; x < imgWidth; ++x) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
@@ -196,8 +196,8 @@ void Dither::NoDither(Image& image, const Palette& palette, const std::string di
 
 	Log::StartTime();
 	Log::WriteOneLine("No Dither...");
-	for (int x = 0; x < imgWidth; x++) {
-		for (int y = 0; y < imgHeight; y++) {
+	for (int x = 0; x < imgWidth; ++x) {
+		for (int y = 0; y < imgHeight; ++y) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = Colour::FromsRGB(image.GetData(index + 0),
 				image.GetData(index + 1),
@@ -239,7 +239,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
 
 	double closestDist = col.MagSq(closest);
 
-	for (size_t i = 1; i < palette.size(); i++) {
+	for (size_t i = 1; i < palette.size(); ++i) {
 		const Colour current = palette.GetIndex(i);
 		double dist = col.MagSq(current);
 

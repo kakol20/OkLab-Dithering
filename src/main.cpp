@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 	json settings;
 	std::string paletteLocStr;
 	std::string imageLoc;
-	for (int i = 0; i < argc; i++) {
+	for (int i = 0; i < argc; ++i) {
 		Log::WriteOneLine(argv[i]);
 		std::string extension = Extension(argv[i]);
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 		{ "mathMode", json::value_t::string },
 	};
 	bool allFound = true;
-	for (auto it = required.begin(); it != required.end(); it++) {
+	for (auto it = required.begin(); it != required.end(); ++it) {
 		if (!settings.contains(it->first)) {
 			Log::WriteOneLine("JSON setting not found: " + it->first);
 			allFound = false;

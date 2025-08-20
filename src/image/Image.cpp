@@ -170,7 +170,7 @@ size_t Image::GetIndex_s(const int x, const int y, const int width, const int ch
 }
 
 void Image::Clear() {
-	for (size_t i = 0; i < m_size; i++) {
+	for (size_t i = 0; i < m_size; ++i) {
 		m_data[i] = 0;
 	}
 }
