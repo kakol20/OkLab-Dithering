@@ -30,6 +30,9 @@ private:
 
 	static inline size_t MatrixIndex(const int x, const int y) { return size_t(x + y * 16); };
 
-	static Colour ClosestColour(const Colour& col, const Palette& palette);
+	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
+
+	static Colour GetColourFromImage(const Image& image, const int x, const int y);
+	static void SetColourToImage(const Colour& colour, Image& image, const int x, const int y);
 };
 

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/suzanne.png";
+	std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
 
@@ -226,6 +227,7 @@ int main(int argc, char* argv[]) {
 
 	Log::Save();
 	//Log::HoldConsole();
+	Log::Sound(2);
 	return 0;
 }
 

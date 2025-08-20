@@ -9,12 +9,14 @@ Colour::Colour() {
 	m_srgb = { 0, 0, 0 };
 	m_oklab = { 0., 0., 0. };
 	m_alpha = 1.;
+	m_isGrayscale = false;
 }
 
 Colour::Colour(const Colour& other) {
 	m_srgb = other.m_srgb;
 	m_oklab = other.m_oklab;
 	m_alpha = other.m_alpha;
+	m_isGrayscale = other.m_isGrayscale;
 }
 
 Colour::~Colour() {
@@ -25,6 +27,7 @@ Colour& Colour::operator=(const Colour& other) {
 	m_srgb = other.m_srgb;
 	m_oklab = other.m_oklab;
 	m_alpha = other.m_alpha;
+	m_isGrayscale = other.m_isGrayscale;
 	return *this;
 }
 
@@ -34,6 +37,7 @@ void Colour::UpdateOkLab() {
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
+		m_isGrayscale = true;
 
 		double l = m_srgb.r;
 
@@ -46,6 +50,7 @@ void Colour::UpdateOkLab() {
 		// can skip "to OkLab" conversion
 		m_oklab = { l, 0., 0. };
 	} else {
+		m_isGrayscale = false;
 		double l1 = m_srgb.r;
 		double a1 = m_srgb.g;
 		double b1 = m_srgb.b;
@@ -79,8 +84,9 @@ void Colour::UpdatesRGB() {
 	const double scalar = 387916. / 30017.;
 	const double limit = 285. / 93752.;
 
-	if (m_oklab.a == 0 && m_oklab.b == 0) {
+	if (m_oklab.a == 0. && m_oklab.b == 0.) {
 		// if graycale - can skip some conversions
+		m_isGrayscale = true;
 
 		double r = m_oklab.l;
 
@@ -93,6 +99,8 @@ void Colour::UpdatesRGB() {
 
 		m_srgb = { r, r, r };
 	} else {
+		m_isGrayscale = false;
+
 		double r1 = m_oklab.l;
 		double g1 = m_oklab.a;
 		double b1 = m_oklab.b;

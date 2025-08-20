@@ -47,6 +47,8 @@ public:
 
 	void HideSemiTransparent(const int threshold = 128);
 
+	inline bool IsGrayscale() const { return m_channels <= 2; };
+
 private:
 	uint8_t* m_data;
 	size_t m_size = 0;
