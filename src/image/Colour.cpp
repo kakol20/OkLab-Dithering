@@ -32,8 +32,8 @@ Colour& Colour::operator=(const Colour& other) {
 }
 
 void Colour::UpdateOkLab() {
-	const double scalar = 387916. / 30017.;
-	const double limit = 11. / 280.;
+	const double scalar = 12.923210180787859;
+	const double limit = 0.039285714285714306;
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
@@ -81,8 +81,8 @@ void Colour::UpdateOkLab() {
 }
 
 void Colour::UpdatesRGB() {
-	const double scalar = 387916. / 30017.;
-	const double limit = 285. / 93752.;
+	const double scalar = 12.923210180787859;
+	const double limit = 0.0030399346397784323;
 
 	if (m_oklab.a == 0. && m_oklab.b == 0.) {
 		// if graycale - can skip some conversions
@@ -117,7 +117,7 @@ void Colour::UpdatesRGB() {
 		b1 = b2 * b2 * b2;
 
 		// to Linear RGB
-		r2 = 4.076741661667 * r1 - 3.307711590572 * g1 + 0.230969928905 * b1;
+		r2 =  4.076741661667 * r1 - 3.307711590572 * g1 + 0.230969928905 * b1;
 		g2 = -1.268438004344 * r1 + 2.609757400792 * g1 - 0.341319396448 * b1;
 		b2 = -0.004196086474 * r1 - 0.703418614494 * g1 + 1.707614700968 * b1;
 
