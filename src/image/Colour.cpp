@@ -32,8 +32,8 @@ Colour& Colour::operator=(const Colour& other) {
 }
 
 void Colour::UpdateOkLab() {
-	const double scalar = 12.923210180787859;
-	const double limit = 0.039285714285714306;
+	const double scalar = 12.92;
+	const double limit = 0.04045;
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
@@ -81,8 +81,8 @@ void Colour::UpdateOkLab() {
 }
 
 void Colour::UpdatesRGB() {
-	const double scalar = 12.923210180787859;
-	const double limit = 0.0030399346397784323;
+	const double scalar = 12.92;
+	const double limit = 0.0031308;
 
 	if (m_oklab.a == 0. && m_oklab.b == 0.) {
 		// if graycale - can skip some conversions
