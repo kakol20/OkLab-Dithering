@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 	}
 	json settings = json::parse(settingsLoc);
 
-	std::string imageLoc = "data/rubik.png";
+	std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -114,7 +114,8 @@ int main(int argc, char* argv[]) {
 		{ "distanceMode", json::value_t::string },
 		{ "mathMode", json::value_t::string },
 		{ "hideSemiTransparent", json::value_t::boolean },
-		{ "hideThreshold", json::value_t::number_unsigned }
+		{ "hideThreshold", json::value_t::number_unsigned },
+		{ "mono", json::value_t::boolean }
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
@@ -170,6 +171,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
+
 	// ========== GET IMAGE ==========
 
 	Log::EndLine();
@@ -197,13 +200,12 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== DITHERING =====");
 
 	if (settings["ditherType"] == "ordered") {
-		Dither::OrderedDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
-		Dither::FloydDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+		Dither::FloydDither(image, palette);
 	} else {
-		Dither::NoDither(image, palette, settings["distanceMode"]);
+		Dither::NoDither(image, palette);
 	}
-
 
 	// ===== Generate Output Path =====
 

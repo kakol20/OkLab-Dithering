@@ -3,5 +3,6 @@
   "distanceMode": "oklab",
   "mathMode": "srgb",
   "hideSemiTransparent": true,
-  "hideThreshold": 255
+  "hideThreshold": 255,
+  "mono": true
 }

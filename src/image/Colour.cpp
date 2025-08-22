@@ -19,6 +19,18 @@ Colour::Colour(const Colour& other) {
 	m_isGrayscale = other.m_isGrayscale;
 }
 
+Colour::Colour(const double l, const double a, const double b, const double alpha) {
+	SetOkLab(l, a, b, alpha);
+}
+
+Colour::Colour(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+	SetsRGB(r, g, b);
+}
+
+Colour::Colour(const char* hex) {
+	SetHex(hex);
+}
+
 Colour::~Colour() {
 }
 
@@ -139,44 +151,24 @@ void Colour::Update() {
 }
 
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	Colour out;
-
-	out.m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
-	out.m_alpha = (double)a / 255.;
-
-	out.UpdateOkLab();
+	Colour out(r, g, b, a);
 	return out;
 }
 
 Colour Colour::FromsRGB_D(const double r, const double g, const double b, const double a) {
 	Colour out;
-	out.m_srgb = { r, g, b };
-	out.m_alpha = a;
-	out.UpdateOkLab();
+	out.SetsRGB_D(r, g, b);
 	return out;
 }
 
 Colour Colour::FromOkLab(const double l, const double a, const double b, const double alpha) {
-	Colour out;
-
-	out.m_oklab = { l, a, b };
-	out.m_alpha = alpha;
-
-	out.UpdatesRGB();
+	Colour out(l, a, b);
 	return out;
 }
 
 Colour Colour::FromHex(const char* hex) {
-	const unsigned int hexInt = std::stoi(hex, 0, 16);
-
-	const unsigned int rMask = 0xFF0000;
-	const unsigned int gMask = 0x00FF00;
-	const unsigned int bMask = 0x0000FF;
-
-	const uint8_t r = uint8_t((hexInt & rMask) >> 16);
-	const uint8_t g = uint8_t((hexInt & gMask) >> 8);
-	const uint8_t b = uint8_t(hexInt & bMask);
-	return FromsRGB(r, g, b, 255);
+	Colour out(hex);
+	return out;
 }
 
 void Colour::Clamp() {
@@ -417,6 +409,19 @@ void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const ui
 	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;
 
+	m_isGrayscale = false;
+	if (r == g && r == b) m_isGrayscale = true;
+
+	UpdateOkLab();
+}
+
+void Colour::SetsRGB_D(const double r, const double g, const double b, const double a) {
+	m_srgb = { r, g, b };
+	m_alpha = a;
+
+	m_isGrayscale = false;
+	if (r == g && r == b) m_isGrayscale = true;
+
 	UpdateOkLab();
 }
 
@@ -424,5 +429,21 @@ void Colour::SetOkLab(const double l, const double a, const double b, const doub
 	m_alpha = alpha;
 	m_oklab = { l, a, b };
 
+	m_isGrayscale = false;
+	if (a == 0. && b == 0.) m_isGrayscale = true;
+
 	UpdatesRGB();
+}
+
+void Colour::SetHex(const char* hex) {
+	const unsigned int hexInt = std::stoi(hex, 0, 16);
+
+	const unsigned int rMask = 0xFF0000;
+	const unsigned int gMask = 0x00FF00;
+	const unsigned int bMask = 0x0000FF;
+
+	const uint8_t r = uint8_t((hexInt & rMask) >> 16);
+	const uint8_t g = uint8_t((hexInt & gMask) >> 8);
+	const uint8_t b = uint8_t(hexInt & bMask);
+	SetsRGB(r, g, b);
 }

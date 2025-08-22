@@ -5,6 +5,9 @@ class Colour {
 public:
 	Colour();
 	Colour(const Colour& other);
+	Colour(const double l, const double a, const double b, const double alpha = 1.);
+	Colour(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
+	Colour(const char* hex);
 	~Colour();
 
 	Colour& operator=(const Colour& other);
@@ -141,7 +144,10 @@ public:
 
 	bool IsGrayscale() const { return m_isGrayscale; };
 
-	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
+	void SetHex(const char* hex);
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
+	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
+	void SetsRGB_D(const double r, const double g, const double b, const double a = 1.);
+
 };
 
