@@ -130,7 +130,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
 			}
-			Colour newPixel = ClosestColour(oldPixel, palette);
+			Colour newPixel = ClosestColour(oldPixel, palette, image.IsGrayscale());
 
 			SetColourToImage(newPixel, image, x, y);
 
@@ -203,7 +203,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
 			}
 
-			pixel = ClosestColour(pixel, palette);
+			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
 
 			SetColourToImage(pixel, image, x, y);
 

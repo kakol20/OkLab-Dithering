@@ -171,8 +171,6 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
-
 	// ========== GET IMAGE ==========
 
 	Log::EndLine();
@@ -196,6 +194,8 @@ int main(int argc, char* argv[]) {
 
 	// ========== DITHERING ==========
 
+	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
+
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
 
@@ -214,22 +214,28 @@ int main(int argc, char* argv[]) {
 
 	std::string outputLoc;
 
-	if (settings["ditherType"] == "none") {
+	if (settings["mono"]) {
 		outputLoc = folder + "\\" +
 			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + ".png";
+			(std::string)settings["mathMode"] + "_mono.png";
 	} else {
-		outputLoc = folder + "\\" +
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + "-" +
-			(std::string)settings["mathMode"] + ".png";
+		if (settings["ditherType"] == "none") {
+			outputLoc = folder + "\\" +
+				(std::string)settings["ditherType"] + "-" +
+				(std::string)settings["distanceMode"] + ".png";
+		} else {
+			outputLoc = folder + "\\" +
+				(std::string)settings["ditherType"] + "-" +
+				(std::string)settings["distanceMode"] + "-" +
+				(std::string)settings["mathMode"] + ".png";
+		}
 	}
 
 	image.Write(outputLoc.c_str());
 
 	Log::Save();
 	//Log::HoldConsole();
-	Log::Sound(2);
+	Log::Sound(1);
 	return 0;
 }
 

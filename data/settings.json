@@ -1,8 +1,8 @@
 {
-  "ditherType": "ordered",
-  "distanceMode": "oklab",
+  "ditherType": "none",
+  "distanceMode": "srgb",
   "mathMode": "srgb",
   "hideSemiTransparent": true,
   "hideThreshold": 255,
-  "mono": true
+  "mono": false
 }
