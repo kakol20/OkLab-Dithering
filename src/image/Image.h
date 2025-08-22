@@ -49,6 +49,11 @@ public:
 
 	inline bool IsGrayscale() const { return m_channels <= 2; };
 
+	/// <summary>
+	/// Converts grayscale to 
+	/// </summary>
+	void ToRGB();
+
 private:
 	uint8_t* m_data;
 	size_t m_size = 0;

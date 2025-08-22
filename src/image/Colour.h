@@ -123,6 +123,17 @@ public:
 	/// </returns>
 	double MagSq(const Colour& other) const;
 
+	/// <summary>
+	/// Calculates distance based on lightness
+	/// </summary>
+	/// <param name="other"></param>
+	/// <returns></returns>
+	double MonoDistance(const Colour& other, const double min = 0., const double max = 1.) const;
+
+	double MonoGetLightness() const;
+
+	void ToGrayscale();
+
 private:
 	sRGB m_srgb;
 	OkLab m_oklab;

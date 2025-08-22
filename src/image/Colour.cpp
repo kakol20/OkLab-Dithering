@@ -343,6 +343,32 @@ double Colour::MagSq(const Colour& other) const {
 	return 0.0;
 }
 
+double Colour::MonoDistance(const Colour& other, const double min, const double max) const {
+	// Normalise other colour
+	double otherL = (other.MonoGetLightness() - min) / (max - min);
+	return std::abs(MonoGetLightness() - otherL);
+}
+
+double Colour::MonoGetLightness() const {
+	if (m_mathMode == MathMode::sRGB) {
+		return 0.2126 * m_srgb.r + 0.7152 * m_srgb.g + 0.0722 * m_srgb.b;
+	} else {
+		return m_oklab.l;
+	}
+}
+
+void Colour::ToGrayscale() {
+	if (m_mathMode == MathMode::sRGB) {
+		double l = MonoGetLightness();
+		m_srgb = { l, l, l };
+		UpdateOkLab();
+	} else {
+		m_oklab.a = 0.;
+		m_oklab.b = 0.;
+		UpdatesRGB();
+	}
+}
+
 void Colour::OkLabFallback() {
 	const int maxIter = 12;
 	struct LCH { double l, c, h; };

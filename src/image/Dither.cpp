@@ -36,6 +36,8 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = GetColourFromImage(image, x, y);
+			
+			if (m_mono) pixel.ToGrayscale();
 
 			// ===== APPLY DITHER =====
 			if (m_mathMode == "oklab") {
@@ -99,6 +101,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = GetColourFromImage(image, x, y);
+			pixel.ToGrayscale();
 
 			colours.push_back(pixel);
 
@@ -197,6 +200,8 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = GetColourFromImage(image, x, y);
 
+			if (m_mono) pixel.ToGrayscale();
+
 			if (m_distanceType == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab);
 			} else {
@@ -232,8 +237,21 @@ void Dither::SetSettings(const std::string distanceType, const std::string mathM
 Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bool grayscale) {
 	Colour closest = Colour::FromsRGB(0, 0, 0, 0);
 
+	double min = 0., max = 1.;
+
+	if (m_mono) {
+		// get darkest and lightest colour in palette
+		min = palette.GetIndex(0).MonoGetLightness();
+		max = min;
+		for (size_t i = 1; i < palette.size(); ++i) {
+			const double l = palette.GetIndex(i).MonoGetLightness();
+			min = l < min ? l : min;
+			max = l > max ? l : max;
+		}
+	}
+
 	size_t startI = 0;
-	if (grayscale) {
+	if (grayscale && !m_mono) {
 		// if grayscale == true - first find earliest grayscale colour
 		for (size_t i = 0; i < palette.size(); ++i) {
 			++startI;
@@ -249,7 +267,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 
 	if (palette.size() == startI) return closest;
 
-	double closestDist = col.MagSq(closest);
+	double closestDist = m_mono ? col.MonoDistance(closest, min, max) : col.MagSq(closest);
 
 	for (size_t i = startI; i < palette.size(); ++i) {
 		const Colour current = palette.GetIndex(i);
@@ -257,7 +275,8 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 		// When grayscale == true - only check grayscale colours
 		// When grayscale == false - check all colours
 		if ((grayscale && current.IsGrayscale()) || (!grayscale)) {
-			double dist = col.MagSq(current);
+			//double dist = col.MagSq(current);
+			double dist = m_mono ? col.MonoDistance(current, min, max) : col.MagSq(current);
 
 			if (dist < closestDist) {
 				closestDist = dist;

@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/gameboy.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -182,6 +182,7 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	image.ToRGB();
 	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
@@ -212,23 +213,27 @@ int main(int argc, char* argv[]) {
 	const std::string folder = NoExtension(imageLoc);
 	std::filesystem::create_directories(folder);
 
-	std::string outputLoc;
+	std::string outputLoc = folder + '\\';
 
-	if (settings["mono"]) {
-		outputLoc = folder + "\\" +
+	/*if (settings["mono"]) {
+		outputLoc = folder + "\\mono-" +
 			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["mathMode"] + "_mono.png";
+			(std::string)settings["distanceMode"] + ".png";
 	} else {
-		if (settings["ditherType"] == "none") {
-			outputLoc = folder + "\\" +
-				(std::string)settings["ditherType"] + "-" +
-				(std::string)settings["distanceMode"] + ".png";
-		} else {
-			outputLoc = folder + "\\" +
-				(std::string)settings["ditherType"] + "-" +
-				(std::string)settings["distanceMode"] + "-" +
-				(std::string)settings["mathMode"] + ".png";
-		}
+		
+	}*/
+
+	if (settings["mono"]) outputLoc += "mono-";
+
+	if (settings["ditherType"] == "none") {
+		outputLoc +=
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + ".png";
+	} else {
+		outputLoc +=
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + "-" +
+			(std::string)settings["mathMode"] + ".png";
 	}
 
 	image.Write(outputLoc.c_str());
