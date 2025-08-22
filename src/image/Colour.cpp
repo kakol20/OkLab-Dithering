@@ -19,6 +19,18 @@ Colour::Colour(const Colour& other) {
 	m_isGrayscale = other.m_isGrayscale;
 }
 
+Colour::Colour(const double l, const double a, const double b, const double alpha) {
+	SetOkLab(l, a, b, alpha);
+}
+
+Colour::Colour(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+	SetsRGB(r, g, b);
+}
+
+Colour::Colour(const char* hex) {
+	SetHex(hex);
+}
+
 Colour::~Colour() {
 }
 
@@ -32,8 +44,8 @@ Colour& Colour::operator=(const Colour& other) {
 }
 
 void Colour::UpdateOkLab() {
-	const double scalar = 387916. / 30017.;
-	const double limit = 11. / 280.;
+	const double scalar = 12.92;
+	const double limit = 0.04045;
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
@@ -62,9 +74,9 @@ void Colour::UpdateOkLab() {
 
 		// to Linear LMS
 
-		double l2 = 0.412221470800 * l1 + 0.536332536300 * a1 + 0.051445992900 * b1;
-		double a2 = 0.211903498234 * l1 + 0.680699545133 * a1 + 0.107396956633 * b1;
-		double b2 = 0.088302461900 * l1 + 0.281718837600 * a1 + 0.629978700500 * b1;
+		double l2 = 0.4122214708 * l1 + 0.5363325363 * a1 + 0.0514459929 * b1;
+		double a2 = 0.2119034982 * l1 + 0.6806995451 * a1 + 0.1073969566 * b1;
+		double b2 = 0.0883024619 * l1 + 0.2817188376 * a1 + 0.6299787005 * b1;
 
 		// to LMS
 		l1 = std::cbrt(l2);
@@ -72,17 +84,17 @@ void Colour::UpdateOkLab() {
 		b1 = std::cbrt(b2);
 
 		// to OkLab
-		l2 = 0.210454257467 * l1 + 0.793617787167 * a1 - 0.004072044634 * b1;
-		a2 = 1.977998495100 * l1 - 2.428592205000 * a1 + 0.450593709900 * b1;
-		b2 = 0.025904024666 * l1 + 0.782771753767 * a1 - 0.808675778433 * b1;
+		l2 = 0.2104542553 * l1 + 0.7936177850 * a1 - 0.0040720468 * b1;
+		a2 = 1.9779984951 * l1 - 2.4285922050 * a1 + 0.4505937099 * b1;
+		b2 = 0.0259040371 * l1 + 0.7827717662 * a1 - 0.8086757660 * b1;
 
 		m_oklab = { l2, a2, b2 };
 	}
 }
 
 void Colour::UpdatesRGB() {
-	const double scalar = 387916. / 30017.;
-	const double limit = 285. / 93752.;
+	const double scalar = 12.92;
+	const double limit = 0.0031308;
 
 	if (m_oklab.a == 0. && m_oklab.b == 0.) {
 		// if graycale - can skip some conversions
@@ -107,9 +119,9 @@ void Colour::UpdatesRGB() {
 
 		// to LMS
 
-		double r2 = r1 + 0.396337792278 * g1 + 0.215803757471 * b1;
-		double g2 = r1 - 0.105561342920 * g1 - 0.063854171399 * b1;
-		double b2 = r1 - 0.089484185764 * g1 - 1.291485517099 * b1;
+		double r2 = r1 + 0.3963377774 * g1 + 0.2158037573 * b1;
+		double g2 = r1 - 0.1055613458 * g1 - 0.0638541728 * b1;
+		double b2 = r1 - 0.0894841775 * g1 - 1.2914855480 * b1;
 
 		// to Linear LMS
 		r1 = r2 * r2 * r2;
@@ -117,9 +129,9 @@ void Colour::UpdatesRGB() {
 		b1 = b2 * b2 * b2;
 
 		// to Linear RGB
-		r2 = 4.076741661667 * r1 - 3.307711590572 * g1 + 0.230969928905 * b1;
-		g2 = -1.268438004344 * r1 + 2.609757400792 * g1 - 0.341319396448 * b1;
-		b2 = -0.004196086474 * r1 - 0.703418614494 * g1 + 1.707614700968 * b1;
+		r2 = +4.0767416621 * r1 - 3.3077115913 * g1 + 0.2309699292 * b1;
+		g2 = -1.2684380046 * r1 + 2.6097574011 * g1 - 0.3413193965 * b1;
+		b2 = -0.0041960863 * r1 - 0.7034186147 * g1 + 1.7076147010 * b1;
 
 		// to sRGB
 		r2 = r2 <= limit ? scalar * r2 : (Maths::NRoot(r2, 2.4) * 1.055) - 0.055;
@@ -139,44 +151,24 @@ void Colour::Update() {
 }
 
 Colour Colour::FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	Colour out;
-
-	out.m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
-	out.m_alpha = (double)a / 255.;
-
-	out.UpdateOkLab();
+	Colour out(r, g, b, a);
 	return out;
 }
 
 Colour Colour::FromsRGB_D(const double r, const double g, const double b, const double a) {
 	Colour out;
-	out.m_srgb = { r, g, b };
-	out.m_alpha = a;
-	out.UpdateOkLab();
+	out.SetsRGB_D(r, g, b);
 	return out;
 }
 
 Colour Colour::FromOkLab(const double l, const double a, const double b, const double alpha) {
-	Colour out;
-
-	out.m_oklab = { l, a, b };
-	out.m_alpha = alpha;
-
-	out.UpdatesRGB();
+	Colour out(l, a, b);
 	return out;
 }
 
 Colour Colour::FromHex(const char* hex) {
-	const unsigned int hexInt = std::stoi(hex, 0, 16);
-
-	const unsigned int rMask = 0xFF0000;
-	const unsigned int gMask = 0x00FF00;
-	const unsigned int bMask = 0x0000FF;
-
-	const uint8_t r = uint8_t((hexInt & rMask) >> 16);
-	const uint8_t g = uint8_t((hexInt & gMask) >> 8);
-	const uint8_t b = uint8_t(hexInt & bMask);
-	return FromsRGB(r, g, b, 255);
+	Colour out(hex);
+	return out;
 }
 
 void Colour::Clamp() {
@@ -351,6 +343,32 @@ double Colour::MagSq(const Colour& other) const {
 	return 0.0;
 }
 
+double Colour::MonoDistance(const Colour& other, const double min, const double max) const {
+	// Normalise other colour
+	double otherL = (other.MonoGetLightness() - min) / (max - min);
+	return std::abs(MonoGetLightness() - otherL);
+}
+
+double Colour::MonoGetLightness() const {
+	if (m_mathMode == MathMode::sRGB) {
+		return 0.2126 * m_srgb.r + 0.7152 * m_srgb.g + 0.0722 * m_srgb.b;
+	} else {
+		return m_oklab.l;
+	}
+}
+
+void Colour::ToGrayscale() {
+	if (m_mathMode == MathMode::sRGB) {
+		double l = MonoGetLightness();
+		m_srgb = { l, l, l };
+		UpdateOkLab();
+	} else {
+		m_oklab.a = 0.;
+		m_oklab.b = 0.;
+		UpdatesRGB();
+	}
+}
+
 void Colour::OkLabFallback() {
 	const int maxIter = 12;
 	struct LCH { double l, c, h; };
@@ -417,6 +435,19 @@ void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const ui
 	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;
 
+	m_isGrayscale = false;
+	if (r == g && r == b) m_isGrayscale = true;
+
+	UpdateOkLab();
+}
+
+void Colour::SetsRGB_D(const double r, const double g, const double b, const double a) {
+	m_srgb = { r, g, b };
+	m_alpha = a;
+
+	m_isGrayscale = false;
+	if (r == g && r == b) m_isGrayscale = true;
+
 	UpdateOkLab();
 }
 
@@ -424,5 +455,21 @@ void Colour::SetOkLab(const double l, const double a, const double b, const doub
 	m_alpha = alpha;
 	m_oklab = { l, a, b };
 
+	m_isGrayscale = false;
+	if (a == 0. && b == 0.) m_isGrayscale = true;
+
 	UpdatesRGB();
+}
+
+void Colour::SetHex(const char* hex) {
+	const unsigned int hexInt = std::stoi(hex, 0, 16);
+
+	const unsigned int rMask = 0xFF0000;
+	const unsigned int gMask = 0x00FF00;
+	const unsigned int bMask = 0x0000FF;
+
+	const uint8_t r = uint8_t((hexInt & rMask) >> 16);
+	const uint8_t g = uint8_t((hexInt & gMask) >> 8);
+	const uint8_t b = uint8_t(hexInt & bMask);
+	SetsRGB(r, g, b);
 }

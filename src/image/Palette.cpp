@@ -18,7 +18,7 @@ Palette::Palette(const char* file) {
 			hex.resize(6);
 			++m_size;
 
-			Colour col = Colour::FromHex(hex.c_str());
+			Colour col(hex.c_str());
 			m_colours.push_back(col);
 
 			std::string hexOut = '#' + hex;

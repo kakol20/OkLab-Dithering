@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/gameboy.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -114,7 +114,8 @@ int main(int argc, char* argv[]) {
 		{ "distanceMode", json::value_t::string },
 		{ "mathMode", json::value_t::string },
 		{ "hideSemiTransparent", json::value_t::boolean },
-		{ "hideThreshold", json::value_t::number_unsigned }
+		{ "hideThreshold", json::value_t::number_unsigned },
+		{ "mono", json::value_t::boolean }
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
@@ -181,6 +182,7 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	image.ToRGB();
 	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
@@ -193,31 +195,42 @@ int main(int argc, char* argv[]) {
 
 	// ========== DITHERING ==========
 
+	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
+
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
 
 	if (settings["ditherType"] == "ordered") {
-		Dither::OrderedDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
-		Dither::FloydDither(image, palette, settings["distanceMode"], settings["mathMode"]);
+		Dither::FloydDither(image, palette);
 	} else {
-		Dither::NoDither(image, palette, settings["distanceMode"]);
+		Dither::NoDither(image, palette);
 	}
-
 
 	// ===== Generate Output Path =====
 
 	const std::string folder = NoExtension(imageLoc);
 	std::filesystem::create_directories(folder);
 
-	std::string outputLoc;
+	std::string outputLoc = folder + '\\';
 
-	if (settings["ditherType"] == "none") {
-		outputLoc = folder + "\\" +
+	/*if (settings["mono"]) {
+		outputLoc = folder + "\\mono-" +
 			(std::string)settings["ditherType"] + "-" +
 			(std::string)settings["distanceMode"] + ".png";
 	} else {
-		outputLoc = folder + "\\" +
+		
+	}*/
+
+	if (settings["mono"]) outputLoc += "mono-";
+
+	if (settings["ditherType"] == "none") {
+		outputLoc +=
+			(std::string)settings["ditherType"] + "-" +
+			(std::string)settings["distanceMode"] + ".png";
+	} else {
+		outputLoc +=
 			(std::string)settings["ditherType"] + "-" +
 			(std::string)settings["distanceMode"] + "-" +
 			(std::string)settings["mathMode"] + ".png";
@@ -227,7 +240,7 @@ int main(int argc, char* argv[]) {
 
 	Log::Save();
 	//Log::HoldConsole();
-	Log::Sound(2);
+	Log::Sound(1);
 	return 0;
 }
 

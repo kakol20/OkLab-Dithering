@@ -13,7 +13,8 @@ Comments in settings.json not supported
   "distanceMode": "oklab",
   "mathMode": "srgb",
   "hideSemiTransparent": true,
-  "hideThreshold": 255
+  "hideThreshold": 255,
+  "mono": true
 }
 ```
 
@@ -30,6 +31,11 @@ Comments in settings.json not supported
 
 #### `hideThreshold`
 An unsigned integer between `0` and `255`  
+
+#### `mono`
+`true` or `false`  
+Treats selected palette like it's a monochromatic palette  
+Uses `distanceMode` to calculate the lightness
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
