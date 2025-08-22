@@ -215,14 +215,6 @@ int main(int argc, char* argv[]) {
 
 	std::string outputLoc = folder + '\\';
 
-	/*if (settings["mono"]) {
-		outputLoc = folder + "\\mono-" +
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + ".png";
-	} else {
-		
-	}*/
-
 	if (settings["mono"]) outputLoc += "mono-";
 
 	if (settings["ditherType"] == "none") {
