@@ -44,8 +44,11 @@ Colour& Colour::operator=(const Colour& other) {
 }
 
 void Colour::UpdateOkLab() {
-	const double scalar = 12.92;
-	const double limit = 0.04045;
+	const double scalar = 12.920750283132739;
+	const double limit = 0.039870440086508217;
+	const double powV = 2.4125093745073549;
+	const double c = 0.056317370387926696;
+	const double cP1 = 1.056317370387926696;
 
 	if (m_srgb.r == m_srgb.g && m_srgb.r == m_srgb.b) {
 		// if graycale - can skip some conversions
@@ -54,7 +57,7 @@ void Colour::UpdateOkLab() {
 		double l = m_srgb.r;
 
 		// to Linear RGB
-		l = l <= limit ? l / scalar : std::pow((l + 0.055) / 1.055, 2.4);
+		l = l <= limit ? l / scalar : std::pow((l + c) / cP1, powV);
 
 		// to LMS - can skip "to Linear LMS" conversion
 		l = std::cbrt(l);
@@ -68,9 +71,9 @@ void Colour::UpdateOkLab() {
 		double b1 = m_srgb.b;
 
 		// to Linear RGB
-		l1 = l1 <= limit ? l1 / scalar : std::pow((l1 + 0.055) / 1.055, 2.4);
-		a1 = a1 <= limit ? a1 / scalar : std::pow((a1 + 0.055) / 1.055, 2.4);
-		b1 = b1 <= limit ? b1 / scalar : std::pow((b1 + 0.055) / 1.055, 2.4);
+		l1 = l1 <= limit ? l1 / scalar : std::pow((l1 + c) / cP1, powV);
+		a1 = a1 <= limit ? a1 / scalar : std::pow((a1 + c) / cP1, powV);
+		b1 = b1 <= limit ? b1 / scalar : std::pow((b1 + c) / cP1, powV);
 
 		// to Linear LMS
 
@@ -93,8 +96,11 @@ void Colour::UpdateOkLab() {
 }
 
 void Colour::UpdatesRGB() {
-	const double scalar = 12.92;
-	const double limit = 0.0031308;
+	const double scalar = 12.920750283132739;
+	const double limit = 0.039870440086508217;
+	const double powV = 2.4125093745073549;
+	const double c = 0.056317370387926696;
+	const double cP1 = 1.056317370387926696;
 
 	if (m_oklab.a == 0. && m_oklab.b == 0.) {
 		// if graycale - can skip some conversions
@@ -107,7 +113,7 @@ void Colour::UpdatesRGB() {
 		r = r * r * r;
 
 		// to sRGB - can skip "to Linear RGB" conversion
-		r = r <= limit ? scalar * r : (Maths::NRoot(r, 2.4) * 1.055) - 0.055;
+		r = r <= limit ? scalar * r : (Maths::NRoot(r, powV) * cP1) - c;
 
 		m_srgb = { r, r, r };
 	} else {
@@ -134,9 +140,9 @@ void Colour::UpdatesRGB() {
 		b2 = -0.0041960863 * r1 - 0.7034186147 * g1 + 1.7076147010 * b1;
 
 		// to sRGB
-		r2 = r2 <= limit ? scalar * r2 : (Maths::NRoot(r2, 2.4) * 1.055) - 0.055;
-		g2 = g2 <= limit ? scalar * g2 : (Maths::NRoot(g2, 2.4) * 1.055) - 0.055;
-		b2 = b2 <= limit ? scalar * b2 : (Maths::NRoot(b2, 2.4) * 1.055) - 0.055;
+		r2 = r2 <= limit ? scalar * r2 : (Maths::NRoot(r2, powV) * cP1) - c;
+		g2 = g2 <= limit ? scalar * g2 : (Maths::NRoot(g2, powV) * cP1) - c;
+		b2 = b2 <= limit ? scalar * b2 : (Maths::NRoot(b2, powV) * cP1) - c;
 
 		m_srgb = { r2, g2, b2 };
 	}

@@ -2,7 +2,7 @@
 
 #include "../wrapper/Log.h"
 
-std::array<uint8_t, 256> Dither::m_bayer16{
+const std::array<uint8_t, 256> Dither::Bayer_16x16{
 		 0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255,
 	 128,  64, 176, 112, 140,  76, 188, 124, 131,  67, 179, 115, 143,  79, 191, 127,
 		32, 224,  16, 208,  44, 236,  28, 220,  35, 227,  19, 211,  47, 239,  31, 223,
@@ -44,7 +44,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
 			}
 
-			double threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16)];
+			double threshold = (double)Bayer_16x16[MatrixIndex(x % 16, y % 16)];
 			threshold = ((threshold + 0.5) / 256.) - 0.5;
 
 			Colour threshold_c;

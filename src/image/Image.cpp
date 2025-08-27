@@ -199,9 +199,9 @@ void Image::ToRGB() {
 		uint8_t* outData = new uint8_t[outSize];
 
 		for (int i = 0; i < m_w * m_h; ++i) {
-			outData[i * outChannels + 0] = m_data[i * m_channels];
-			outData[i * outChannels + 1] = m_data[i * m_channels];
-			outData[i * outChannels + 2] = m_data[i * m_channels];
+			outData[(size_t)i * outChannels + 0] = m_data[i * m_channels];
+			outData[(size_t)i * outChannels + 1] = m_data[i * m_channels];
+			outData[(size_t)i * outChannels + 2] = m_data[i * m_channels];
 
 			if (m_channels == 2) outData[i * outChannels + 3] = m_data[i * m_channels + 1];
 		}
