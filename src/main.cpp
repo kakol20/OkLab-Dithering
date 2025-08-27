@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	if (settings["mono"]) {
+	if (settings["mono"] || !settings["grayscale"]) {
 		image.ToRGB();
 	} else if (settings["grayscale"] && image.GetChannels() >= 3) {
 		//Dither::ImageToGrayscale(image);

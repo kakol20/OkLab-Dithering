@@ -36,8 +36,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = GetColourFromImage(image, x, y);
-			
-			if (m_mono) pixel.ToGrayscale();
 
 			// ===== APPLY DITHER =====
 			if (m_mathMode == "oklab") {
@@ -101,7 +99,6 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
 			Colour pixel = GetColourFromImage(image, x, y);
-			pixel.ToGrayscale();
 
 			colours.push_back(pixel);
 
