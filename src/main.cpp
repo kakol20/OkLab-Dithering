@@ -14,7 +14,7 @@
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
 
-
+// https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)
 #define JSON_CATCH_USER(exception) if(false)
 //#define JSON_THROW_USER(exception)                           \
