@@ -1,8 +1,9 @@
 {
-  "ditherType": "fs",
+  "ditherType": "ordered",
   "distanceMode": "srgb",
   "mathMode": "srgb",
   "hideSemiTransparent": true,
-  "hideThreshold": 255,
-  "mono": true
+  "hideThreshold": 127,
+  "mono": false,
+  "grayscale": false
 }

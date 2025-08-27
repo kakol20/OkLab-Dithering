@@ -92,7 +92,12 @@ Image::ImageType Image::GetFileType(const char* file) {
 }
 
 bool Image::Read(const char* file, const int forceChannels) {
-	Log::StartLine();
+	if (GetFileType(file) == ImageType::NA) {
+		Log::WriteOneLine("Invalid file type");
+		return false;
+	}
+
+	//Log::StartLine();
 	if (forceChannels > 0 && forceChannels <= 4) {
 		m_data = stbi_load(file, &m_w, &m_h, &m_channels, forceChannels);
 	} else {
@@ -100,15 +105,15 @@ bool Image::Read(const char* file, const int forceChannels) {
 	}
 
 	if (m_data != NULL) {
-		Log::Write("Read success ");
+		Log::WriteOneLine("Read success ");
 	} else {
-		Log::Write("Read failed ");
+		Log::WriteOneLine("Read failed ");
 	}
 
 	m_size = (size_t)(m_w * m_h * m_channels);
 
-	Log::Write(file);
-	Log::EndLine();
+	Log::WriteOneLine(file);
+	//Log::EndLine();
 
 	return m_data != NULL;
 }
@@ -191,7 +196,7 @@ void Image::ToRGB() {
 	if (IsGrayscale()) {		
 		const int outChannels = m_channels == 1 ? 3 : 4;
 		const size_t outSize = (size_t)(m_w * m_h * outChannels);
-		uint8_t* outData = new uint8_t[(size_t)(m_w * m_h * outChannels)];
+		uint8_t* outData = new uint8_t[outSize];
 
 		for (int i = 0; i < m_w * m_h; ++i) {
 			outData[i * outChannels + 0] = m_data[i * m_channels];

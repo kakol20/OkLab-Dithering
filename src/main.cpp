@@ -7,15 +7,29 @@
 #include <string>
 #include <unordered_map>
 
-#include "../ext/json/json.hpp"
-using json = nlohmann::json;
-
 #include "image/Colour.h"
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
+
+
+#define JSON_TRY_USER if(true)
+#define JSON_CATCH_USER(exception) if(false)
+//#define JSON_THROW_USER(exception)                           \
+//    {std::clog << "Error in " << __FILE__ << ":" << __LINE__ \
+//               << " (function " << __FUNCTION__ << ") - "    \
+//               << (exception).what() << std::endl;           \
+//     std::abort();}
+#define JSON_THROW_USER(exception) {  \
+	Log::WriteOneLine((exception).what());  \
+	Log::Save();  \
+	Log::HoldConsole();  \
+}	\
+
+#include "../ext/json/json.hpp"
+using json = nlohmann::json;
 
 //const double Maths::Pi = 3.1415926535;
 //const double Maths::Tau = 6.283185307;
@@ -45,7 +59,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/gameboy.palette";
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -80,10 +94,11 @@ int main(int argc, char* argv[]) {
 				Log::HoldConsole();
 				return -1;
 			}
+			
 			settings = json::parse(settingsLoc);
 		} else if (extension == ".palette") {
-			paletteLocStr = argv[i];
-			std::ifstream paletteLoc(paletteLocStr);
+			palettstdeLocStr = argv[i];
+			::ifstream paletteLoc(paletteLocStr);
 			if (!(paletteLoc)) {
 				Log::WriteOneLine("Palette not found");
 				Log::Save();
@@ -115,7 +130,8 @@ int main(int argc, char* argv[]) {
 		{ "mathMode", json::value_t::string },
 		{ "hideSemiTransparent", json::value_t::boolean },
 		{ "hideThreshold", json::value_t::number_unsigned },
-		{ "mono", json::value_t::boolean }
+		{ "mono", json::value_t::boolean },
+		{ "grayscale", json::value_t::boolean }
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
@@ -182,7 +198,7 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
-	image.ToRGB();
+	if (settings["mono"]) image.ToRGB();
 	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
