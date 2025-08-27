@@ -98,8 +98,8 @@ int main(int argc, char* argv[]) {
 				return -1;
 			}
 		} else if (extension == ".palette") {
-			palettstdeLocStr = argv[i];
-			::ifstream paletteLoc(paletteLocStr);
+			paletteLocStr = argv[i];
+			std::ifstream paletteLoc(paletteLocStr);
 			if (!(paletteLoc)) {
 				Log::WriteOneLine("Palette not found");
 				Log::Save();
