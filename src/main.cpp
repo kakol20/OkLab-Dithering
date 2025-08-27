@@ -7,15 +7,20 @@
 #include <string>
 #include <unordered_map>
 
-#include "../ext/json/json.hpp"
-using json = nlohmann::json;
-
 #include "image/Colour.h"
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
+
+// https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
+#define JSON_TRY_USER if(true)
+#define JSON_CATCH_USER(exception) if(false)
+#define JSON_THROW_USER(exception) { Log::WriteOneLine((exception).what()); }\
+
+#include "../ext/json/json.hpp"
+using json = nlohmann::json;
 
 //const double Maths::Pi = 3.1415926535;
 //const double Maths::Tau = 6.283185307;
@@ -35,8 +40,13 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	json settings = json::parse(settingsLoc);
+	if (settings.is_discarded()) {
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
 
-	std::string imageLoc = "data/grayscale.png";
+	std::string imageLoc = "data/suzanne.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -45,7 +55,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/gameboy.palette";
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -80,7 +90,13 @@ int main(int argc, char* argv[]) {
 				Log::HoldConsole();
 				return -1;
 			}
+			
 			settings = json::parse(settingsLoc);
+			if (settings.is_discarded()) {
+				Log::Save();
+				Log::HoldConsole();
+				return -1;
+			}
 		} else if (extension == ".palette") {
 			paletteLocStr = argv[i];
 			std::ifstream paletteLoc(paletteLocStr);
@@ -115,7 +131,8 @@ int main(int argc, char* argv[]) {
 		{ "mathMode", json::value_t::string },
 		{ "hideSemiTransparent", json::value_t::boolean },
 		{ "hideThreshold", json::value_t::number_unsigned },
-		{ "mono", json::value_t::boolean }
+		{ "mono", json::value_t::boolean },
+		{ "grayscale", json::value_t::boolean }
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
@@ -182,7 +199,50 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
-	image.ToRGB();
+	if (!(settings["mono"]) && settings["grayscale"] && image.GetChannels() >= 3) {
+		// Convert image to grayscale
+		if (settings["distanceMode"] == "srgb") {
+			Colour::SetMathMode(Colour::MathMode::sRGB);
+		} else {
+			Colour::SetMathMode(Colour::MathMode::OkLab);
+		}
+
+		const int channels = image.GetChannels() == 3 ? 1 : 2;
+		Image newImage(image.GetWidth(), image.GetHeight(), channels);
+
+		for (int x = 0; x < image.GetWidth(); ++x) {
+			for (int y = 0; y < image.GetHeight(); ++y) {
+				const size_t newIndex = newImage.GetIndex(x, y);
+				Colour col = Dither::GetColourFromImage(image, x, y);
+				const double l_d = col.MonoGetLightness();
+				
+				if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
+					col.SetsRGB_D(l_d, l_d, l_d);
+				} else {
+					col.SetOkLab(l_d, 0., 0.);
+				}
+
+				newImage.SetData(newIndex, col.GetsRGB_UInt().r);
+
+				if (channels == 2) {
+					const size_t oldIndex = image.GetIndex(x, y) + 3;
+					newImage.SetData(newIndex + 1, image.GetData(oldIndex));
+				}
+			}
+		}
+
+		image = newImage;
+
+		// saves grayscale version
+		std::string folder = NoExtension(imageLoc);
+		std::filesystem::create_directories(folder);
+
+		folder += "\\grayscale-" + (std::string)settings["distanceMode"] + ".png";
+
+		image.Write(folder.c_str());
+	}
+
+	if (settings["mono"]) image.ToRGB();
 	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
@@ -215,25 +275,22 @@ int main(int argc, char* argv[]) {
 
 	std::string outputLoc = folder + '\\';
 
-	/*if (settings["mono"]) {
-		outputLoc = folder + "\\mono-" +
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + ".png";
-	} else {
-		
-	}*/
-
 	if (settings["mono"]) outputLoc += "mono-";
 
 	if (settings["ditherType"] == "none") {
 		outputLoc +=
 			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + ".png";
+			(std::string)settings["distanceMode"];
 	} else {
 		outputLoc +=
 			(std::string)settings["ditherType"] + "-" +
 			(std::string)settings["distanceMode"] + "-" +
-			(std::string)settings["mathMode"] + ".png";
+			(std::string)settings["mathMode"];
+	}
+	if (image.IsGrayscale()) {
+		outputLoc += "-grayscale.png";
+	} else {
+		outputLoc += ".png";
 	}
 
 	image.Write(outputLoc.c_str());

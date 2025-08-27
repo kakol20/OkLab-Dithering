@@ -274,7 +274,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 
 		// When grayscale == true - only check grayscale colours
 		// When grayscale == false - check all colours
-		if ((grayscale && current.IsGrayscale()) || (!grayscale)) {
+		if ((!grayscale) || current.IsGrayscale()) {
 			//double dist = col.MagSq(current);
 			double dist = m_mono ? col.MonoDistance(current, min, max) : col.MagSq(current);
 

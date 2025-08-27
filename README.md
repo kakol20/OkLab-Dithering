@@ -10,11 +10,12 @@ Comments in settings.json not supported
 ```json
 {
   "ditherType": "ordered",
-  "distanceMode": "oklab",
+  "distanceMode": "srgb",
   "mathMode": "srgb",
   "hideSemiTransparent": true,
-  "hideThreshold": 255,
-  "mono": true
+  "hideThreshold": 127,
+  "mono": false,
+  "grayscale": false
 }
 ```
 
@@ -35,7 +36,11 @@ An unsigned integer between `0` and `255`
 #### `mono`
 `true` or `false`  
 Treats selected palette like it's a monochromatic palette  
-Uses `distanceMode` to calculate the lightness
+Will override `grayscale` setting
+
+#### `grayscale`
+`true` or `false`  
+Uses `distanceMode` to determine conversion to grayscale
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

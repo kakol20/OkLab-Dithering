@@ -367,6 +367,7 @@ void Colour::ToGrayscale() {
 		m_oklab.b = 0.;
 		UpdatesRGB();
 	}
+	m_isGrayscale = true;
 }
 
 void Colour::OkLabFallback() {
