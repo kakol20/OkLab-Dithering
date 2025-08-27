@@ -40,6 +40,7 @@ Will override `grayscale` setting
 
 #### `grayscale`
 `true` or `false`  
+Uses `distanceMode` to determine conversion to grayscale
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

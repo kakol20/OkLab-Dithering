@@ -27,15 +27,15 @@ public:
 
 	static void SetSettings(const std::string distanceType, const std::string mathMode, const bool mono);
 
+	static Colour GetColourFromImage(const Image& image, const int x, const int y);
+	static void SetColourToImage(const Colour& colour, Image& image, const int x, const int y);
+
 private:
 	static std::array<uint8_t, 256> m_bayer16;
 
 	static inline size_t MatrixIndex(const int x, const int y) { return size_t(x + y * 16); };
 
 	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
-
-	static Colour GetColourFromImage(const Image& image, const int x, const int y);
-	static void SetColourToImage(const Colour& colour, Image& image, const int x, const int y);
 
 	static std::string m_distanceType, m_mathMode;
 	static bool m_mono;

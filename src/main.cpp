@@ -17,9 +17,7 @@
 // https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)
 #define JSON_CATCH_USER(exception) if(false)
-#define JSON_THROW_USER(exception) {  \
-	Log::WriteOneLine((exception).what());  \
-}	\
+#define JSON_THROW_USER(exception) { Log::WriteOneLine((exception).what()); }\
 
 #include "../ext/json/json.hpp"
 using json = nlohmann::json;
@@ -48,7 +46,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string imageLoc = "data/grayscale.png";
+	std::string imageLoc = "data/suzanne.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -201,6 +199,49 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return -1;
 	}
+	if (!(settings["mono"]) && settings["grayscale"] && image.GetChannels() >= 3) {
+		// Convert image to grayscale
+		if (settings["distanceMode"] == "srgb") {
+			Colour::SetMathMode(Colour::MathMode::sRGB);
+		} else {
+			Colour::SetMathMode(Colour::MathMode::OkLab);
+		}
+
+		const int channels = image.GetChannels() == 3 ? 1 : 2;
+		Image newImage(image.GetWidth(), image.GetHeight(), channels);
+
+		for (int x = 0; x < image.GetWidth(); ++x) {
+			for (int y = 0; y < image.GetHeight(); ++y) {
+				const size_t newIndex = newImage.GetIndex(x, y);
+				Colour col = Dither::GetColourFromImage(image, x, y);
+				const double l_d = col.MonoGetLightness();
+				
+				if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
+					col.SetsRGB_D(l_d, l_d, l_d);
+				} else {
+					col.SetOkLab(l_d, 0., 0.);
+				}
+
+				newImage.SetData(newIndex, col.GetsRGB_UInt().r);
+
+				if (channels == 2) {
+					const size_t oldIndex = image.GetIndex(x, y) + 3;
+					newImage.SetData(newIndex + 1, image.GetData(oldIndex));
+				}
+			}
+		}
+
+		image = newImage;
+
+		// saves grayscale version
+		std::string folder = NoExtension(imageLoc);
+		std::filesystem::create_directories(folder);
+
+		folder += "\\grayscale-" + (std::string)settings["distanceMode"] + ".png";
+
+		image.Write(folder.c_str());
+	}
+
 	if (settings["mono"]) image.ToRGB();
 	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
@@ -239,12 +280,17 @@ int main(int argc, char* argv[]) {
 	if (settings["ditherType"] == "none") {
 		outputLoc +=
 			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + ".png";
+			(std::string)settings["distanceMode"];
 	} else {
 		outputLoc +=
 			(std::string)settings["ditherType"] + "-" +
 			(std::string)settings["distanceMode"] + "-" +
-			(std::string)settings["mathMode"] + ".png";
+			(std::string)settings["mathMode"];
+	}
+	if (image.IsGrayscale()) {
+		outputLoc += "-grayscale.png";
+	} else {
+		outputLoc += ".png";
 	}
 
 	image.Write(outputLoc.c_str());
