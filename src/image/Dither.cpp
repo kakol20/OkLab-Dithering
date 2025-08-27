@@ -21,7 +21,7 @@ std::array<uint8_t, 256> Dither::m_bayer16{
 	 170, 106, 154,  90, 166, 102, 150,  86, 169, 105, 153,  89, 165, 101, 149,  85
 };
 
-std::string Dither::m_distanceType = "oklab";
+std::string Dither::m_distanceMode = "oklab";
 std::string Dither::m_mathMode = "srgb";
 bool Dither::m_mono = false;
 
@@ -60,7 +60,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			dithered.Clamp();
 			dithered.Update();
 
-			if (m_distanceType == "oklab") {
+			if (m_distanceMode == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab);
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
@@ -128,7 +128,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 			Colour oldPixel = colours[indexCol];
 
-			if (m_distanceType == "oklab") {
+			if (m_distanceMode == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab);
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
@@ -202,7 +202,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			if (m_mono) pixel.ToGrayscale();
 
-			if (m_distanceType == "oklab") {
+			if (m_distanceMode == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab);
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
@@ -229,7 +229,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 }
 
 void Dither::SetSettings(const std::string distanceType, const std::string mathMode, const bool mono) {
-	m_distanceType = distanceType;
+	m_distanceMode = distanceType;
 	m_mathMode = mathMode;
 	m_mono = mono;
 }
@@ -311,4 +311,39 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 		image.SetData(index + 1, colour_int.g);
 		image.SetData(index + 2, colour_int.b);
 	}
+}
+
+void Dither::ImageToGrayscale(Image& image) {
+	// Convert image to grayscale
+	if (m_distanceMode == "srgb") {
+		Colour::SetMathMode(Colour::MathMode::sRGB);
+	} else {
+		Colour::SetMathMode(Colour::MathMode::OkLab);
+	}
+
+	const int channels = image.GetChannels() == 3 ? 1 : 2;
+	Image newImage(image.GetWidth(), image.GetHeight(), channels);
+
+	for (int x = 0; x < image.GetWidth(); ++x) {
+		for (int y = 0; y < image.GetHeight(); ++y) {
+			const size_t newIndex = newImage.GetIndex(x, y);
+			Colour col = Dither::GetColourFromImage(image, x, y);
+			const double l_d = col.MonoGetLightness();
+
+			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
+				col.SetsRGB_D(l_d, l_d, l_d);
+			} else {
+				col.SetOkLab(l_d, 0., 0.);
+			}
+
+			newImage.SetData(newIndex, col.GetsRGB_UInt().r);
+
+			if (channels == 2) {
+				const size_t oldIndex = image.GetIndex(x, y) + 3;
+				newImage.SetData(newIndex + 1, image.GetData(oldIndex));
+			}
+		}
+	}
+
+	image = newImage;
 }

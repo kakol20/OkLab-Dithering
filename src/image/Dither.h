@@ -30,6 +30,8 @@ public:
 	static Colour GetColourFromImage(const Image& image, const int x, const int y);
 	static void SetColourToImage(const Colour& colour, Image& image, const int x, const int y);
 
+	static void ImageToGrayscale(Image& image);
+
 private:
 	static std::array<uint8_t, 256> m_bayer16;
 
@@ -37,7 +39,7 @@ private:
 
 	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
 
-	static std::string m_distanceType, m_mathMode;
+	static std::string m_distanceMode, m_mathMode;
 	static bool m_mono;
 };
 
