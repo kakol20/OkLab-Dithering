@@ -14,14 +14,9 @@
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
 
-
+// https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)
 #define JSON_CATCH_USER(exception) if(false)
-//#define JSON_THROW_USER(exception)                           \
-//    {std::clog << "Error in " << __FILE__ << ":" << __LINE__ \
-//               << " (function " << __FUNCTION__ << ") - "    \
-//               << (exception).what() << std::endl;           \
-//     std::abort();}
 #define JSON_THROW_USER(exception) {  \
 	Log::WriteOneLine((exception).what());  \
 	Log::Save();  \
