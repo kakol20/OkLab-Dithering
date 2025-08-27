@@ -1,6 +1,8 @@
 #include "Yliluoma.h"
 
+#include <algorithm>
 #include <cmath>
+#include <numeric>
 
 #include "../wrapper/Maths.hpp"
 
@@ -57,4 +59,45 @@ Yliluoma::LinearRGB Yliluoma::ToLinearRGB(const Colour& col) {
 	const double b = colsRGB.b <= X ? (colsRGB.b / A)
 		: std::pow((colsRGB.b + C) / (1. + C), Y);
 	return { r, g, b, col.GetAlpha() };
+}
+
+double Yliluoma::Lum(const Colour& col) {
+	return col.MonoGetLightness();
+}
+
+//double Yliluoma::Dist2LAB(const Colour& a, const Colour& b) {
+//	return a.MagSq(b);
+//}
+
+double Yliluoma::Dist2LRGB(const LinearRGB& a, const LinearRGB& b) {
+	constexpr double wr = 0.2126, wg = 0.7152, wb = 0.0722;
+
+	const double dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
+	return wr * dr * dr + wg * dg * dg + wb * db * db;
+}
+
+std::vector<int> Yliluoma::KNearestLAB(const std::vector<Colour>& palL, const Colour& targetL, const int K) {
+	std::vector<int> idx(palL.size());
+	std::iota(idx.begin(), idx.end(), 0);
+
+	std::partial_sort(idx.begin(), idx.begin() + std::min(K, (int)idx.size()), idx.end(),
+		[&](int a, int b) {
+			//return dist2()
+			return palL[a].MagSq(targetL) < palL[b].MagSq(targetL);
+		});
+	idx.resize(std::min(K, (int)idx.size()));
+	return idx;
+}
+
+std::vector<int> Yliluoma::KNearestLRGB(const std::vector<LinearRGB>& palL, const LinearRGB& targetL, const int K) {
+	std::vector<int> idx(palL.size());
+	std::iota(idx.begin(), idx.end(), 0);
+
+	std::partial_sort(idx.begin(), idx.begin() + std::min(K, (int)idx.size()), idx.end(),
+		[&](int a, int b) {
+			//return dist2()
+			return Dist2LRGB(palL[a], targetL) < Dist2LRGB(palL[b], targetL);
+		});
+	idx.resize(std::min(K, (int)idx.size()));
+	return idx;
 }

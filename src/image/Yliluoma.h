@@ -21,11 +21,23 @@ private:
 	struct LinearRGB {
 		double r, g, b, a;
 	};
+	struct Plan2 {
+		int i0 = -1, i1 = 1;
+		double q = 0.;
+	};
+
+	static std::string m_distanceMode, m_mathMode;
+	static bool m_mono;
 
 	Colour TosRGB(const LinearRGB& col);
 	LinearRGB ToLinearRGB(const Colour& col);
 
-	static std::string m_distanceMode, m_mathMode;
-	static bool m_mono;
+	static double Lum(const Colour& col);
+
+	//static double Dist2LAB(const Colour& a, const Colour& b);
+	static double Dist2LRGB(const LinearRGB& a, const LinearRGB& b);
+
+	std::vector<int> KNearestLAB(const std::vector<Colour>& palL, const Colour& targetL, const int K);
+	std::vector<int> KNearestLRGB(const std::vector<LinearRGB>& palL, const LinearRGB& targetL, const int K);
 };
 
