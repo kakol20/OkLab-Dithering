@@ -19,8 +19,6 @@
 #define JSON_CATCH_USER(exception) if(false)
 #define JSON_THROW_USER(exception) {  \
 	Log::WriteOneLine((exception).what());  \
-	Log::Save();  \
-	Log::HoldConsole();  \
 }	\
 
 #include "../ext/json/json.hpp"
@@ -44,6 +42,11 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	json settings = json::parse(settingsLoc);
+	if (settings.is_discarded()) {
+		Log::Save();
+		Log::HoldConsole();
+		return -1;
+	}
 
 	std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
@@ -91,6 +94,11 @@ int main(int argc, char* argv[]) {
 			}
 			
 			settings = json::parse(settingsLoc);
+			if (settings.is_discarded()) {
+				Log::Save();
+				Log::HoldConsole();
+				return -1;
+			}
 		} else if (extension == ".palette") {
 			palettstdeLocStr = argv[i];
 			::ifstream paletteLoc(paletteLocStr);
