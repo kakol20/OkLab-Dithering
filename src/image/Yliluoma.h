@@ -1,5 +1,9 @@
 #pragma once
 
+#include <map>
+#include <mutex>
+#include <thread>
+
 #include "Colour.h"
 #include "Image.h"
 #include "Palette.h"
@@ -33,6 +37,12 @@ private:
 	struct MonoLimits {
 		double min, max;
 	};
+
+	static std::mutex m_mutex;
+	static int m_progress;
+	static std::map<std::thread::id, bool> m_threadStatus;
+
+	static void ThreadRun(Image& image, const Palette& palette, const int minY, const int maxY);
 
 	static std::string m_distanceMode, m_mathMode;
 	static bool m_mono;
@@ -69,5 +79,7 @@ private:
 	/// <param name="lamda">Psychovisual weight</param>
 	/// <returns></returns>
 	static Plan2 GetPlanLRGB(const LinearRGB& targetL, const std::vector<LinearRGB>& palL, const int K = 16, const double lambda = 0.08);
+
+	static const std::array<double, 64>& Bayer_8x8();
 };
 

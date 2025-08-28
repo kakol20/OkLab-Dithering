@@ -75,7 +75,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				std::string outStr = Log::ToString(progress, 6);
 				outStr = Log::LeadingCharacter(outStr, 9);
 
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("  " + outStr + "%");
 
 				Log::StartTime();
 			}
@@ -110,7 +110,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 				std::string outStr = Log::ToString(progress, 6);
 				outStr = Log::LeadingCharacter(outStr, 9);
 
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("  " + outStr + "%");
 
 				Log::StartTime();
 			}
@@ -178,7 +178,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 				std::string outStr = Log::ToString(progress, 6);
 				outStr = Log::LeadingCharacter(outStr, 9);
 
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("  " + outStr + "%");
 
 				Log::StartTime();
 			}
@@ -217,7 +217,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 				std::string outStr = Log::ToString(progress, 6);
 				outStr = Log::LeadingCharacter(outStr, 9);
 
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("  " + outStr + "%");
 
 				Log::StartTime();
 			}

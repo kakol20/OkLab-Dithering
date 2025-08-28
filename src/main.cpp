@@ -11,6 +11,7 @@
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
+#include "image/Yliluoma.h"
 #include "wrapper/Log.h"
 #include "wrapper/Maths.hpp"
 
@@ -55,8 +56,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
+	std::string paletteLocStr = "data/wplace_free.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -168,6 +170,8 @@ int main(int argc, char* argv[]) {
 		settings["ditherType"] = "ordered";
 	} else if (settings["ditherType"] == "none") {
 		settings["ditherType"] = "none";
+	} else if (settings["ditherType"] == "yliluoma") {
+		settings["ditherType"] = "yliluoma";
 	} else {
 		Log::WriteOneLine("Invalid ditherType: " + settings["ditherType"]);
 		invalidType = true;
@@ -230,6 +234,7 @@ int main(int argc, char* argv[]) {
 	// ========== DITHERING ==========
 
 	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
+	Yliluoma::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
 
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
@@ -238,6 +243,8 @@ int main(int argc, char* argv[]) {
 		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
 		Dither::FloydDither(image, palette);
+	} else if (settings["ditherType"] == "yliluoma") {
+		Yliluoma::Run(image, palette);
 	} else {
 		Dither::NoDither(image, palette);
 	}
