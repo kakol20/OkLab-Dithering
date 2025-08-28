@@ -33,10 +33,9 @@ public:
 	static void ImageToGrayscale(Image& image);
 
 	static const std::array<uint8_t, 256> Bayer_16x16;
+	static inline size_t MatrixIndex(const int x, const int y) { return size_t(x + y * 16); };
 
 private:
-
-	static inline size_t MatrixIndex(const int x, const int y) { return size_t(x + y * 16); };
 
 	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
 

@@ -4,7 +4,9 @@
 #include <cmath>
 #include <numeric>
 
+#include "../wrapper/Log.h"
 #include "../wrapper/Maths.hpp"
+#include "Dither.h"
 
 std::string Yliluoma::m_distanceMode = "oklab";
 std::string Yliluoma::m_mathMode = "srgb";
@@ -12,6 +14,82 @@ bool Yliluoma::m_mono = false;
 Yliluoma::MonoLimits Yliluoma::m_monoLimits = { 0., 1. };
 
 void Yliluoma::Run(Image& image, const Palette& palette) {
+	if (m_mathMode == "srgb") {
+		std::vector<LinearRGB> palL;
+		palL.reserve(palette.size());
+		for (size_t i = 0; i < palette.size(); ++i) {
+			const Colour palC = palette.GetIndex(i);
+			if (image.IsGrayscale() && !palC.IsGrayscale()) continue;
+			palL.emplace_back(ToLinearRGB(palC));
+		}
+
+		Log::StartTime();
+		Log::WriteOneLine("Yliluoma Ordered Dither...");
+
+		for (int x = 0; x < image.GetWidth(); ++x) {
+			for (int y = 0; y < image.GetHeight(); ++y) {
+				const Colour col = Dither::GetColourFromImage(image, x, y);
+				const LinearRGB targetL = ToLinearRGB(col);
+
+				Plan2 plan = GetPlanLRGB(targetL, palL);
+
+				const double t = (double)Dither::Bayer_16x16[Dither::MatrixIndex(x % 16, y % 16)] / 256.;
+
+				Colour outCol = TosRGB(palL[(t < plan.q) ? plan.i1 : plan.i0]);
+				Dither::SetColourToImage(outCol, image, x, y);
+
+				// -- Check Time --
+				if (Log::CheckTimeSeconds(5.)) {
+					double progress = double(image.GetIndex(x, y)) / double(image.GetSize());
+					progress *= 100.;
+
+					std::string outStr = Log::ToString(progress, 6);
+					outStr = Log::LeadingCharacter(outStr, 9);
+
+					Log::WriteOneLine("\t" + outStr + "%");
+
+					Log::StartTime();
+				}
+			}
+		}
+	} else {
+		std::vector<Colour> palL;
+		palL.reserve(palette.size());
+
+		for (size_t i = 0; i < palette.size(); ++i) {
+			const Colour palC = palette.GetIndex(i);
+			if (image.IsGrayscale() && !palC.IsGrayscale()) continue;
+			palL.emplace_back(palC);
+		}
+
+		Log::StartTime();
+		Log::WriteOneLine("Yliluoma Ordered Dither...");
+
+		for (int x = 0; x < image.GetWidth(); ++x) {
+			for (int y = 0; y < image.GetHeight(); ++y) {
+				const Colour targetL = Dither::GetColourFromImage(image, x, y);
+				Plan2 plan = GetPlanLAB(targetL, palL);
+
+				const double t = (double)Dither::Bayer_16x16[Dither::MatrixIndex(x % 16, y % 16)] / 256.;
+
+				Colour outCol = palL[(t < plan.q) ? plan.i1 : plan.i0];
+				Dither::SetColourToImage(outCol, image, x, y);
+
+				// -- Check Time --
+				if (Log::CheckTimeSeconds(5.)) {
+					double progress = double(image.GetIndex(x, y)) / double(image.GetSize());
+					progress *= 100.;
+
+					std::string outStr = Log::ToString(progress, 6);
+					outStr = Log::LeadingCharacter(outStr, 9);
+
+					Log::WriteOneLine("\t" + outStr + "%");
+
+					Log::StartTime();
+				}
+			}
+		}
+	}
 }
 
 void Yliluoma::SetSettings(const std::string distanceMode, const std::string mathMode, const bool mono) {
@@ -25,7 +103,7 @@ void Yliluoma::SetSettings(const std::string distanceMode, const std::string mat
 0.056317370387926696,
 0.039870440086508217,
 12.920750283132739
-// 0.0030857681800844569
+0.0030857681800844569
 */
 
 Colour Yliluoma::TosRGB(const LinearRGB& col) {
