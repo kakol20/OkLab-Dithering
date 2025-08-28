@@ -18,12 +18,11 @@ Palette::Palette(const char* file) {
 			hex.resize(6);
 			++m_size;
 
-			Colour col(hex.c_str());
-			m_colours.push_back(col);
+			m_colours.emplace_back(hex.c_str());
 
 			std::string hexOut = '#' + hex;
-			std::string rgbOut = "rgb(" + col.sRGBUintDebug() + ')';
-			std::string labOut = "oklab(" + col.OkLabDebug() + ')';
+			std::string rgbOut = "rgb(" + m_colours.back().sRGBUintDebug() + ')';
+			std::string labOut = "oklab(" + m_colours.back().OkLabDebug() + ')';
 
 			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut);
 		}

@@ -9,6 +9,7 @@
 std::string Yliluoma::m_distanceMode = "oklab";
 std::string Yliluoma::m_mathMode = "srgb";
 bool Yliluoma::m_mono = false;
+Yliluoma::MonoLimits Yliluoma::m_monoLimits = { 0., 1. };
 
 void Yliluoma::Run(Image& image, const Palette& palette) {
 }
@@ -17,7 +18,6 @@ void Yliluoma::SetSettings(const std::string distanceMode, const std::string mat
 	m_distanceMode = distanceMode;
 	m_mathMode = mathMode;
 	m_mono = mono;
-
 }
 
 /*
@@ -65,11 +65,18 @@ double Yliluoma::Lum(const Colour& col) {
 	return col.MonoGetLightness();
 }
 
-//double Yliluoma::Dist2LAB(const Colour& a, const Colour& b) {
-//	return a.MagSq(b);
-//}
+double Yliluoma::Dist2LAB(const Colour& a, const Colour& b) {
+	if (m_mono) return a.MonoDistance(b, m_monoLimits.min, m_monoLimits.max);
+	return a.MagSq(b);
+}
 
 double Yliluoma::Dist2LRGB(const LinearRGB& a, const LinearRGB& b) {
+	if (m_mono) {
+		Colour aCol, bCol;
+		aCol.SetsRGB_D(a.r, a.g, a.b);
+		bCol.SetsRGB_D(b.r, b.g, b.b);
+		return aCol.MonoDistance(bCol, m_monoLimits.min, m_monoLimits.max);
+	}
 	constexpr double wr = 0.2126, wg = 0.7152, wb = 0.0722;
 
 	const double dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
@@ -82,7 +89,6 @@ std::vector<int> Yliluoma::KNearestLAB(const std::vector<Colour>& palL, const Co
 
 	std::partial_sort(idx.begin(), idx.begin() + std::min(K, (int)idx.size()), idx.end(),
 		[&](int a, int b) {
-			//return dist2()
 			return palL[a].MagSq(targetL) < palL[b].MagSq(targetL);
 		});
 	idx.resize(std::min(K, (int)idx.size()));
@@ -100,4 +106,135 @@ std::vector<int> Yliluoma::KNearestLRGB(const std::vector<LinearRGB>& palL, cons
 		});
 	idx.resize(std::min(K, (int)idx.size()));
 	return idx;
+}
+
+Yliluoma::Plan2 Yliluoma::GetPlanLAB(const Colour& targetL, const std::vector<Colour>& palL, const int K, const double lambda) {
+	if (m_distanceMode == "srgb") {
+		Colour::SetMathMode(Colour::MathMode::sRGB);
+	} else {
+		Colour::SetMathMode(Colour::MathMode::OkLab);
+	}
+
+	std::vector<int> cand = KNearestLAB(palL, targetL, K);
+
+	double best = 1e30;
+	Plan2 plan{};
+
+	constexpr int STEPS = 16 * 16; // for bayer matrix
+	for (size_t a = 0; a < cand.size(); ++a) {
+		for (size_t b = a + 1; b < cand.size(); ++b) {
+			int i0 = cand[a], i1 = cand[b];
+			Colour p0 = palL[i0], p1 = palL[i1];
+
+			if (m_distanceMode == "srgb") {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+			}
+			double pair_d = Dist2LAB(p0, p1);
+			if (!m_mono) pair_d = std::sqrt(pair_d);
+			pair_d += 1e-8;
+
+			for (int s = 0; s <= STEPS; ++s) {
+				const double q = double(s) / double(STEPS);
+
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+				Colour mix = (p0 * (1. - q)) + (p1 * q);
+				mix.UpdatesRGB();
+
+				if (m_distanceMode == "srgb") {
+					Colour::SetMathMode(Colour::MathMode::sRGB);
+				} else {
+					Colour::SetMathMode(Colour::MathMode::OkLab);
+				}
+
+				double penalty = Dist2LAB(mix, targetL);
+				double uneven = 0.5 * std::abs(q - 0.5);
+				penalty += lambda * pair_d * uneven;
+				if (penalty < best) {
+					best = penalty;
+					plan = { i0, i1, q };
+				}
+			}
+		}
+	}
+	return plan;
+}
+
+Yliluoma::Plan2 Yliluoma::GetPlanLRGB(const LinearRGB& targetL, const std::vector<LinearRGB>& palL, const int K, const double lambda) {
+	std::vector<int> cand;
+	if (m_distanceMode == "srgb") {
+		Colour::SetMathMode(Colour::MathMode::sRGB);
+		cand = KNearestLRGB(palL, targetL, K);
+	} else {
+		Colour::SetMathMode(Colour::MathMode::OkLab);
+
+		const Colour targetC = TosRGB(targetL);
+		std::vector<Colour> palC;
+		palC.reserve(palL.size());
+		for (size_t i = 0; i < palL.size(); ++i) {
+			palC.emplace_back(TosRGB(palL[i]));
+		}
+
+		cand = KNearestLAB(palC, targetC, K);
+	}
+
+	double best = 1e30;
+
+	Plan2 plan{};
+	constexpr int STEPS = 16 * 16; // for bayer matrix
+
+	for (size_t a = 0; a < cand.size(); ++a) {
+		for (size_t b = a + 1; b < cand.size(); ++b) {
+			int i0 = cand[a], i1 = cand[b];
+			LinearRGB p0 = palL[i0], p1 = palL[i1];
+
+			double pair_d = 0.;
+			if (m_distanceMode == "srgb") {
+				Colour::SetMathMode(Colour::MathMode::sRGB);
+				pair_d = Dist2LRGB(p0, p1);
+			} else {
+				Colour::SetMathMode(Colour::MathMode::OkLab);
+				const Colour p0C = TosRGB(p0);
+				const Colour p1C = TosRGB(p1);
+				pair_d = Dist2LAB(p0C, p1C);
+			}
+			if (!m_mono) pair_d = std::sqrt(pair_d);
+			pair_d += 1e-8;
+			//double pair_d = std::sqrt(Dist2LRGB(p0, p1)) + 1e-8;
+
+			for (int s = 0; s <= STEPS; ++s) {
+				double q = double(s) / double(STEPS);
+
+				// No need to use m_mathMode since it is called before function is called
+				LinearRGB mix{
+					(1 - q) * p0.r + q * p1.r,
+					(1 - q) * p0.g + q * p1.g,
+					(1 - q) * p0.b + q * p1.b
+				};
+
+				double penalty = 0.;
+				if (m_distanceMode == "srgb") {
+					Colour::SetMathMode(Colour::MathMode::sRGB);
+					penalty = Dist2LRGB(mix, targetL);
+				} else {
+					Colour::SetMathMode(Colour::MathMode::OkLab);
+					const Colour mixLab = TosRGB(mix);
+					const Colour targetLab = TosRGB(targetL);
+					penalty = Dist2LAB(mixLab, targetLab);
+				}
+
+				// Psychovisual term: discourage very uneven mixes of very distant colors.
+				// Weight grows as |q-0.5| increases (uneven) and as colors differ.
+
+				double uneven = 0.5 + std::abs(q - 0.5);
+				penalty += lambda * pair_d * uneven;
+				if (penalty < best) {
+					best = penalty;
+					plan = { i0, i1, q };
+				}
+			}
+		}
+	}
+	return plan;
 }

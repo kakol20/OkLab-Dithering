@@ -20,7 +20,7 @@ Comments in settings.json not supported
 ```
 
 #### `ditherType`
-`ordered` or `bayer` for ordered dithering  
+`ordered` or `bayer` for standard ordered dithering  
 `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
 `none` for no dithering
 
@@ -45,3 +45,4 @@ Uses `distanceMode` to determine conversion to grayscale
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
 [stb_image](https://github.com/nothings/stb) 
+[Joel Yliluoma's arbitrary-palette positional dithering algorithm](https://bisqwit.iki.fi/story/howto/dither/jy/)  

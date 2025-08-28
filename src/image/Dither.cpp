@@ -98,9 +98,9 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = GetColourFromImage(image, x, y);
+			//Colour pixel = GetColourFromImage(image, x, y);
 
-			colours.push_back(pixel);
+			colours.emplace_back(GetColourFromImage(image, x, y));
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {

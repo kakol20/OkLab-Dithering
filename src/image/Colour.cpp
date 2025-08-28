@@ -358,9 +358,8 @@ double Colour::MonoDistance(const Colour& other, const double min, const double 
 double Colour::MonoGetLightness() const {
 	if (m_mathMode == MathMode::sRGB) {
 		return 0.2126 * m_srgb.r + 0.7152 * m_srgb.g + 0.0722 * m_srgb.b;
-	} else {
-		return m_oklab.l;
 	}
+	return m_oklab.l;
 }
 
 void Colour::ToGrayscale() {
