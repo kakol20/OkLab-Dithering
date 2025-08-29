@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
 	// ===== Generate Output Path =====
 
 	const std::string folder = NoExtension(imageLoc);
-	std::filesystem::create_directories(folder);
+	
 
 	std::string outputLoc = folder + '\\';
 
@@ -281,8 +281,12 @@ int main(int argc, char* argv[]) {
 	} else if (settings["grayscale"]) {
 		outputLoc += "grayscale";
 	} else {
-		outputLoc += (std::string)settings["ditherType"];
+		outputLoc += "regular";
 	}
+
+	std::filesystem::create_directories(outputLoc);
+
+	outputLoc += "\\" + (std::string)settings["ditherType"];
 
 	if (settings["ditherType"] == "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
 
@@ -290,17 +294,6 @@ int main(int argc, char* argv[]) {
 
 	if (settings["ditherType"] != "none") outputLoc += "-" + (std::string)settings["mathMode"];
 
-	/*if (settings["ditherType"] == "none") {
-		outputLoc +=
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"];
-	} else {
-		outputLoc +=
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + "-" +
-			(std::string)settings["mathMode"];
-	}
-	outputLoc += ".png";*/
 	outputLoc += ".png";
 
 	image.Write(outputLoc.c_str());

@@ -1,10 +1,10 @@
 {
-	"ditherType": "fs",
-	"distanceMode": "srgb",
+	"ditherType": "ordered",
+	"distanceMode": "oklab",
 	"mathMode": "srgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
-	"grayscale": false,
-	"matrixType": "bayer"
+	"grayscale": true,
+	"matrixType": "bluenoise16"
 }
