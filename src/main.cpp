@@ -31,6 +31,26 @@ std::string Extension(const std::string loc);
 std::string NoExtension(const std::string loc);
 
 int main(int argc, char* argv[]) {
+// For generating blue noise array from blue noise texture
+//#define DEV_MODE
+#ifdef DEV_MODE
+	// https://github.com/Calinou/free-blue-noise-textures
+	Image blueNoise("dev/32_LDR_LLL1_0.png");
+	Log::WriteOneLine("Grayscale: " + Log::ToString(blueNoise.IsGrayscale()));
+
+	Log::Write("\n{\n");
+	for (int y = 0; y < blueNoise.GetHeight(); ++y) {
+		Log::Write("\t");
+		for (int x = 0; x < blueNoise.GetWidth(); ++x) {
+			const uint8_t val = blueNoise.GetData(blueNoise.GetIndex(x, y));
+			const std::string valStr = Log::ToString((unsigned int)val, 3, ' ');
+			Log::Write(valStr + ", ");
+		}
+		Log::EndLine();
+	}
+	Log::Write("};\n");
+
+#else
 #ifdef _DEBUG
 	std::ifstream settingsLoc("data/settings.json");
 	if (!(settingsLoc)) {
@@ -91,7 +111,7 @@ int main(int argc, char* argv[]) {
 				Log::HoldConsole();
 				return -1;
 			}
-			
+
 			settings = json::parse(settingsLoc);
 			if (settings.is_discarded()) {
 				Log::Save();
@@ -133,7 +153,8 @@ int main(int argc, char* argv[]) {
 		{ "hideSemiTransparent", json::value_t::boolean },
 		{ "hideThreshold", json::value_t::number_unsigned },
 		{ "mono", json::value_t::boolean },
-		{ "grayscale", json::value_t::boolean }
+		{ "grayscale", json::value_t::boolean },
+		{ "matrixType", json::value_t::string }
 	};
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
@@ -164,7 +185,7 @@ int main(int argc, char* argv[]) {
 	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
 		settings["ditherType"] == "steinberg" || settings["ditherType"] == "fs") {
 		settings["ditherType"] = "fs";
-	} else if (settings["ditherType"] == "ordered" || settings["ditherType"] == "bayer") {
+	} else if (settings["ditherType"] == "ordered") {
 		settings["ditherType"] = "ordered";
 	} else if (settings["ditherType"] == "none") {
 		settings["ditherType"] = "none";
@@ -180,6 +201,12 @@ int main(int argc, char* argv[]) {
 
 	if (settings["mathMode"] != "srgb" && settings["mathMode"] != "oklab") {
 		Log::WriteOneLine("Invalid mathMode: " + settings["distanceMode"]);
+		invalidType = true;
+	}
+
+	// No big noticeable difference between a 16x16 blue noise map vs a 32x32 blue noise map
+	if (settings["matrixType"] != "bayer" && settings["matrixType"] != "bluenoise16"/* && settings["matrixType"] != "bluenoise32"*/) {
+		Log::WriteOneLine("Invalid matrixType: " + settings["matrixType"]);
 		invalidType = true;
 	}
 
@@ -229,7 +256,7 @@ int main(int argc, char* argv[]) {
 
 	// ========== DITHERING ==========
 
-	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"]);
+	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"], settings["matrixType"]);
 
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");
@@ -245,29 +272,33 @@ int main(int argc, char* argv[]) {
 	// ===== Generate Output Path =====
 
 	const std::string folder = NoExtension(imageLoc);
-	std::filesystem::create_directories(folder);
+	
 
 	std::string outputLoc = folder + '\\';
 
 	if (settings["mono"]) {
-		outputLoc += "mono-";
+		outputLoc += "mono";
 	} else if (settings["grayscale"]) {
-		outputLoc += "grayscale-";
+		outputLoc += "grayscale";
+	} else {
+		outputLoc += "regular";
 	}
 
-	if (settings["ditherType"] == "none") {
-		outputLoc +=
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"];
-	} else {
-		outputLoc +=
-			(std::string)settings["ditherType"] + "-" +
-			(std::string)settings["distanceMode"] + "-" +
-			(std::string)settings["mathMode"];
-	}
+	std::filesystem::create_directories(outputLoc);
+
+	outputLoc += "\\" + (std::string)settings["ditherType"];
+
+	if (settings["ditherType"] == "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
+
+	outputLoc += "-" + (std::string)settings["distanceMode"];
+
+	if (settings["ditherType"] != "none") outputLoc += "-" + (std::string)settings["mathMode"];
+
 	outputLoc += ".png";
 
 	image.Write(outputLoc.c_str());
+
+#endif // DEV_MODE
 
 	Log::Save();
 	//Log::HoldConsole();

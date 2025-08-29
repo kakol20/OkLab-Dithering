@@ -20,7 +20,7 @@ Comments in settings.json not supported
 ```
 
 #### `ditherType`
-`ordered` or `bayer` for ordered dithering  
+`ordered` for ordered dithering  
 `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
 `none` for no dithering
 
@@ -41,6 +41,11 @@ Will override `grayscale` setting
 #### `grayscale`
 `true` or `false`  
 Uses `distanceMode` to determine conversion to grayscale
+
+#### `matrixType`
+Matrix used for ordered dithering  
+`bayer` Bayer 16x16 matrix  
+`blueNoise16` Blue Noise 16x16 matrix  
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
