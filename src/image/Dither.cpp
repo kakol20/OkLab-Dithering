@@ -154,7 +154,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			SetColourToImage(newPixel, image, x, y);
 
 			if (m_mathMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
+				Colour::SetMathMode(Colour::MathMode::OkLab);
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
 			}
