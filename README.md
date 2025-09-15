@@ -41,10 +41,12 @@ Comments in settings.json not supported
 - `true` or `false`  
 	- Treats selected palette like it's a monochromatic palette  
 	- Will override `grayscale` setting
+	- NOTE: Due to the math - math mode `oklab` and `oklab_l` will produce the same result
 
 #### `grayscale`
 - `true` or `false`  
 	- Uses `distanceMode` to determine conversion to grayscale
+	- NOTE: Due to the math, math mode `oklab` and `oklab_l` will produce the same result
 
 #### `matrixType`
 Matrix used for ordered dithering  

@@ -68,7 +68,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/lenna.png";
+	//std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
