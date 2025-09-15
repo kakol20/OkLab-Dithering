@@ -13,16 +13,6 @@ public:
 	Colour& operator=(const Colour& other);
 
 	/// <summary>
-	/// Update OkLab from sRGB
-	/// </summary>
-	void UpdateOkLab();
-
-	/// <summary>
-	/// Update sRGB from OkLab
-	/// </summary>
-	void UpdatesRGB();
-
-	/// <summary>
 	/// Choose update function based on mathMode
 	/// </summary>
 	/// <param name="mathMode"></param>
@@ -39,7 +29,7 @@ public:
 	static Colour FromsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 
 	/// <summary>
-	/// Assign Colour based on sRGB values
+	/// Assign Colour via sRGB values
 	/// </summary>
 	/// <param name="r">0 to 1</param>
 	/// <param name="g">0 to 1</param>
@@ -49,7 +39,7 @@ public:
 	static Colour FromsRGB_D(const double r, const double g, const double b, const double a = 1.);
 
 	/// <summary>
-	/// Assign Colour based on OkLab values
+	/// Assign Colourvia OkLab values
 	/// </summary>
 	/// <param name="l"></param>
 	/// <param name="a"></param>
@@ -59,7 +49,7 @@ public:
 	static Colour FromOkLab(const double l, const double a, const double b, const double alpha = 1.);
 
 	/// <summary>
-	/// Get Colour hex value
+	/// Get Colour via hex value
 	/// </summary>
 	/// <param name="hex"></param>
 	/// <returns></returns>
@@ -73,7 +63,8 @@ public:
 	/// <param name="sRGB">Maths is treated like the values are 0 to 1</param>
 	/// <param name="Oklab"></param>
 	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
-	enum class MathMode { sRGB, OkLab, OkLab_Lightness };
+	/// <param name="Linear_RGB"></param>
+	enum class MathMode { sRGB, OkLab, OkLab_Lightness, Linear_RGB };
 
 	/// <summary>
 	/// <para>Clamp value based on m_mathMode</para>
@@ -106,8 +97,14 @@ public:
 	struct sRGB_UInt { uint8_t r, g, b; };
 	struct OkLab { double l, a, b; };
 
+	/// <summary>
+	/// Linear RGB
+	/// </summary>
+	struct LRGB { double r, g, b; };
+
 	// ========== DEBUGGING ==========
 
+	std::string LRGBDebug() const;
 	std::string OkLabDebug() const;
 	std::string sRGBUintDebug() const;
 
@@ -135,8 +132,9 @@ public:
 	void ToGrayscale();
 
 private:
-	sRGB m_srgb;
+	LRGB m_lrgb;
 	OkLab m_oklab;
+	sRGB m_srgb;
 
 	double m_alpha;
 
@@ -148,6 +146,16 @@ private:
 
 	void OkLabFallback();
 
+	// Convert sRGB to Linear RGB
+	void sRGBtoLRGB();
+	// Convert Linear RGB to sRGB
+	void LRGBtosRGB();
+
+	// Convert Linear RGB to OkLab
+	void LRGBtoOkLab();
+	// Convert OkLab to Linear RGB
+	void OkLabtoLRGB();
+
 public:
 	sRGB GetsRGB() const { return m_srgb; };
 	OkLab GetOkLab() const { return m_oklab; };
@@ -156,6 +164,7 @@ public:
 	bool IsGrayscale() const { return m_isGrayscale; };
 
 	void SetHex(const char* hex);
+	void SetLRGB(const double r, const double g, const double b, const double a = 1.);
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
 	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 	void SetsRGB_D(const double r, const double g, const double b, const double a = 1.);

@@ -58,17 +58,22 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			Colour pixel = GetColourFromImage(image, x, y);
 
 			// ===== APPLY DITHER =====
-			if (m_mathMode == "oklab") {
+			/*if (m_mathMode == "oklab") {
 				Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
 			} else {
 				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}
+			}*/
+			SetColourMathMode(m_mathMode);
 
 			const double threshold = GetThreshold(x, y);
 
 			Colour threshold_c;
 			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
 				threshold_c.SetsRGB_D(threshold, threshold, threshold);
+			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
+				threshold_c.SetLRGB(threshold, threshold, threshold);
+			} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
+				threshold_c.SetOkLab(threshold, 0., 0.);
 			} else {
 				threshold_c.SetOkLab(threshold, threshold, threshold);
 			}
@@ -77,11 +82,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			dithered.Clamp();
 			dithered.Update();
 
-			if (m_distanceMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab);
-			} else {
-				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}
+			SetColourMathMode(m_distanceMode);
 			Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
 			SetColourToImage(nearest, image, x, y);
@@ -144,20 +145,12 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 			Colour oldPixel = colours[indexCol];
 
-			if (m_distanceMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab);
-			} else {
-				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}
+			SetColourMathMode(m_distanceMode);
 			Colour newPixel = ClosestColour(oldPixel, palette, image.IsGrayscale());
 
 			SetColourToImage(newPixel, image, x, y);
 
-			if (m_mathMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab);
-			} else {
-				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}
+			SetColourMathMode(m_mathMode);
 			Colour quantError = oldPixel - newPixel;
 
 			size_t neighbourIndex = 0;
@@ -218,11 +211,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			if (m_mono) pixel.ToGrayscale();
 
-			if (m_distanceMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab);
-			} else {
-				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}
+			SetColourMathMode(m_distanceMode);
 
 			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
 
@@ -317,6 +306,23 @@ double Dither::GetThreshold(const int x, const int y) {
 	return ((threshold + 0.5) / 256.) - 0.5;
 }
 
+// Fix for E0847: expression must have integral or enum type
+// The error is caused by using a std::string in a switch statement.
+// Replace the switch statement with if-else statements.
+
+void Dither::SetColourMathMode(const std::string& mode) {
+	if (mode == "srgb") {
+		Colour::SetMathMode(Colour::MathMode::sRGB);
+	} else if (mode == "oklab") {
+		Colour::SetMathMode(Colour::MathMode::OkLab);
+	} else if (mode == "oklab_l") {
+		Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
+	} else if (mode == "lrgb") {
+		Colour::SetMathMode(Colour::MathMode::Linear_RGB);
+	} else {
+		Colour::SetMathMode(Colour::MathMode::sRGB);
+	}
+}
 Colour Dither::GetColourFromImage(const Image& image, const int x, const int y) {
 	const size_t index = image.GetIndex(x, y);
 	if (image.IsGrayscale()) {
@@ -344,11 +350,7 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 
 void Dither::ImageToGrayscale(Image& image) {
 	// Convert image to grayscale
-	if (m_distanceMode == "srgb") {
-		Colour::SetMathMode(Colour::MathMode::sRGB);
-	} else {
-		Colour::SetMathMode(Colour::MathMode::OkLab);
-	}
+	SetColourMathMode(m_distanceMode);
 
 	const int channels = image.GetChannels() == 3 ? 1 : 2;
 	Image newImage(image.GetWidth(), image.GetHeight(), channels);
@@ -361,6 +363,8 @@ void Dither::ImageToGrayscale(Image& image) {
 
 			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
 				col.SetsRGB_D(l_d, l_d, l_d);
+			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
+				col.SetLRGB(l_d, l_d, l_d);
 			} else {
 				col.SetOkLab(l_d, 0., 0.);
 			}

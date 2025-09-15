@@ -30,6 +30,8 @@ using json = nlohmann::json;
 std::string Extension(const std::string loc);
 std::string NoExtension(const std::string loc);
 
+bool CheckColourMathMode(const std::string & mode);
+
 int main(int argc, char* argv[]) {
 // For generating blue noise array from blue noise texture
 //#define DEV_MODE
@@ -66,7 +68,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string imageLoc = "data/lenna.png";
+	//std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/lenna.png";
+	std::string imageLoc = "data/grayscale.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -75,7 +79,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
@@ -194,13 +199,13 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
-	if (settings["distanceMode"] != "srgb" && settings["distanceMode"] != "oklab") {
+	if (!CheckColourMathMode(settings["distanceMode"])) {
 		Log::WriteOneLine("Invalid distanceMode: " + settings["distanceMode"]);
 		invalidType = true;
 	}
 
-	if (settings["mathMode"] != "srgb" && settings["mathMode"] != "oklab") {
-		Log::WriteOneLine("Invalid mathMode: " + settings["distanceMode"]);
+	if (!CheckColourMathMode(settings["mathMode"])) {
+		Log::WriteOneLine("Invalid mathMode: " + settings["mathMode"]);
 		invalidType = true;
 	}
 
@@ -315,4 +320,17 @@ std::string NoExtension(const std::string loc) {
 	std::filesystem::path p = loc;
 	std::filesystem::path noExt = p.parent_path() / p.stem();
 	return noExt.string();
+}
+
+bool CheckColourMathMode(const std::string& mode) {
+	if (mode == "srgb") {
+		return true;
+	} else if (mode == "oklab") {
+		return true;
+	} else if (mode == "oklab_l") {
+		return true;
+	} else if (mode == "lrgb") {
+		return true;
+	}
+	return false;
 }
