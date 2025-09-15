@@ -350,11 +350,7 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 
 void Dither::ImageToGrayscale(Image& image) {
 	// Convert image to grayscale
-	if (m_distanceMode == "srgb") {
-		Colour::SetMathMode(Colour::MathMode::sRGB);
-	} else {
-		Colour::SetMathMode(Colour::MathMode::OkLab);
-	}
+	SetColourMathMode(m_distanceMode);
 
 	const int channels = image.GetChannels() == 3 ? 1 : 2;
 	Image newImage(image.GetWidth(), image.GetHeight(), channels);
@@ -367,6 +363,8 @@ void Dither::ImageToGrayscale(Image& image) {
 
 			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
 				col.SetsRGB_D(l_d, l_d, l_d);
+			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
+				col.SetLRGB(l_d, l_d, l_d);
 			} else {
 				col.SetOkLab(l_d, 0., 0.);
 			}
