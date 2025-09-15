@@ -45,5 +45,7 @@ private:
 	static bool m_mono;
 
 	static double GetThreshold(const int x, const int y);
+
+	static void SetColourMathMode(const std::string& mode);
 };
 

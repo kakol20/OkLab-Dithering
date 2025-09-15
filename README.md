@@ -21,32 +21,35 @@ Comments in settings.json not supported
 ```
 
 #### `ditherType`
-`ordered` for ordered dithering  
-`floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
-`none` for no dithering
+- `ordered` for ordered dithering  
+- `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
+- `none` for no dithering
 
 #### `distanceMode` and `mathMode`
-`srgb` or `oklab`
+- `srgb` for sRGB
+- `oklab` for all values
+- `oklab_l` for lightness only
+- `lrgb` for Linear RGB
 
 #### `hideSemiTransparent`
-`true` or `false`
+- `true` or `false`
 
 #### `hideThreshold`
-An unsigned integer between `0` and `255`  
+- An unsigned integer between `0` and `255`  
 
 #### `mono`
-`true` or `false`  
-Treats selected palette like it's a monochromatic palette  
-Will override `grayscale` setting
+- `true` or `false`  
+	- Treats selected palette like it's a monochromatic palette  
+	- Will override `grayscale` setting
 
 #### `grayscale`
-`true` or `false`  
-Uses `distanceMode` to determine conversion to grayscale
+- `true` or `false`  
+	- Uses `distanceMode` to determine conversion to grayscale
 
 #### `matrixType`
 Matrix used for ordered dithering  
-`bayer` Bayer 16x16 matrix  
-`blueNoise16` Blue Noise 16x16 matrix  
+- `bayer` Bayer 16x16 matrix  
+- `blueNoise16` Blue Noise 16x16 matrix  
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

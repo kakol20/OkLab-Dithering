@@ -6,5 +6,5 @@
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer"
+	"matrixType": "bluenoise16"
 }
