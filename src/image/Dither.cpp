@@ -357,11 +357,13 @@ void Dither::ImageToGrayscale(Image& image) {
 
 	for (int x = 0; x < image.GetWidth(); ++x) {
 		for (int y = 0; y < image.GetHeight(); ++y) {
+#ifdef _DEBUG
 			const bool debug = x == 10 && y == 10;
-
 			if (debug) {
 				bool test = true;
 			}
+#endif // _DEBUG
+			
 			const size_t newIndex = newImage.GetIndex(x, y);
 			Colour col = Dither::GetColourFromImage(image, x, y);
 			const double l_d = col.MonoGetLightness();
@@ -374,11 +376,13 @@ void Dither::ImageToGrayscale(Image& image) {
 				col.SetOkLab(l_d, 0., 0.);
 			}
 
+#ifdef _DEBUG
 			if (debug) {
 				const Colour::sRGB_UInt testVal = col.GetsRGB_UInt();
 
 				bool test = true;
 			}
+#endif // _DEBUG
 
 			newImage.SetData(newIndex, col.GetsRGB_UInt().r);
 
