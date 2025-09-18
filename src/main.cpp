@@ -221,6 +221,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"], settings["matrixType"]);
+
 	// ========== GET IMAGE ==========
 
 	Log::EndLine();
@@ -236,6 +238,7 @@ int main(int argc, char* argv[]) {
 	if (settings["mono"] || !settings["grayscale"]) {
 		image.ToRGB();
 	} else if (settings["grayscale"] && image.GetChannels() >= 3) {
+		Dither::SetColourMathMode(settings["distanceMode"]);
 		//Dither::ImageToGrayscale(image);
 		Dither::ImageToGrayscale(image);
 
@@ -260,8 +263,6 @@ int main(int argc, char* argv[]) {
 	Palette palette(paletteLocStr.c_str());
 
 	// ========== DITHERING ==========
-
-	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"], settings["matrixType"]);
 
 	Log::EndLine();
 	Log::WriteOneLine("===== DITHERING =====");

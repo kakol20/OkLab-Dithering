@@ -5,6 +5,6 @@
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
-	"grayscale": true,
+	"grayscale": false,
 	"matrixType": "bayer"
 }

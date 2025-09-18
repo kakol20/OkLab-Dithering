@@ -32,6 +32,8 @@ public:
 
 	static void ImageToGrayscale(Image& image);
 
+	static void SetColourMathMode(const std::string& mode);
+
 private:
 	static std::array<uint8_t, 1024> m_blueNoise32;
 	static std::array<uint8_t, 256> m_bayer16;
@@ -45,7 +47,5 @@ private:
 	static bool m_mono;
 
 	static double GetThreshold(const int x, const int y);
-
-	static void SetColourMathMode(const std::string& mode);
 };
 
