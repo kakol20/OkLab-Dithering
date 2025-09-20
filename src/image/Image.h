@@ -49,6 +49,8 @@ public:
 
 	inline bool IsGrayscale() const { return m_channels <= 2; };
 
+	void AddAlphaChannel();
+
 	/// <summary>
 	/// Converts grayscale to 
 	/// </summary>

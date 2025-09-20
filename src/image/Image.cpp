@@ -192,6 +192,26 @@ void Image::HideSemiTransparent(const int threshold) {
 	}
 }
 
+void Image::AddAlphaChannel() {
+	if (m_channels == 1 || m_channels == 3) {
+		const int outChannels = m_channels + 1;
+		const size_t outSize = (size_t)(m_w * m_h * outChannels);
+		uint8_t* outData = new uint8_t[outSize];
+		for (int i = 0; i < m_w * m_h; ++i) {
+			for (int c = 0; c < m_channels; ++c) {
+				outData[i * outChannels + c] = m_data[i * m_channels + c];
+			}
+			outData[i * outChannels + (outChannels - 1)] = 255;
+		}
+		stbi_image_free(m_data);
+		m_channels = outChannels;
+		m_size = outSize;
+		m_data = new uint8_t[m_size];
+		memcpy(m_data, outData, m_size);
+		stbi_image_free(outData);
+	}
+}
+
 void Image::ToRGB() {
 	if (IsGrayscale()) {		
 		const int outChannels = m_channels == 1 ? 3 : 4;
