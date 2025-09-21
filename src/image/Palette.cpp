@@ -28,7 +28,7 @@ Palette::Palette(const char* file) {
 			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut);
 		}
 	}
-	Log::WriteOneLine("Palette Size: " + Log::ToString(m_size));
+	Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));
 }
 
 Palette::~Palette() {

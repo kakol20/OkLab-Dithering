@@ -59,13 +59,13 @@ int main(int argc, char* argv[]) {
 		Log::WriteOneLine("JSON not found");
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 	json settings = json::parse(settingsLoc);
 	if (settings.is_discarded()) {
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	//std::string imageLoc = "data/test.png";
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 		Log::WriteOneLine("Image not found");
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	std::string paletteLocStr = "data/wplace_premium.palette";
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 		Log::WriteOneLine("Palette not found");
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 #else
 	if (argc < 4) {
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	json settings;
@@ -114,14 +114,14 @@ int main(int argc, char* argv[]) {
 				Log::WriteOneLine("JSON not found");
 				Log::Save();
 				Log::HoldConsole();
-				return -1;
+				return EXIT_FAILURE;
 			}
 
 			settings = json::parse(settingsLoc);
 			if (settings.is_discarded()) {
 				Log::Save();
 				Log::HoldConsole();
-				return -1;
+				return EXIT_FAILURE;
 			}
 		} else if (extension == ".palette") {
 			paletteLocStr = argv[i];
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
 				Log::WriteOneLine("Palette not found");
 				Log::Save();
 				Log::HoldConsole();
-				return -1;
+				return EXIT_FAILURE;
 			}
 		} else {
 			imageLoc = argv[i];
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
 				Log::WriteOneLine("Image not found");
 				Log::Save();
 				Log::HoldConsole();
-				return -1;
+				return EXIT_FAILURE;
 			}
 		}
 	}
@@ -177,14 +177,14 @@ int main(int argc, char* argv[]) {
 			settings[it->first] = value;
 			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
 		} else if (it->second == json::value_t::number_unsigned) {
-			Log::WriteOneLine(it->first + ": " + Log::ToString((unsigned int)settings[it->first]));
+			Log::WriteOneLine(it->first + ": " + Log::ToString(static_cast<unsigned int>(settings[it->first]), 0, '0'));
 		}
 	}
 
 	if (!allFound) {
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 	bool invalidType = false;
 	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
 	if (invalidType) {
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"], settings["matrixType"]);
@@ -232,7 +232,7 @@ int main(int argc, char* argv[]) {
 	if (!image.Read(imageLoc.c_str())) {
 		Log::Save();
 		Log::HoldConsole();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if (settings["mono"] || !settings["grayscale"]) {
@@ -309,7 +309,7 @@ int main(int argc, char* argv[]) {
 	Log::Save();
 	//Log::HoldConsole();
 	Log::Sound(1);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 std::string Extension(const std::string loc) {

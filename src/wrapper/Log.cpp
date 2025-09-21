@@ -114,85 +114,38 @@ std::string Log::ToString(const bool value) {
 
 std::string Log::ToString(const double value, const unsigned int precision) {
 	std::stringstream out;
+	out << (value < 0. ? '-' : ' ');
 	out << std::fixed << std::setprecision(precision);
-	out << value;
+	out << std::abs(value);
 	return out.str();
 }
 
 std::string Log::ToString(const int value, const unsigned int precision, const char lead) {
-	const bool isNegative = value < 0;
-	
-	std::string out = std::to_string(std::abs(value));
+	std::stringstream out;
+	out << (value < 0) ? '-' : ' ';
+	out << std::setw(precision) << std::setfill(lead) << std::abs(value);
 
-	if (precision > 0) {
-		const int delta = (int)precision - (int)out.size();
-
-		if (delta >= 1) {
-			std::string leading = "";
-			for (int i = 0; i < delta; ++i) {
-				leading += lead;
-			}
-
-			out = leading + out;
-		}
-	}
-
-	return isNegative ? '-' + out : ' ' + out;
+	return out.str();
 }
 
-std::string Log::ToString(const size_t value, const unsigned int precision, const char lead) {
-	std::string out = std::to_string(value);
+std::string Log::ToString(const size_t value, const unsigned int width, const char lead) {
+	std::stringstream out;
+	out << std::setw(width) << std::setfill(lead) << value;
 
-	if (precision > 0) {
-		const int delta = (int)precision - (int)out.size();
-
-		if (delta >= 1) {
-			std::string leading = "";
-			for (int i = 0; i < delta; ++i) {
-				leading += lead;
-			}
-
-			out = leading + out;
-		}
-	}
-
-	return out;
+	return out.str();
 }
 
-std::string Log::ToString(const unsigned int value, const unsigned int precision, const char lead) {
-	std::string out = std::to_string(value);
+std::string Log::ToString(const unsigned int value, const unsigned int width, const char lead) {
+	std::stringstream out;
+	out << std::setw(width) << std::setfill(lead) << value;
 
-	if (precision > 0) {
-		const int delta = (int)precision - (int)out.size();
-
-		if (delta >= 1) {
-			std::string leading = "";
-			for (int i = 0; i < delta; ++i) {
-				leading += lead;
-			}
-
-			out = leading + out;
-		}
-	}
-
-	return out;
+	return out.str();;
 }
 
 std::string Log::LeadingCharacter(const std::string value, const unsigned int amount, const char lead) {
-	std::string out = value;
-	if (amount > 0) {
-		const int delta = (int)amount - (int)out.size();
-
-		if (delta >= 1) {
-			std::string leading = "";
-			for (int i = 0; i < delta; ++i) {
-				leading += lead;
-			}
-
-			out = leading + out;
-		}
-	}
-	return out;
+	std::stringstream out;
+	out << std::setw(amount) << std::setfill(lead) << value;
+	return out.str();
 }
 
 void Log::Sound(const long long duration) {
