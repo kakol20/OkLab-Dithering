@@ -430,6 +430,9 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 	//	bool temp = true;
 	//}
 
+	// Skip fully opaque or fully transparent pixels
+	if (col.GetAlpha() == 1. || col.GetAlpha() == 0) return;
+
 	//const size_t indexCol = size_t(x + y * imgWidth);
 	if (m_ditherAlphaType == "fs") {
 		// Floyd-Steinberg Dither Alpha
