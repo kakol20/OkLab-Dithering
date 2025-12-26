@@ -1,11 +1,16 @@
 #include "Log.h"
 
 #include <chrono>
+#include <cmath>
+#include <corecrt.h>
+#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <thread>
 
 std::string Log::m_console = "";

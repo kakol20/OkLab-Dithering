@@ -1,3 +1,8 @@
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <string>
+
 #include "Colour.h"
 
 #include "../wrapper/Log.h"

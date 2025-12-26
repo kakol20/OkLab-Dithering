@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "../wrapper/Log.h"
+#include "Colour.h"
 
 Palette::Palette(const char* file) {
 	std::fstream p(file);

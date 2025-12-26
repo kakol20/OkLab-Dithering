@@ -1,6 +1,15 @@
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <string>
+#include <vector>
+
 #include "Dither.h"
 
 #include "../wrapper/Log.h"
+#include "Colour.h"
+#include "Image.h"
+#include "Palette.h"
 
 std::array<uint8_t, 256> Dither::m_bayer16{
 		 0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255,

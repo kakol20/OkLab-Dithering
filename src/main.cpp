@@ -1,18 +1,13 @@
 #include <algorithm>
-#include <array>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
-#include <map>
 #include <string>
 #include <unordered_map>
 
-#include "image/Colour.h"
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
-#include "wrapper/Maths.hpp"
 
 // https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)
@@ -20,6 +15,8 @@
 #define JSON_THROW_USER(exception) { Log::WriteOneLine((exception).what()); }\
 
 #include "../ext/json/json.hpp"
+#include <cctype>
+#include <cstdlib>
 using json = nlohmann::json;
 
 //const double Maths::Pi = 3.1415926535;
@@ -71,8 +68,8 @@ int main(int argc, char* argv[]) {
 	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/lenna.png";
-	//std::string imageLoc = "data/alphaTest.png";
-	std::string imageLoc = "data/alphaTest-gradient.png";
+	std::string imageLoc = "data/alphaTest.png";
+	//std::string imageLoc = "data/alphaTest-gradient.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
