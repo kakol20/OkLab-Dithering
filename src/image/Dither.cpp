@@ -438,9 +438,7 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		// Floyd-Steinberg Dither Alpha
 		const double oldAlpha = col.GetAlpha();
 
-		double newAlpha = oldAlpha * 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		double newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * oldAlpha) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 
@@ -487,16 +485,12 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		newAlpha += M * r;
 		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);
 
-		newAlpha *= 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * newAlpha) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 	} else {
 		// No Dither Alpha
-		double newAlpha = col.GetAlpha() * 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		double newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * col.GetAlpha()) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 	}
