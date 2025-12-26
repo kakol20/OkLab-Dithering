@@ -94,7 +94,7 @@ public:
 	static MathMode GetMathMode() { return m_mathMode; };
 
 	struct sRGB { double r, g, b; };
-	struct sRGB_UInt { uint8_t r, g, b; };
+	struct sRGB_UInt { uint8_t r, g, b, a; };
 	struct OkLab { double l, a, b; };
 
 	/// <summary>
@@ -161,6 +161,9 @@ public:
 	OkLab GetOkLab() const { return m_oklab; };
 	sRGB_UInt GetsRGB_UInt() const;
 
+	double GetAlpha() const { return m_alpha; };
+	void SetAlpha(const double alpha) { m_alpha = alpha; };
+
 	bool IsGrayscale() const { return m_isGrayscale; };
 
 	void SetHex(const char* hex);
@@ -168,6 +171,4 @@ public:
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
 	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 	void SetsRGB_D(const double r, const double g, const double b, const double a = 1.);
-
 };
-

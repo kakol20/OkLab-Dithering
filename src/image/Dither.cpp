@@ -41,28 +41,54 @@ std::array<uint8_t, 256> Dither::m_blueNoise16{
 };
 
 bool Dither::m_mono = false;
+bool Dither::m_ditherAlpha = false;
 std::string Dither::m_distanceMode = "oklab";
 std::string Dither::m_mathMode = "srgb";
 std::string Dither::m_matrixType = "bayer";
+std::string Dither::m_ditherAlphaType = "ordered";
+unsigned int Dither::m_ditherAlphaFactor = 1;
 
 void Dither::OrderedDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
-	Log::StartTime();
+	// Create a copy of of image in Colour form
+	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
+	std::vector<Colour> colours;
+	colours.reserve(coloursSize);
 
+	Log::StartTime();
 	Log::WriteOneLine("Ordered Dither...");
+
+	for (int y = 0; y < imgHeight; ++y) {
+		for (int x = 0; x < imgWidth; ++x) {
+			const size_t index = image.GetIndex(x, y);
+			//Colour pixel = GetColourFromImage(image, x, y);
+			colours.emplace_back(GetColourFromImage(image, x, y));
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
+				progress *= 100.;
+
+				std::string outStr = Log::ToString(progress, 6);
+				outStr = Log::LeadingCharacter(outStr, 9);
+
+				Log::WriteOneLine("\t" + outStr + "%");
+
+				Log::StartTime();
+			}
+		}
+	}
+
 	for (int x = 0; x < imgWidth; ++x) {
 		for (int y = 0; y < imgHeight; ++y) {
+			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = GetColourFromImage(image, x, y);
+
+			Colour pixel = colours[indexCol];
 
 			// ===== APPLY DITHER =====
-			/*if (m_mathMode == "oklab") {
-				Colour::SetMathMode(Colour::MathMode::OkLab_Lightness);
-			} else {
-				Colour::SetMathMode(Colour::MathMode::sRGB);
-			}*/
 			SetColourMathMode(m_mathMode);
 
 			const double threshold = GetThreshold(x, y);
@@ -85,11 +111,15 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			SetColourMathMode(m_distanceMode);
 			Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight);
+
 			SetColourToImage(nearest, image, x, y);
+
+			//if (m_ditherAlpha) DitherAlphaChannel(image, x, y);
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double(image.GetIndex(x, y)) / double(image.GetSize());
+				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
 				progress *= 100.;
 
 				std::string outStr = Log::ToString(progress, 6);
@@ -118,9 +148,8 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = GetColourFromImage(image, x, y);
-
-			colours.push_back(pixel);
+			//Colour pixel = GetColourFromImage(image, x, y);
+			colours.emplace_back(GetColourFromImage(image, x, y));
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
@@ -147,6 +176,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 			SetColourMathMode(m_distanceMode);
 			Colour newPixel = ClosestColour(oldPixel, palette, image.IsGrayscale());
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(newPixel, colours, x, y, imgWidth, imgHeight);
 
 			SetColourToImage(newPixel, image, x, y);
 
@@ -202,24 +232,53 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
+	// Create a copy of of image in Colour form
+	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
+	std::vector<Colour> colours;
+	colours.reserve(coloursSize);
+
 	Log::StartTime();
 	Log::WriteOneLine("No Dither...");
+
+	for (int y = 0; y < imgHeight; ++y) {
+		for (int x = 0; x < imgWidth; ++x) {
+			const size_t index = image.GetIndex(x, y);
+			//Colour pixel = GetColourFromImage(image, x, y);
+			colours.emplace_back(GetColourFromImage(image, x, y));
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
+				progress *= 100.;
+
+				std::string outStr = Log::ToString(progress, 6);
+				outStr = Log::LeadingCharacter(outStr, 9);
+
+				Log::WriteOneLine("\t" + outStr + "%");
+
+				Log::StartTime();
+			}
+		}
+	}
+
 	for (int x = 0; x < imgWidth; ++x) {
 		for (int y = 0; y < imgHeight; ++y) {
+			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = GetColourFromImage(image, x, y);
+			Colour pixel = colours[indexCol];
 
 			if (m_mono) pixel.ToGrayscale();
 
 			SetColourMathMode(m_distanceMode);
 
 			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight);
 
 			SetColourToImage(pixel, image, x, y);
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double(image.GetIndex(x, y)) / double(image.GetSize());
+				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
 				progress *= 100.;
 
 				std::string outStr = Log::ToString(progress, 6);
@@ -233,11 +292,21 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	}
 }
 
-void Dither::SetSettings(const std::string distanceType, const std::string mathMode, const bool mono, const std::string matrixType) {
+void Dither::SetSettings(
+	const std::string distanceType,
+	const std::string mathMode,
+	const bool mono,
+	const std::string matrixType,
+	const bool ditherAlpha,
+	const unsigned int ditherAlphaFactor,
+	const std::string ditherAlphaType) {
 	m_distanceMode = distanceType;
 	m_mathMode = mathMode;
 	m_mono = mono;
 	m_matrixType = matrixType;
+	m_ditherAlpha = ditherAlpha;
+	m_ditherAlphaFactor = ditherAlphaFactor;
+	m_ditherAlphaType = ditherAlphaType;
 }
 
 Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bool grayscale) {
@@ -290,6 +359,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 			}
 		}
 	}
+	closest.SetAlpha(col.GetAlpha());
 
 	return closest;
 }
@@ -304,6 +374,76 @@ double Dither::GetThreshold(const int x, const int y) {
 		threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16, 16)];
 	}
 	return ((threshold + 0.5) / 256.) - 0.5;
+}
+
+void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
+	//if (col.GetAlpha() > 0. && col.GetAlpha() < 1.) {
+	//	bool temp = true;
+	//}
+	//if (col.GetAlpha() == 0.) {
+	//	bool temp = true;
+	//}
+
+	//const size_t indexCol = size_t(x + y * imgWidth);
+	if (m_ditherAlphaType == "fs") {
+		// Floyd-Steinberg Dither Alpha
+		const double oldAlpha = col.GetAlpha();
+
+		double newAlpha = oldAlpha * 255.;
+		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
+		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+
+		col.SetAlpha(newAlpha);
+
+		double quantError = oldAlpha - newAlpha;
+
+		if (x + 1 < imgWidth) {
+			size_t neighbourIndex = size_t((x + 1) + y * imgWidth);
+			double currAlpha = colours[neighbourIndex].GetAlpha() + (quantError * (7. / 16.));
+			currAlpha = currAlpha > 1. ? 1. : (currAlpha < 0. ? 0. : currAlpha);
+			colours[neighbourIndex].SetAlpha(currAlpha);
+		}
+
+		if (y + 1 < imgHeight) {
+			size_t neighbourIndex = 0;
+			double currAlpha = 0.;
+
+			if (x - 1 >= 0) {
+				neighbourIndex = size_t((x - 1) + (y + 1) * imgWidth);
+				currAlpha = colours[neighbourIndex].GetAlpha() + (quantError * (3. / 16.));
+				currAlpha = currAlpha > 1. ? 1. : (currAlpha < 0. ? 0. : currAlpha);
+				colours[neighbourIndex].SetAlpha(currAlpha);
+			}
+
+			if (x + 1 < imgWidth) {
+				neighbourIndex = size_t((x + 1) + (y + 1) * imgWidth);
+				currAlpha = colours[neighbourIndex].GetAlpha() + (quantError * (1. / 16.));
+				currAlpha = currAlpha > 1. ? 1. : (currAlpha < 0. ? 0. : currAlpha);
+				colours[neighbourIndex].SetAlpha(currAlpha);
+			}
+
+			neighbourIndex = size_t(x + (y + 1) * imgWidth);
+			currAlpha = colours[neighbourIndex].GetAlpha() + (quantError * (5. / 16.));
+			currAlpha = currAlpha > 1. ? 1. : (currAlpha < 0. ? 0. : currAlpha);
+			colours[neighbourIndex].SetAlpha(currAlpha);
+		}
+	} else if (m_ditherAlphaType == "ordered") {
+		// Ordered Dither Alpha
+		const double threshold = GetThreshold(x, y);
+		double newAlpha = col.GetAlpha() + (threshold * (1. / 16.));
+		newAlpha *= 255.;
+		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
+		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+
+		col.SetAlpha(newAlpha);
+	} else {
+		// No Dither Alpha
+		double newAlpha = col.GetAlpha() * 255.;
+		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
+		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+
+		col.SetAlpha(newAlpha);
+	}
 }
 
 // Fix for E0847: expression must have integral or enum type
@@ -327,11 +467,32 @@ Colour Dither::GetColourFromImage(const Image& image, const int x, const int y) 
 	const size_t index = image.GetIndex(x, y);
 	if (image.IsGrayscale()) {
 		const uint8_t data = image.GetData(index);
-		return Colour::FromsRGB(data, data, data);
+		uint8_t alpha = 255;
+
+		if (image.GetChannels() == 2) {
+			alpha = image.GetData(index + 1);
+		}
+
+		return Colour::FromsRGB(data, data, data, alpha);
 	} else {
-		return Colour::FromsRGB(image.GetData(index + 0),
-			image.GetData(index + 1),
-			image.GetData(index + 2));
+		uint8_t r, g, b, a;
+
+		a = 255;
+		if (image.GetChannels() == 4) {
+			if (image.GetData(index + 3) > 0 && image.GetData(index + 3) < 255) {
+				bool temp = true;
+			}
+			if (image.GetData(index + 3) == 0) {
+				bool temp = true;
+			}
+
+			a = image.GetData(index + 3);
+		}
+		r = image.GetData(index + 0);
+		g = image.GetData(index + 1);
+		b = image.GetData(index + 2);
+
+		return Colour::FromsRGB(r, g, b, a);
 	}
 }
 
@@ -340,11 +501,23 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 	Colour::sRGB_UInt colour_int = colour.GetsRGB_UInt();
 
 	if (image.IsGrayscale()) {
-		image.SetData(index, colour_int.r);
+		if (image.GetChannels() == 2) {
+			image.SetData(index, colour_int.r);
+			image.SetData(index + 1, colour_int.a); // keep alpha channel
+		} else {
+			image.SetData(index, colour_int.r);
+		}
 	} else {
-		image.SetData(index + 0, colour_int.r);
-		image.SetData(index + 1, colour_int.g);
-		image.SetData(index + 2, colour_int.b);
+		if (image.GetChannels() == 4) {
+			image.SetData(index + 0, colour_int.r);
+			image.SetData(index + 1, colour_int.g);
+			image.SetData(index + 2, colour_int.b);
+			image.SetData(index + 3, colour_int.a);
+		} else {
+			image.SetData(index + 0, colour_int.r);
+			image.SetData(index + 1, colour_int.g);
+			image.SetData(index + 2, colour_int.b);
+		}
 	}
 }
 
@@ -363,7 +536,7 @@ void Dither::ImageToGrayscale(Image& image) {
 				bool test = true;
 			}
 #endif // _DEBUG
-			
+
 			const size_t newIndex = newImage.GetIndex(x, y);
 			Colour col = Dither::GetColourFromImage(image, x, y);
 			const double l_d = col.MonoGetLightness();

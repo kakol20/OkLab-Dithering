@@ -161,6 +161,7 @@
     <ClInclude Include="src\image\Palette.h" />
     <ClInclude Include="src\wrapper\Log.h" />
     <ClInclude Include="src\image\Image.h" />
+    <ClInclude Include="src\wrapper\Maths.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

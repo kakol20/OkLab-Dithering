@@ -51,7 +51,21 @@ Comments in settings.json not supported
 #### `matrixType`
 Matrix used for ordered dithering  
 - `bayer` Bayer 16x16 matrix  
-- `blueNoise16` Blue Noise 16x16 matrix  
+- `blueNoise16` Blue Noise 16x16 matrix
+
+### `ditherAlpha`
+- `true` or `false`  
+	- Enables dithering of alpha channel
+	- This setting is overridden if `hideSemiTransparent` is `true`
+
+### `ditherAlphaFactor`
+- An unsigned integer between `0` and `255`  
+	- Factor for alpha dithering
+
+### `ditherAlphaType`
+- Same options as `ditherType`  
+	- Dithering algorithm for alpha channel
+	- Uses `matrixType` for the threshold matrix if `ditherType` is `ordered`
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
