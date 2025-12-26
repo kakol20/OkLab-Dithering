@@ -131,6 +131,9 @@ public:
 
 	void ToGrayscale();
 
+	void Abs();
+	static Colour Min(const Colour& a, const Colour& b);
+
 private:
 	LRGB m_lrgb;
 	OkLab m_oklab;

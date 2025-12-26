@@ -328,6 +328,46 @@ void Colour::ToGrayscale() {
 	m_isGrayscale = true;
 }
 
+void Colour::Abs() {
+	if (m_mathMode == MathMode::sRGB) {
+		m_srgb.r = std::abs(m_srgb.r);
+		m_srgb.g = std::abs(m_srgb.g);
+		m_srgb.b = std::abs(m_srgb.b);
+
+	} else if (m_mathMode == MathMode::Linear_RGB) {
+		m_lrgb.r = std::abs(m_lrgb.r);
+		m_lrgb.g = std::abs(m_lrgb.g);
+		m_lrgb.b = std::abs(m_lrgb.b);
+	} else {
+		m_oklab.l = std::abs(m_oklab.l);
+		m_oklab.a = std::abs(m_oklab.a);
+		m_oklab.b = std::abs(m_oklab.b);
+	}
+
+	m_alpha = std::abs(m_alpha);
+}
+
+Colour Colour::Min(const Colour& a, const Colour& b) {
+	Colour out;
+	if (m_mathMode == MathMode::sRGB) {
+		out.m_srgb.r = a.m_srgb.r < b.m_srgb.r ? a.m_srgb.r : b.m_srgb.r;
+		out.m_srgb.g = a.m_srgb.g < b.m_srgb.g ? a.m_srgb.g : b.m_srgb.g;
+		out.m_srgb.b = a.m_srgb.b < b.m_srgb.b ? a.m_srgb.b : b.m_srgb.b;
+	} else if (m_mathMode == MathMode::Linear_RGB) {
+		out.m_lrgb.r = a.m_lrgb.r < b.m_lrgb.r ? a.m_lrgb.r : b.m_lrgb.r;
+		out.m_lrgb.g = a.m_lrgb.g < b.m_lrgb.g ? a.m_lrgb.g : b.m_lrgb.g;
+		out.m_lrgb.b = a.m_lrgb.b < b.m_lrgb.b ? a.m_lrgb.b : b.m_lrgb.b;
+	} else {
+		out.m_oklab.l = a.m_oklab.l < b.m_oklab.l ? a.m_oklab.l : b.m_oklab.l;
+		out.m_oklab.a = a.m_oklab.a < b.m_oklab.a ? a.m_oklab.a : b.m_oklab.a;
+		out.m_oklab.b = a.m_oklab.b < b.m_oklab.b ? a.m_oklab.b : b.m_oklab.b;
+	}
+	out.m_alpha = a.m_alpha < b.m_alpha ? a.m_alpha : b.m_alpha;
+
+	//out.Update();
+	return out;
+}
+
 void Colour::OkLabFallback() {
 	if (m_oklab.l == 1. || m_oklab.l == 0.) {
 		m_oklab.a = 0.;

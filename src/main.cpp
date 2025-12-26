@@ -69,8 +69,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	//std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/lenna.png";
-	std::string imageLoc = "data/alphaTest.png";
+	//std::string imageLoc = "data/alphaTest.png";
+	std::string imageLoc = "data/alphaTest-gradient.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -79,8 +81,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string paletteLocStr = "data/wplace_premium.palette";
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
