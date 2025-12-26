@@ -58,7 +58,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	colours.reserve(coloursSize);
 
 	Log::StartTime();
-	Log::WriteOneLine("Ordered Dither...");
+	Log::WriteOneLine("ORDERED DITHERING...");
+
+	Log::WriteOneLine("  Copying Pixels");
 
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
@@ -68,19 +70,57 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
 		}
 	}
 
+	// dithering values
+	Colour r;
+	size_t count = 0;
+
+	Log::WriteOneLine("  Calculating r value");
+	for (size_t i = 0; i < palette.size(); ++i) {
+
+		for (size_t j = 0; j < palette.size(); ++j) {
+			if (i != j) {
+				Colour diff = palette.GetIndex(i) - palette.GetIndex(j);
+				diff.Abs();
+				r += diff;
+				++count;
+			}
+
+			// -- Check Time --
+			if (Log::CheckTimeSeconds(5.)) {
+				const std::string maxStr = Log::ToString(colours.size());
+				const std::string currStr = Log::ToString(i, maxStr.size(), ' ');
+
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
+
+				Log::StartTime();
+			}
+		}
+	}
+	Colour div;
+	const double countD = static_cast<double>(count);
+	if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
+		div.SetsRGB_D(countD, countD, countD);
+	} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
+		div.SetLRGB(countD, countD, countD);
+	} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
+		div.SetOkLab(countD, 0., 0.);
+	} else {
+		div.SetOkLab(countD, countD, countD);
+	}
+	r /= div;
+	r.Update();
+
+	Log::WriteOneLine("  Dithering");
 	for (int x = 0; x < imgWidth; ++x) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t indexCol = size_t(x + y * imgWidth);
@@ -91,7 +131,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// ===== APPLY DITHER =====
 			SetColourMathMode(m_mathMode);
 
-			const double threshold = GetThreshold(x, y);
+			/*const double threshold = GetThreshold(x, y);
 
 			Colour threshold_c;
 			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
@@ -106,6 +146,22 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 			Colour dithered = pixel + (threshold_c * (1. / 16.));
 			dithered.Clamp();
+			dithered.Update();*/
+
+			const double threshold = GetThreshold(x, y);
+			Colour M;
+			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
+				M.SetsRGB_D(threshold, threshold, threshold);
+			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
+				M.SetLRGB(threshold, threshold, threshold);
+			} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
+				M.SetOkLab(threshold, 0., 0.);
+			} else {
+				M.SetOkLab(threshold, threshold, threshold);
+			}
+
+			Colour dithered = pixel + (M * r);
+			dithered.Clamp();
 			dithered.Update();
 
 			SetColourMathMode(m_distanceMode);
@@ -119,13 +175,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
@@ -373,7 +426,8 @@ double Dither::GetThreshold(const int x, const int y) {
 	}*/ else {
 		threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16, 16)];
 	}
-	return ((threshold + 0.5) / 256.) - 0.5;
+	//return ((threshold + 0.5) / 256.) - 0.5;
+	return (threshold / 256.) - 0.5;
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
@@ -429,8 +483,15 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		}
 	} else if (m_ditherAlphaType == "ordered") {
 		// Ordered Dither Alpha
-		const double threshold = GetThreshold(x, y);
-		double newAlpha = col.GetAlpha() + (threshold * (1. / 16.));
+
+		double newAlpha = col.GetAlpha();
+
+		const double r = 1. / static_cast<double>(m_ditherAlphaFactor);
+		const double M = GetThreshold(x, y);
+
+		newAlpha += M * r;
+		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);
+
 		newAlpha *= 255.;
 		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
 		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
