@@ -30,11 +30,11 @@ using json = nlohmann::json;
 std::string Extension(const std::string loc);
 std::string NoExtension(const std::string loc);
 
-bool CheckColourMathMode(const std::string & mode);
+bool CheckColourMathMode(const std::string& mode);
 
 int main(int argc, char* argv[]) {
-// For generating blue noise array from blue noise texture
-//#define DEV_MODE
+	// For generating blue noise array from blue noise texture
+	//#define DEV_MODE
 #ifdef DEV_MODE
 	// https://github.com/Calinou/free-blue-noise-textures
 	Image blueNoise("dev/32_LDR_LLL1_0.png");
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/lenna.png";
-	std::string imageLoc = "data/grayscale.png";
+	std::string imageLoc = "data/alphaTest.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -79,8 +79,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string paletteLocStr = "data/wplace_premium.palette";
-	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	//std::string paletteLocStr = "data/wplace_premium.palette";
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
@@ -159,8 +159,12 @@ int main(int argc, char* argv[]) {
 		{ "hideThreshold", json::value_t::number_unsigned },
 		{ "mono", json::value_t::boolean },
 		{ "grayscale", json::value_t::boolean },
-		{ "matrixType", json::value_t::string }
+		{ "matrixType", json::value_t::string },
+		{ "ditherAlpha", json::value_t::boolean},
+		{ "ditherAlphaFactor", json::value_t::number_unsigned },
+		{ "ditherAlphaType", json::value_t::string }
 	};
+
 	bool allFound = true;
 	for (auto it = required.begin(); it != required.end(); ++it) {
 		if (!settings.contains(it->first)) {
@@ -199,6 +203,18 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
+	if (settings["ditherAlphaType"] == "floyd" || settings["ditherAlphaType"] == "floyd-steinberg" ||
+		settings["ditherAlphaType"] == "steinberg" || settings["ditherAlphaType"] == "fs") {
+		settings["ditherAlphaType"] = "fs";
+	} else if (settings["ditherAlphaType"] == "ordered") {
+		settings["ditherAlphaType"] = "ordered";
+	} else if (settings["ditherAlphaType"] == "none") {
+		settings["ditherAlphaType"] = "none";
+	} else {
+		Log::WriteOneLine("Invalid ditherAlphaType: " + settings["ditherAlphaType"]);
+		invalidType = true;
+	}
+
 	if (!CheckColourMathMode(settings["distanceMode"])) {
 		Log::WriteOneLine("Invalid distanceMode: " + settings["distanceMode"]);
 		invalidType = true;
@@ -221,7 +237,14 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	Dither::SetSettings(settings["distanceMode"], settings["mathMode"], settings["mono"], settings["matrixType"]);
+	Dither::SetSettings(
+		settings["distanceMode"], 
+		settings["mathMode"], 
+		settings["mono"], 
+		settings["matrixType"], 
+		((bool)settings["hideSemiTransparent"] ? false : (bool)settings["ditherAlpha"]),
+		static_cast<unsigned int>(settings["ditherAlphaFactor"]),
+		settings["ditherAlphaType"]);
 
 	// ========== GET IMAGE ==========
 
@@ -278,7 +301,6 @@ int main(int argc, char* argv[]) {
 	// ===== Generate Output Path =====
 
 	const std::string folder = NoExtension(imageLoc);
-	
 
 	std::string outputLoc = folder + '\\';
 

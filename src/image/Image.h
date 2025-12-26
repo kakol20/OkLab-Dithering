@@ -46,6 +46,7 @@ public:
 	void Clear();
 
 	void HideSemiTransparent(const int threshold = 127);
+	bool HasAlphaChannel() const;
 
 	inline bool IsGrayscale() const { return m_channels <= 2; };
 

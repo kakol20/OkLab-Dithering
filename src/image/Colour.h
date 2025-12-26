@@ -161,6 +161,9 @@ public:
 	OkLab GetOkLab() const { return m_oklab; };
 	sRGB_UInt GetsRGB_UInt() const;
 
+	double GetAlpha() const { return m_alpha; };
+	void SetAlpha(const double alpha) { m_alpha = alpha; };
+
 	bool IsGrayscale() const { return m_isGrayscale; };
 
 	void SetHex(const char* hex);

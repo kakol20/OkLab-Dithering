@@ -192,6 +192,10 @@ void Image::HideSemiTransparent(const int threshold) {
 	}
 }
 
+bool Image::HasAlphaChannel() const {
+	return m_channels == 4 || m_channels == 2;
+}
+
 void Image::AddAlphaChannel() {
 	if (m_channels == 1 || m_channels == 3) {
 		const int outChannels = m_channels + 1;
