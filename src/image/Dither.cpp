@@ -71,7 +71,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -98,7 +98,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(colours.size());
-				const std::string currStr = Log::ToString(i, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(i, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -176,7 +176,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -208,7 +208,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -267,7 +267,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -299,7 +299,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
@@ -327,7 +327,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
 				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
+				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
 
 				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
