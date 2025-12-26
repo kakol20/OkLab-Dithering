@@ -26,7 +26,7 @@ Colour::Colour(const double l, const double a, const double b, const double alph
 }
 
 Colour::Colour(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	SetsRGB(r, g, b);
+	SetsRGB(r, g, b, a);
 }
 
 Colour::Colour(const char* hex) {
@@ -461,7 +461,7 @@ void Colour::OkLabtoLRGB() {
 	if (m_oklab.a == 0. && m_oklab.b == 0) {
 		// if graycale - can skip some conversions
 		m_isGrayscale = true;
-		
+
 		double r = m_oklab.l;
 
 		// to Linear LMS - can skip "to LMS" conversion
@@ -498,20 +498,24 @@ Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
 	double r = m_srgb.r * 255.;
 	double g = m_srgb.g * 255.;
 	double b = m_srgb.b * 255.;
+	double a = m_alpha * 255.;
 
 	r = std::round(r);
 	g = std::round(g);
 	b = std::round(b);
+	a = std::round(a);
 
 	r = r > 255. ? 255. : r;
 	g = g > 255. ? 255. : g;
 	b = b > 255. ? 255. : b;
+	a = a > 255. ? 255. : a;
 
 	r = r < 0. ? 0. : r;
 	g = g < 0. ? 0. : g;
 	b = b < 0. ? 0. : b;
+	a = a < 0. ? 0. : a;
 
-	return { (uint8_t)r, (uint8_t)g, (uint8_t)b };
+	return { (uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a };
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {

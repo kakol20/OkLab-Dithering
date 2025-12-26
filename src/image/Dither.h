@@ -25,9 +25,9 @@ public:
 
 	static void NoDither(Image& image, const Palette& palette);
 
-	static void SetSettings(const std::string distanceType, 
-		const std::string mathMode, 
-		const bool mono, 
+	static void SetSettings(const std::string distanceType,
+		const std::string mathMode,
+		const bool mono,
 		const std::string matrixType, const bool ditherAlpha, const unsigned int ditherAlphaFactor, const std::string ditherAlphaType);
 
 	static Colour GetColourFromImage(const Image& image, const int x, const int y);
@@ -55,4 +55,3 @@ private:
 	//static void DitherAlphaChannel(Image& image, const int x, const int y);
 	static void DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight);
 };
-

@@ -53,7 +53,7 @@ public:
 	void AddAlphaChannel();
 
 	/// <summary>
-	/// Converts grayscale to 
+	/// Converts grayscale to
 	/// </summary>
 	void ToRGB();
 
@@ -62,4 +62,3 @@ private:
 	size_t m_size = 0;
 	int m_w, m_h, m_channels;
 };
-

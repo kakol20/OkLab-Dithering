@@ -217,7 +217,7 @@ void Image::AddAlphaChannel() {
 }
 
 void Image::ToRGB() {
-	if (IsGrayscale()) {		
+	if (IsGrayscale()) {
 		const int outChannels = m_channels == 1 ? 3 : 4;
 		const size_t outSize = (size_t)(m_w * m_h * outChannels);
 		uint8_t* outData = new uint8_t[outSize];

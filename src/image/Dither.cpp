@@ -57,7 +57,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	std::vector<Colour> colours;
 	colours.reserve(coloursSize);
 
-
 	Log::StartTime();
 	Log::WriteOneLine("Ordered Dither...");
 
@@ -294,14 +293,13 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 }
 
 void Dither::SetSettings(
-	const std::string distanceType, 
-	const std::string mathMode, 
-	const bool mono, 
-	const std::string matrixType, 
-	const bool ditherAlpha, 
-	const unsigned int ditherAlphaFactor, 
+	const std::string distanceType,
+	const std::string mathMode,
+	const bool mono,
+	const std::string matrixType,
+	const bool ditherAlpha,
+	const unsigned int ditherAlphaFactor,
 	const std::string ditherAlphaType) {
-
 	m_distanceMode = distanceType;
 	m_mathMode = mathMode;
 	m_mono = mono;
@@ -361,6 +359,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 			}
 		}
 	}
+	closest.SetAlpha(col.GetAlpha());
 
 	return closest;
 }
@@ -378,9 +377,12 @@ double Dither::GetThreshold(const int x, const int y) {
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
-	if (col.GetAlpha() > 0. && col.GetAlpha() < 1.) {
-		bool temp = true;
-	}
+	//if (col.GetAlpha() > 0. && col.GetAlpha() < 1.) {
+	//	bool temp = true;
+	//}
+	//if (col.GetAlpha() == 0.) {
+	//	bool temp = true;
+	//}
 
 	//const size_t indexCol = size_t(x + y * imgWidth);
 	if (m_ditherAlphaType == "fs") {
@@ -425,7 +427,6 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 			currAlpha = currAlpha > 1. ? 1. : (currAlpha < 0. ? 0. : currAlpha);
 			colours[neighbourIndex].SetAlpha(currAlpha);
 		}
-
 	} else if (m_ditherAlphaType == "ordered") {
 		// Ordered Dither Alpha
 		const double threshold = GetThreshold(x, y);
@@ -466,21 +467,32 @@ Colour Dither::GetColourFromImage(const Image& image, const int x, const int y) 
 	const size_t index = image.GetIndex(x, y);
 	if (image.IsGrayscale()) {
 		const uint8_t data = image.GetData(index);
+		uint8_t alpha = 255;
 
-		if (image.GetChannels() == 2) return Colour::FromsRGB(data, data, data, image.GetData(index + 1));
+		if (image.GetChannels() == 2) {
+			alpha = image.GetData(index + 1);
+		}
 
-		return Colour::FromsRGB(data, data, data);
+		return Colour::FromsRGB(data, data, data, alpha);
 	} else {
-		if (image.GetChannels() == 4) return Colour::FromsRGB(
-			image.GetData(index + 0),
-			image.GetData(index + 1),
-			image.GetData(index + 2),
-			image.GetData(index + 3));
+		uint8_t r, g, b, a;
 
-		return Colour::FromsRGB(
-			image.GetData(index + 0),
-			image.GetData(index + 1),
-			image.GetData(index + 2));
+		a = 255;
+		if (image.GetChannels() == 4) {
+			if (image.GetData(index + 3) > 0 && image.GetData(index + 3) < 255) {
+				bool temp = true;
+			}
+			if (image.GetData(index + 3) == 0) {
+				bool temp = true;
+			}
+
+			a = image.GetData(index + 3);
+		}
+		r = image.GetData(index + 0);
+		g = image.GetData(index + 1);
+		b = image.GetData(index + 2);
+
+		return Colour::FromsRGB(r, g, b, a);
 	}
 }
 
@@ -489,11 +501,23 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 	Colour::sRGB_UInt colour_int = colour.GetsRGB_UInt();
 
 	if (image.IsGrayscale()) {
-		image.SetData(index, colour_int.r);
+		if (image.GetChannels() == 2) {
+			image.SetData(index, colour_int.r);
+			image.SetData(index + 1, colour_int.a); // keep alpha channel
+		} else {
+			image.SetData(index, colour_int.r);
+		}
 	} else {
-		image.SetData(index + 0, colour_int.r);
-		image.SetData(index + 1, colour_int.g);
-		image.SetData(index + 2, colour_int.b);
+		if (image.GetChannels() == 4) {
+			image.SetData(index + 0, colour_int.r);
+			image.SetData(index + 1, colour_int.g);
+			image.SetData(index + 2, colour_int.b);
+			image.SetData(index + 3, colour_int.a);
+		} else {
+			image.SetData(index + 0, colour_int.r);
+			image.SetData(index + 1, colour_int.g);
+			image.SetData(index + 2, colour_int.b);
+		}
 	}
 }
 
@@ -512,7 +536,7 @@ void Dither::ImageToGrayscale(Image& image) {
 				bool test = true;
 			}
 #endif // _DEBUG
-			
+
 			const size_t newIndex = newImage.GetIndex(x, y);
 			Colour col = Dither::GetColourFromImage(image, x, y);
 			const double l_d = col.MonoGetLightness();
