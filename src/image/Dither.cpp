@@ -196,8 +196,9 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 	colours.reserve(coloursSize);
 
 	Log::StartTime();
-	Log::WriteOneLine("Floyd-Steinberg Dither...");
+	Log::WriteOneLine("FLOYD STEINBERG DITHERING...");
 
+	Log::WriteOneLine("  Copying Pixels");
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
@@ -206,13 +207,10 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
@@ -220,6 +218,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 	}
 
 	// Dither
+	Log::WriteOneLine("  Dithering");
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t indexCol = size_t(x + y * imgWidth);
@@ -267,13 +266,10 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
@@ -291,8 +287,9 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	colours.reserve(coloursSize);
 
 	Log::StartTime();
-	Log::WriteOneLine("No Dither...");
+	Log::WriteOneLine("NO DITHER...");
 
+	Log::WriteOneLine("  Copying Pixels");
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
@@ -301,19 +298,17 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double(x + y * imgWidth) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
 		}
 	}
 
+	Log::WriteOneLine("  Quantising");
 	for (int x = 0; x < imgWidth; ++x) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t indexCol = size_t(x + y * imgWidth);
@@ -331,13 +326,10 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
-				double progress = double((x + y * imgWidth) + (imgHeight * imgWidth)) / double(2 * imgHeight * imgWidth);
-				progress *= 100.;
+				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
+				const std::string currStr = Log::ToString(x + y * imgWidth, maxStr.size(), ' ');
 
-				std::string outStr = Log::ToString(progress, 6);
-				outStr = Log::LeadingCharacter(outStr, 9);
-
-				Log::WriteOneLine("\t" + outStr + "%");
+				Log::WriteOneLine("    " + currStr + " / " + maxStr);
 
 				Log::StartTime();
 			}
