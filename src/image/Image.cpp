@@ -1,5 +1,4 @@
 #include "Image.h"
-
 #include <cmath>
 #include <cstdint>
 #include <cstring>

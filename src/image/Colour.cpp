@@ -1,12 +1,10 @@
+#include "../wrapper/Log.h"
+#include "../wrapper/Maths.hpp"
+#include "Colour.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <string>
-
-#include "Colour.h"
-
-#include "../wrapper/Log.h"
-#include "../wrapper/Maths.hpp"
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 

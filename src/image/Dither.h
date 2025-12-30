@@ -1,7 +1,11 @@
 #pragma once
-#include <array>
+#include "Colour.h"
 #include "Image.h"
 #include "Palette.h"
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 class Dither {
 public:

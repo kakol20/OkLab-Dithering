@@ -1,5 +1,4 @@
 #include "Log.h"
-
 #include <chrono>
 #include <cmath>
 #include <corecrt.h>

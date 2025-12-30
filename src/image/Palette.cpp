@@ -1,9 +1,8 @@
-#include "Palette.h"
-#include <string>
-#include <fstream>
-
 #include "../wrapper/Log.h"
 #include "Colour.h"
+#include "Palette.h"
+#include <fstream>
+#include <string>
 
 Palette::Palette(const char* file) {
 	std::fstream p(file);

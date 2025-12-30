@@ -1,13 +1,12 @@
+#include "image/Dither.h"
+#include "image/Image.h"
+#include "image/Palette.h"
+#include "wrapper/Log.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <unordered_map>
-
-#include "image/Dither.h"
-#include "image/Image.h"
-#include "image/Palette.h"
-#include "wrapper/Log.h"
 
 // https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)

@@ -1,7 +1,6 @@
 #pragma once
-#include <vector>
-
 #include "Colour.h"
+#include <vector>
 
 class Palette {
 public:
