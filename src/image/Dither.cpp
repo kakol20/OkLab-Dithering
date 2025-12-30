@@ -88,45 +88,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	}
 
 	// dithering values
-	SetColourMathMode(m_mathMode);
-	Colour r;
-	size_t count = 0;
 
 	Log::WriteOneLine("  Calculating r value");
-	for (size_t i = 0; i < palette.size(); ++i) {
-
-		for (size_t j = 0; j < palette.size(); ++j) {
-			if (i != j) {
-				Colour diff = palette.GetIndex(i) - palette.GetIndex(j);
-				diff.Abs();
-				r += diff;
-				++count;
-			}
-
-			// -- Check Time --
-			if (Log::CheckTimeSeconds(5.)) {
-				const std::string maxStr = Log::ToString(colours.size());
-				const std::string currStr = Log::ToString(i, static_cast<unsigned int>(maxStr.size()), ' ');
-
-				Log::WriteOneLine("    " + currStr + " / " + maxStr);
-
-				Log::StartTime();
-			}
-		}
-	}
-	Colour div;
-	const double countD = static_cast<double>(count);
-	if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
-		div.SetsRGB_D(countD, countD, countD);
-	} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
-		div.SetLRGB(countD, countD, countD);
-	} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
-		div.SetOkLab(countD, 0., 0.);
-	} else {
-		div.SetOkLab(countD, countD, countD);
-	}
-	r /= div;
-	r.Update();
+	Colour r = palette.GetAverageSpread();
+	//r.Update();
 
 	Log::WriteOneLine("  Dithering");
 	for (int x = 0; x < imgWidth; ++x) {

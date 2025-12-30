@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/grayscale.png";
 	std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/alphaTest.png";
@@ -289,6 +289,8 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== DITHERING =====");
 
 	if (settings["ditherType"] == "ordered") {
+		Dither::SetColourMathMode(settings["mathMode"]);
+		palette.CalculateAverageSpread();
 		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
 		Dither::FloydDither(image, palette);

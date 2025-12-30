@@ -133,6 +133,7 @@ public:
 
 	void Abs();
 	static Colour Min(const Colour& a, const Colour& b);
+	void PureBlack(const uint8_t alpha = 255);
 
 private:
 	LRGB m_lrgb;

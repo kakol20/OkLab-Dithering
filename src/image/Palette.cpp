@@ -3,6 +3,7 @@
 #include "Palette.h"
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 Palette::Palette(const char* file) {
 	std::fstream p(file);
@@ -32,4 +33,37 @@ Palette::Palette(const char* file) {
 }
 
 Palette::~Palette() {
+}
+
+void Palette::CalculateAverageSpread() {
+	// Memoisastion of distances
+	std::unordered_map<size_t, bool> mem;
+
+	// size_t(x + y * imgWidth);
+	size_t count = 0;
+
+	m_avgSpread.PureBlack();
+	for (size_t i = 0; i < m_size; ++i) {
+		for (size_t j = 0; j < m_size; ++j) {
+			if (i == j) continue;
+
+			// Makes sure that two pairs of indices query from the same key
+			const size_t smaller = i < j ? i : j;
+			const size_t bigger = i > j ? i : j;
+			const size_t key = smaller + bigger * m_size;
+
+			if (mem.find(key) != mem.end()) continue;
+
+			mem[key] = true;
+
+			++count;
+
+			Colour spread = m_colours[i] - m_colours[j];
+			spread.Abs();
+
+			m_avgSpread += spread;
+		}
+	}
+	m_avgSpread *= 1. / static_cast<double>(count);
+	m_avgSpread.Update();
 }

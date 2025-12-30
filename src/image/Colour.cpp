@@ -371,6 +371,23 @@ Colour Colour::Min(const Colour& a, const Colour& b) {
 	return out;
 }
 
+void Colour::PureBlack(const uint8_t alpha) {
+
+	/*
+		m_alpha = other.m_alpha;
+	m_isGrayscale = other.m_isGrayscale;
+	m_lrgb = other.m_lrgb;
+	m_oklab = other.m_oklab;
+	m_srgb = other.m_srgb;
+	*/
+	m_srgb = { 0., 0., 0. };
+	m_lrgb = { 0., 0., 0. };
+	m_oklab = { 0., 0., 0. };
+	m_isGrayscale = true;
+
+	m_alpha = static_cast<double>(alpha) / 255.;
+}
+
 void Colour::OkLabFallback() {
 	if (m_oklab.l == 1. || m_oklab.l == 0.) {
 		m_oklab.a = 0.;
