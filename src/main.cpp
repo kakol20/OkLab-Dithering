@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string imageLoc = "data/test.png";
+	std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/grayscale.png";
 	std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/alphaTest.png";
