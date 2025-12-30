@@ -88,6 +88,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	}
 
 	// dithering values
+	SetColourMathMode(m_mathMode);
 	Colour r;
 	size_t count = 0;
 
