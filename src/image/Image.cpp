@@ -1,6 +1,8 @@
 #include "Image.h"
-
+#include <cmath>
+#include <cstdint>
 #include <cstring>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -9,6 +11,7 @@
 #include "../../ext/stb/stb_image_write.h"
 
 #include "../wrapper/Log.h"
+
 
 Image::Image() {
 	m_h = 0;

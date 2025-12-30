@@ -1,6 +1,13 @@
-#include "Dither.h"
-
 #include "../wrapper/Log.h"
+#include "Colour.h"
+#include "Dither.h"
+#include "Image.h"
+#include "Palette.h"
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 std::array<uint8_t, 256> Dither::m_bayer16{
 		 0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255,
@@ -81,44 +88,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	}
 
 	// dithering values
-	Colour r;
-	size_t count = 0;
 
 	Log::WriteOneLine("  Calculating r value");
-	for (size_t i = 0; i < palette.size(); ++i) {
-
-		for (size_t j = 0; j < palette.size(); ++j) {
-			if (i != j) {
-				Colour diff = palette.GetIndex(i) - palette.GetIndex(j);
-				diff.Abs();
-				r += diff;
-				++count;
-			}
-
-			// -- Check Time --
-			if (Log::CheckTimeSeconds(5.)) {
-				const std::string maxStr = Log::ToString(colours.size());
-				const std::string currStr = Log::ToString(i, static_cast<unsigned int>(maxStr.size()), ' ');
-
-				Log::WriteOneLine("    " + currStr + " / " + maxStr);
-
-				Log::StartTime();
-			}
-		}
-	}
-	Colour div;
-	const double countD = static_cast<double>(count);
-	if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
-		div.SetsRGB_D(countD, countD, countD);
-	} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
-		div.SetLRGB(countD, countD, countD);
-	} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
-		div.SetOkLab(countD, 0., 0.);
-	} else {
-		div.SetOkLab(countD, countD, countD);
-	}
-	r /= div;
-	r.Update();
+	Colour r = palette.GetAverageSpread();
+	//r.Update();
 
 	Log::WriteOneLine("  Dithering");
 	for (int x = 0; x < imgWidth; ++x) {
@@ -438,9 +411,7 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		// Floyd-Steinberg Dither Alpha
 		const double oldAlpha = col.GetAlpha();
 
-		double newAlpha = oldAlpha * 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		double newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * oldAlpha) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 
@@ -487,16 +458,12 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		newAlpha += M * r;
 		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);
 
-		newAlpha *= 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * newAlpha) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 	} else {
 		// No Dither Alpha
-		double newAlpha = col.GetAlpha() * 255.;
-		newAlpha = std::floor((newAlpha * (m_ditherAlphaFactor + 1.)) / 256.);
-		newAlpha /= static_cast<double>(m_ditherAlphaFactor);
+		double newAlpha = std::floor(static_cast<double>(m_ditherAlphaFactor + 1) * col.GetAlpha()) / static_cast<double>(m_ditherAlphaFactor);
 
 		col.SetAlpha(newAlpha);
 	}
