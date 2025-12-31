@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// No big noticeable difference between a 16x16 blue noise map vs a 32x32 blue noise map
-	if (settings["matrixType"] != "bayer" && settings["matrixType"] != "bluenoise16"/* && settings["matrixType"] != "bluenoise32"*/) {
+	if (settings["matrixType"] != "bayer" && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
 		Log::WriteOneLine("Invalid matrixType: " + settings["matrixType"]);
 		invalidType = true;
 	}

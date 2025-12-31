@@ -386,12 +386,15 @@ double Dither::GetThreshold(const int x, const int y) {
 	double threshold = 0.;
 	if (m_matrixType == "bluenoise16") {
 		threshold = (double)m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)];
-	} /*else if (m_matrixType == "bluenoise32") {
-		threshold = (double)m_blueNoise32[MatrixIndex(x % 32, y % 32, 32)];
-	}*/ else {
-		threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16, 16)];
+	} else if (m_matrixType == "ign") {
+		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
+
+		threshold = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
+		threshold *= 255;
+	} else {
+
 	}
-	//return ((threshold + 0.5) / 256.) - 0.5;
+	// TODO: Interleaved Gradient Noise Dithering
 	return (threshold / 256.) - 0.5;
 }
 

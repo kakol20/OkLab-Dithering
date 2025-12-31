@@ -52,11 +52,6 @@ void Palette::CalculateAverageSpread() {
 			const size_t bigger = i > j ? i : j;
 			const size_t key = smaller + bigger * m_size;
 
-			/*if (mem.find(key) != mem.end()) {
-				++count;
-				m_avgSpread += mem[key];
-				continue;
-			}*/
 			if (mem.find(key) != mem.end()) continue;
 
 			++count;
