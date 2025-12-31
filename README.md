@@ -55,6 +55,7 @@ Comments in settings.json not supported
 Matrix used for ordered dithering  
 - `bayer` Bayer 16x16 matrix  
 - `blueNoise16` Blue Noise 16x16 matrix
+- `ign` Interleaved Gradient Noise
 
 ### `ditherAlpha`
 - `true` or `false`  

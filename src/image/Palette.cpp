@@ -36,8 +36,8 @@ Palette::~Palette() {
 }
 
 void Palette::CalculateAverageSpread() {
-	// Memoisastion of distances
-	std::unordered_map<size_t, bool> mem;
+	// Memoisastion of spreads between colours
+	std::unordered_map<size_t, Colour> mem;
 
 	// size_t(x + y * imgWidth);
 	size_t count = 0;
@@ -54,12 +54,12 @@ void Palette::CalculateAverageSpread() {
 
 			if (mem.find(key) != mem.end()) continue;
 
-			mem[key] = true;
-
 			++count;
 
 			Colour spread = m_colours[i] - m_colours[j];
 			spread.Abs();
+
+			mem[key] = spread;
 
 			m_avgSpread += spread;
 		}
