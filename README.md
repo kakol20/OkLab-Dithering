@@ -25,6 +25,7 @@ Comments in settings.json not supported
 
 #### `ditherType`
 - `ordered` for ordered dithering  
+	- With new ordered dithering method `mathMode` is not used
 - `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
 - `none` for no dithering
 

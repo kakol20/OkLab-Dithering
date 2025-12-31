@@ -3,9 +3,11 @@
 #include "Dither.h"
 #include "Image.h"
 #include "Palette.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -87,11 +89,15 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 		}
 	}
 
-	// dithering values
+	struct DitherInfo {
+		double alpha = 0.;
+		Colour p0;
+		Colour p1;
+	};
 
-	Log::WriteOneLine("  Calculating r value");
-	Colour r = palette.GetAverageSpread();
-	//r.Update();
+	std::map<Colour, DitherInfo> ditherMem;
+
+	SetColourMathMode(m_distanceMode);
 
 	Log::WriteOneLine("  Dithering");
 	for (int x = 0; x < imgWidth; ++x) {
@@ -101,44 +107,70 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 			Colour pixel = colours[indexCol];
 
+			//SetColourMathMode(m_mathMode);
+
+			// ===== CHECK MEMOISATION =====
+
+			DitherInfo info;
+			
+			if (ditherMem.find(pixel) != ditherMem.end()) {
+				// Found
+				info = ditherMem[pixel];
+			} else {
+				// Find p0 and p1
+				
+				size_t i0 = 0, i1 = 0;
+				double d0 = 0., d1 = 0.;
+
+				for (size_t i = 0; i < palette.size(); ++i) {
+					double d = pixel.MagSq(palette.GetIndex(i));
+
+					if (i == 0) {
+						d0 = d;
+						d1 = d;
+						continue;
+					}
+
+					if (d < d0) {
+						d1 = d0; 
+						i1 = i0;
+						d0 = d; 
+						i0 = i;
+					} else if (d < d1) {
+						d1 = d;
+						i1 = i;
+					}
+				}
+
+				info.p0 = palette.GetIndex(i0);
+				info.p1 = palette.GetIndex(i1);
+
+				// Calculate Alpha value
+				Colour d = info.p1 - info.p0;
+				double denom = d.LengthSq();
+
+				if (denom < 1e-8) {
+					info.alpha = 0.;
+				} else {
+					info.alpha = d.Dot(pixel - info.p0);
+					info.alpha /= denom;
+					info.alpha = std::clamp(info.alpha, 0., 1.);
+				}
+
+				ditherMem[pixel] = info;
+			}
+
 			// ===== APPLY DITHER =====
-			SetColourMathMode(m_mathMode);
 
-			/*const double threshold = GetThreshold(x, y);
+			// This is to cancel out the (-0.5) inside GetThreshold() function
+			const double threshold = GetThreshold(x, y) + 0.5;
 
-			Colour threshold_c;
-			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
-				threshold_c.SetsRGB_D(threshold, threshold, threshold);
-			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
-				threshold_c.SetLRGB(threshold, threshold, threshold);
-			} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
-				threshold_c.SetOkLab(threshold, 0., 0.);
-			} else {
-				threshold_c.SetOkLab(threshold, threshold, threshold);
-			}
+			//SetColourMathMode(m_distanceMode);
+			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
-			Colour dithered = pixel + (threshold_c * (1. / 16.));
-			dithered.Clamp();
-			dithered.Update();*/
-
-			const double threshold = GetThreshold(x, y);
-			Colour M;
-			if (Colour::GetMathMode() == Colour::MathMode::sRGB) {
-				M.SetsRGB_D(threshold, threshold, threshold);
-			} else if (Colour::GetMathMode() == Colour::MathMode::Linear_RGB) {
-				M.SetLRGB(threshold, threshold, threshold);
-			} else if (Colour::GetMathMode() == Colour::MathMode::OkLab_Lightness) {
-				M.SetOkLab(threshold, 0., 0.);
-			} else {
-				M.SetOkLab(threshold, threshold, threshold);
-			}
-
-			Colour dithered = pixel + (M * r);
-			dithered.Clamp();
-			dithered.Update();
-
-			SetColourMathMode(m_distanceMode);
-			Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
+			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
+			nearest.SetAlpha(pixel.GetAlpha());
+			//Colour nearest = pixel;
 
 			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight);
 
@@ -157,6 +189,8 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			}
 		}
 	}
+
+	Log::WriteOneLine("    Dither Mem Size: " + Log::ToString(ditherMem.size()));
 }
 
 void Dither::FloydDither(Image& image, const Palette& palette) {
@@ -385,27 +419,20 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 double Dither::GetThreshold(const int x, const int y) {
 	double threshold = 0.;
 	if (m_matrixType == "bluenoise16") {
-		threshold = (double)m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)];
+		threshold = (double)m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)] / 256.;
 	} else if (m_matrixType == "ign") {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
 
 		threshold = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
-		threshold *= 255;
+		//threshold *= 255;
 	} else {
-
+		threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16, 16)] / 256.;
 	}
-	// TODO: Interleaved Gradient Noise Dithering
-	return (threshold / 256.) - 0.5;
+	
+	return threshold - 0.5;
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
-	//if (col.GetAlpha() > 0. && col.GetAlpha() < 1.) {
-	//	bool temp = true;
-	//}
-	//if (col.GetAlpha() == 0.) {
-	//	bool temp = true;
-	//}
-
 	// Skip fully opaque or fully transparent pixels
 	if (col.GetAlpha() == 1. || col.GetAlpha() == 0) return;
 
