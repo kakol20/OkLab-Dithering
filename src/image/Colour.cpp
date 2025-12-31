@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <tuple>
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
@@ -259,6 +260,44 @@ Colour Colour::operator*(const double scalar) const {
 	return out;
 }
 
+bool Colour::operator==(const Colour& other) const {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
+		return std::tie(m_srgb.r, m_srgb.g, m_srgb.b, m_alpha) ==
+			std::tie(other.m_srgb.r, other.m_srgb.g, other.m_srgb.b, other.m_alpha);
+	case Colour::MathMode::OkLab:
+		return std::tie(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha) ==
+			std::tie(other.m_oklab.l, other.m_oklab.a, other.m_oklab.b, other.m_alpha);
+	case Colour::MathMode::OkLab_Lightness:
+		return std::tie(m_oklab.l, m_alpha) ==
+			std::tie(other.m_oklab.l, other.m_alpha);
+	case Colour::MathMode::Linear_RGB:
+		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) ==
+			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
+	default:
+		return false;
+	}
+}
+
+bool Colour::operator<(const Colour& other) const {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
+		return std::tie(m_srgb.r, m_srgb.g, m_srgb.b, m_alpha) <
+			std::tie(other.m_srgb.r, other.m_srgb.g, other.m_srgb.b, other.m_alpha);
+	case Colour::MathMode::OkLab:
+		return std::tie(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha) <
+			std::tie(other.m_oklab.l, other.m_oklab.a, other.m_oklab.b, other.m_alpha);
+	case Colour::MathMode::OkLab_Lightness:
+		return std::tie(m_oklab.l, m_alpha) <
+			std::tie(other.m_oklab.l, other.m_alpha);
+	case Colour::MathMode::Linear_RGB:
+		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
+			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
+	default:
+		return false;
+	}
+}
+
 std::string Colour::LRGBDebug() const {
 	std::string rStr = Log::LeadingCharacter(Log::ToString(m_lrgb.r, 4), 7, ' ');
 	std::string gStr = Log::LeadingCharacter(Log::ToString(m_lrgb.g, 4), 7, ' ');
@@ -300,6 +339,48 @@ double Colour::MagSq(const Colour& other) const {
 	return 0.0;
 }
 
+double Colour::LengthSq() const {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
+		return Maths::Pow2(m_srgb.r) +
+			Maths::Pow2(m_srgb.g) +
+			Maths::Pow2(m_srgb.b);
+	case Colour::MathMode::OkLab:
+		return Maths::Pow2(m_oklab.l) +
+			Maths::Pow2(m_oklab.a) +
+			Maths::Pow2(m_oklab.b);
+	case Colour::MathMode::OkLab_Lightness:
+		return Maths::Pow2(m_oklab.l);
+	case Colour::MathMode::Linear_RGB:
+		return Maths::Pow2(m_lrgb.r) +
+			Maths::Pow2(m_lrgb.g) +
+			Maths::Pow2(m_lrgb.b);
+	default:
+		return 0.;
+	}
+}
+
+double Colour::Dot(const Colour& other) const {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
+		return m_srgb.r * other.m_srgb.r +
+			m_srgb.g * other.m_srgb.g +
+			m_srgb.b * other.m_srgb.b;
+	case Colour::MathMode::OkLab:
+		return m_oklab.l * other.m_oklab.l +
+			m_oklab.a * other.m_oklab.a +
+			m_oklab.b * other.m_oklab.b;
+	case Colour::MathMode::OkLab_Lightness:
+		return m_oklab.l * other.m_oklab.l;
+	case Colour::MathMode::Linear_RGB:
+		return m_lrgb.r * other.m_lrgb.r +
+			m_lrgb.g * other.m_lrgb.g +
+			m_lrgb.b * other.m_lrgb.b;
+	default:
+		return 0.0;
+	}
+}
+
 double Colour::MonoDistance(const Colour& other, const double min, const double max) const {
 	// Normalise other colour
 	double otherL = (other.MonoGetLightness() - min) / (max - min);
@@ -336,7 +417,6 @@ void Colour::Abs() {
 		m_srgb.r = std::abs(m_srgb.r);
 		m_srgb.g = std::abs(m_srgb.g);
 		m_srgb.b = std::abs(m_srgb.b);
-
 	} else if (m_mathMode == MathMode::Linear_RGB) {
 		m_lrgb.r = std::abs(m_lrgb.r);
 		m_lrgb.g = std::abs(m_lrgb.g);
@@ -372,7 +452,6 @@ Colour Colour::Min(const Colour& a, const Colour& b) {
 }
 
 void Colour::PureBlack(const uint8_t alpha) {
-
 	/*
 		m_alpha = other.m_alpha;
 	m_isGrayscale = other.m_isGrayscale;

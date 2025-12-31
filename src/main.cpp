@@ -64,11 +64,11 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/alphaTest.png";
-	//std::string imageLoc = "data/alphaTest-gradient.png";
+	std::string imageLoc = "data/alphaTest-gradient.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== DITHERING =====");
 
 	if (settings["ditherType"] == "ordered") {
-		Dither::SetColourMathMode(settings["mathMode"]);
+		//Dither::SetColourMathMode(settings["mathMode"]);
 		palette.CalculateAverageSpread();
 		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
@@ -320,7 +320,7 @@ int main(int argc, char* argv[]) {
 
 	outputLoc += "-" + (std::string)settings["distanceMode"];
 
-	if (settings["ditherType"] != "none") outputLoc += "-" + (std::string)settings["mathMode"];
+	if (settings["ditherType"] != "none" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
 
 	outputLoc += ".png";
 

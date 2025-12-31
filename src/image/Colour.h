@@ -84,6 +84,14 @@ public:
 	Colour operator-(const Colour& other) const;
 	Colour operator*(const double scalar) const;
 
+	bool operator==(const Colour& other) const;
+	bool operator<(const Colour& other) const;
+	
+	inline bool operator!=(const Colour& other) const { return !(*this == other); };
+	inline bool operator>(const Colour& other) const { return other < *this; };
+	inline bool operator<=(const Colour& other) const { return !(*this > other); };
+	inline bool operator>=(const Colour& other) const { return !(*this < other); };
+
 	/// <summary>
 	/// NOTE: Will not update other colour space when maths is done - must call UPDATE functions
 	/// </summary>
@@ -119,6 +127,14 @@ public:
 	/// <para>between L values will be outputted instead</para>
 	/// </returns>
 	double MagSq(const Colour& other) const;
+
+	/// <summary>
+	/// Const member function that returns the squared length (squared magnitude) of the object.
+	/// </summary>
+	/// <returns>The squared length as a double.</returns>
+	double LengthSq() const;
+
+	double Dot(const Colour& other) const;
 
 	/// <summary>
 	/// Calculates distance based on lightness
