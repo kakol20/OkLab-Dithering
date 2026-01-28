@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 std::array<uint8_t, 256> Dither::m_bayer16{
@@ -119,26 +120,23 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			} else {
 				// Find p0 and p1
 				
-				size_t i0 = 0, i1 = 0;
-				double d0 = 0., d1 = 0.;
+				size_t i0 = 0, i1 = 1;
+				double d0 = pixel.MagSq(palette.GetIndex(0));
+				double d1 = pixel.MagSq(palette.GetIndex(1));
 
-				for (size_t i = 0; i < palette.size(); ++i) {
+				if (d1 < d0) {
+					std::swap(d0, d1);
+					std::swap(i0, i1);
+				}
+
+				for (size_t i = 2; i < palette.size(); ++i) {
 					double d = pixel.MagSq(palette.GetIndex(i));
 
-					if (i == 0) {
-						d0 = d;
-						d1 = d;
-						continue;
-					}
-
 					if (d < d0) {
-						d1 = d0; 
-						i1 = i0;
-						d0 = d; 
-						i0 = i;
+						d1 = d0; i1 = i0;
+						d0 = d;  i0 = i;
 					} else if (d < d1) {
-						d1 = d;
-						i1 = i;
+						d1 = d;  i1 = i;
 					}
 				}
 
@@ -149,13 +147,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				Colour d = info.p1 - info.p0;
 				double denom = d.LengthSq();
 
-				if (denom < 1e-8) {
-					info.alpha = 0.;
-				} else {
-					info.alpha = d.Dot(pixel - info.p0);
-					info.alpha /= denom;
-					info.alpha = std::clamp(info.alpha, 0., 1.);
-				}
+				info.alpha = d.Dot(pixel - info.p0);
+				info.alpha /= denom;
+				info.alpha = std::clamp(info.alpha, 0., 1.);
 
 				ditherMem[pixel] = info;
 			}
