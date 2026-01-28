@@ -53,16 +53,20 @@ int main(int argc, char* argv[]) {
 
 	Image img(256, 256, 3);
 	for (int x = 0; x < 256; ++x) {
-		const uint8_t col = static_cast<uint8_t>(x);
 		for (int y = 0; y < 256; ++y) {
-			const size_t index = img.GetIndex(x, y);
+			int tileX = x / 16;
+			int tileY = y / 16;
 
-			img.SetData(index + 0, col);
-			img.SetData(index + 1, col);
-			img.SetData(index + 2, col);
+			uint8_t gray = static_cast<uint8_t>(tileY * 16 + tileX);
+
+			size_t index = img.GetIndex(x, y);
+
+			img.SetData(index + 0, gray);
+			img.SetData(index + 1, gray);
+			img.SetData(index + 2, gray);
 		}
 	}
-	img.Write("data/gs-gradient.png");
+	img.Write("data/gs-tiles.png");
 
 #else
 #ifdef _DEBUG
@@ -81,11 +85,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	//std::string imageLoc = "data/test.png";
-	std::string imageLoc = "data/grayscale.png";
+	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/gs-gradient.png";
+	std::string imageLoc = "data/gs-tiles.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -94,10 +99,10 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/wplace_premium.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
-	//std::string paletteLocStr = "data/bw.palette";
+	std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
