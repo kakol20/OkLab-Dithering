@@ -634,15 +634,15 @@ void Colour::OkLabtoLRGB() {
 }
 
 Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
-	double r = m_srgb.r * 255.;
-	double g = m_srgb.g * 255.;
-	double b = m_srgb.b * 255.;
-	double a = m_alpha * 255.;
+	double r = m_srgb.r * 256.;
+	double g = m_srgb.g * 256.;
+	double b = m_srgb.b * 256.;
+	double a = m_alpha * 256.;
 
-	r = std::round(r);
-	g = std::round(g);
-	b = std::round(b);
-	a = std::round(a);
+	r = std::floor(r);
+	g = std::floor(g);
+	b = std::floor(b);
+	a = std::floor(a);
 
 	r = r > 255. ? 255. : r;
 	g = g > 255. ? 255. : g;
@@ -654,7 +654,8 @@ Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
 	b = b < 0. ? 0. : b;
 	a = a < 0. ? 0. : a;
 
-	return { (uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a };
+	//return { (uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a };
+	return { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), static_cast<uint8_t>(a) };
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {

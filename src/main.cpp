@@ -1,8 +1,12 @@
+#include "../ext/json/json.hpp"
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
 #include <algorithm>
+#include <cctype>
+#include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -13,10 +17,9 @@
 #define JSON_CATCH_USER(exception) if(false)
 #define JSON_THROW_USER(exception) { Log::WriteOneLine((exception).what()); }\
 
-#include "../ext/json/json.hpp"
-#include <cctype>
-#include <cstdlib>
 using json = nlohmann::json;
+
+//#define DEV_MODE
 
 //const double Maths::Pi = 3.1415926535;
 //const double Maths::Tau = 6.283185307;
@@ -32,21 +35,34 @@ int main(int argc, char* argv[]) {
 	// For generating blue noise array from blue noise texture
 	//#define DEV_MODE
 #ifdef DEV_MODE
-	// https://github.com/Calinou/free-blue-noise-textures
-	Image blueNoise("dev/32_LDR_LLL1_0.png");
-	Log::WriteOneLine("Grayscale: " + Log::ToString(blueNoise.IsGrayscale()));
+	//// https://github.com/Calinou/free-blue-noise-textures
+	//Image blueNoise("dev/32_LDR_LLL1_0.png");
+	//Log::WriteOneLine("Grayscale: " + Log::ToString(blueNoise.IsGrayscale()));
 
-	Log::Write("\n{\n");
-	for (int y = 0; y < blueNoise.GetHeight(); ++y) {
-		Log::Write("\t");
-		for (int x = 0; x < blueNoise.GetWidth(); ++x) {
-			const uint8_t val = blueNoise.GetData(blueNoise.GetIndex(x, y));
-			const std::string valStr = Log::ToString((unsigned int)val, 3, ' ');
-			Log::Write(valStr + ", ");
+	//Log::Write("\n{\n");
+	//for (int y = 0; y < blueNoise.GetHeight(); ++y) {
+	//	Log::Write("\t");
+	//	for (int x = 0; x < blueNoise.GetWidth(); ++x) {
+	//		const uint8_t val = blueNoise.GetData(blueNoise.GetIndex(x, y));
+	//		const std::string valStr = Log::ToString((unsigned int)val, 3, ' ');
+	//		Log::Write(valStr + ", ");
+	//	}
+	//	Log::EndLine();
+	//}
+	//Log::Write("};\n");
+
+	Image img(256, 256, 3);
+	for (int x = 0; x < 256; ++x) {
+		const uint8_t col = static_cast<uint8_t>(x);
+		for (int y = 0; y < 256; ++y) {
+			const size_t index = img.GetIndex(x, y);
+
+			img.SetData(index + 0, col);
+			img.SetData(index + 1, col);
+			img.SetData(index + 2, col);
 		}
-		Log::EndLine();
 	}
-	Log::Write("};\n");
+	img.Write("data/gs-gradient.png");
 
 #else
 #ifdef _DEBUG
@@ -65,10 +81,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	//std::string imageLoc = "data/test.png";
-	//std::string imageLoc = "data/grayscale.png";
+	std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/alphaTest.png";
-	std::string imageLoc = "data/alphaTest-gradient.png";
+	//std::string imageLoc = "data/alphaTest-gradient.png";
+	//std::string imageLoc = "data/gs-gradient.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -80,6 +97,7 @@ int main(int argc, char* argv[]) {
 	std::string paletteLocStr = "data/wplace_premium.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
+	//std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -236,10 +254,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	Dither::SetSettings(
-		settings["distanceMode"], 
-		settings["mathMode"], 
-		settings["mono"], 
-		settings["matrixType"], 
+		settings["distanceMode"],
+		settings["mathMode"],
+		settings["mono"],
+		settings["matrixType"],
 		((bool)settings["hideSemiTransparent"] ? false : (bool)settings["ditherAlpha"]),
 		static_cast<unsigned int>(settings["ditherAlphaFactor"]),
 		settings["ditherAlphaType"]);
