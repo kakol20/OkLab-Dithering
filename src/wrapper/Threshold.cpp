@@ -6,7 +6,7 @@
 #include <cctype>
 
 std::string Threshold::m_matrixType = "bayer16";
-int Threshold::m_bayerSize = 16;
+int Threshold::m_bayerSize = 2;
 
 std::vector<unsigned int> Threshold::m_bayer{ 0, 2, 3, 1 };
 
