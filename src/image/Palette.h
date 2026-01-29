@@ -9,7 +9,7 @@ public:
 
 	size_t size() const { return m_size; };
 
-	Colour GetIndex(const size_t index) const { return m_colours[index]; };
+	Colour GetColour(const size_t index) const { return m_colours[index]; };
 
 	/// <summary>
 	/// Average spread between one colour and other colours

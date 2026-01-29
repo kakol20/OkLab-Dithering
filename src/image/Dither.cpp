@@ -1,4 +1,5 @@
 #include "../wrapper/Log.h"
+#include "../wrapper/Threshold.h"
 #include "Colour.h"
 #include "Dither.h"
 #include "Image.h"
@@ -11,44 +12,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-std::array<uint8_t, 256> Dither::m_bayer16{
-		 0, 192,  48, 240,  12, 204,  60, 252,   3, 195,  51, 243,  15, 207,  63, 255,
-	 128,  64, 176, 112, 140,  76, 188, 124, 131,  67, 179, 115, 143,  79, 191, 127,
-		32, 224,  16, 208,  44, 236,  28, 220,  35, 227,  19, 211,  47, 239,  31, 223,
-	 160,  96, 144,  80, 172, 108, 156,  92, 163,  99, 147,  83, 175, 111, 159,  95,
-		 8, 200,  56, 248,   4, 196,  52, 244,  11, 203,  59, 251,   7, 199,  55, 247,
-	 136,  72, 184, 120, 132,  68, 180, 116, 139,  75, 187, 123, 135,  71, 183, 119,
-		40, 232,  24, 216,  36, 228,  20, 212,  43, 235,  27, 219,  39, 231,  23, 215,
-	 168, 104, 152,  88, 164, 100, 148,  84, 171, 107, 155,  91, 167, 103, 151,  87,
-		 2, 194,  50, 242,  14, 206,  62, 254,   1, 193,  49, 241,  13, 205,  61, 253,
-	 130,  66, 178, 114, 142,  78, 190, 126, 129,  65, 177, 113, 141,  77, 189, 125,
-		34, 226,  18, 210,  46, 238,  30, 222,  33, 225,  17, 209,  45, 237,  29, 221,
-	 162,  98, 146,  82, 174, 110, 158,  94, 161,  97, 145,  81, 173, 109, 157,  93,
-		10, 202,  58, 250,   6, 198,  54, 246,   9, 201,  57, 249,   5, 197,  53, 245,
-	 138,  74, 186, 122, 134,  70, 182, 118, 137,  73, 185, 121, 133,  69, 181, 117,
-		42, 234,  26, 218,  38, 230,  22, 214,  41, 233,  25, 217,  37, 229,  21, 213,
-	 170, 106, 154,  90, 166, 102, 150,  86, 169, 105, 153,  89, 165, 101, 149,  85
-};
-
-std::array<uint8_t, 256> Dither::m_blueNoise16{
-	111,  53, 141, 160, 113, 194,  73, 176, 200,  53, 150,  94,  68,  42,  86, 252,
-	 31,  99, 238, 221,  37, 250, 147,  26,  42, 105, 219, 168, 193, 137,  21, 165,
-	124, 176,  80,  22,  67, 172, 122,  87, 211, 130, 247,  29, 115,  57, 228, 211,
-	 45, 200, 150, 130, 188, 104,  56, 235, 159,  64,   6, 179,  78, 241, 146,  69,
-		9, 244,  58,  91, 229,  13, 203,  33, 185, 101, 143, 205,  38,  92, 189, 106,
-	222, 162, 114,  40, 213, 155, 138,  72, 245,  85, 225,  51, 125, 156,  24, 134,
-	 84, 194,  27, 254,  77,  49, 177, 114,  20,  45, 167, 104, 253, 175, 210,  62,
-	100, 179, 143, 121, 171,  97, 235, 128, 214, 148, 198,  17,  73,  32, 238,  48,
-	231,  37,  70,  20, 204,  61,  25, 191,  88,  62, 111, 220, 139,  87, 119, 152,
-	207, 129, 243, 159, 223, 109,  39, 247, 163,  30, 233, 182,  55, 197, 169,  15,
-	107, 187,  54,  90, 136, 185, 152,  79,  51, 133,  98, 156,  40, 249,  95,  65,
-	 24,  76, 218,  43,   0,  68, 227, 120, 195, 239,  11,  75, 126,  27, 226, 142,
-	246, 173, 119, 199, 251, 103, 145,  21, 208, 172, 109, 217, 191,  83, 202, 162,
-	 34,  93, 149,  28, 165, 181,  58,  36,  90,  66,  46, 139, 166,  59, 116,  49,
-	215, 232,  63, 127,  82, 237, 216, 117, 158, 255, 184,  33, 242, 102,  12, 132,
-	 75, 190,  17, 209,  47,  96,  15, 135, 230,  81,  19, 123, 224, 206, 154, 181
-};
 
 bool Dither::m_mono = false;
 bool Dither::m_ditherAlpha = false;
@@ -117,12 +80,26 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			if (ditherMem.find(pixel) != ditherMem.end()) {
 				// Found
 				info = ditherMem[pixel];
-			} else {
+			} else if (palette.size() <= 1) {
+				info.p0 = palette.GetColour(0);
+				info.p1 = palette.GetColour(1);
+
+				// Calculate Alpha value
+				Colour d = info.p1 - info.p0;
+				double denom = d.LengthSq();
+
+				info.alpha = d.Dot(pixel - info.p0);
+				info.alpha /= denom;
+				info.alpha = std::clamp(info.alpha, 0., 1.);
+
+				ditherMem[pixel] = info;
+			}
+			else {
 				// Find p0 and p1
 				
 				size_t i0 = 0, i1 = 1;
-				double d0 = pixel.MagSq(palette.GetIndex(0));
-				double d1 = pixel.MagSq(palette.GetIndex(1));
+				double d0 = pixel.MagSq(palette.GetColour(0));
+				double d1 = pixel.MagSq(palette.GetColour(1));
 
 				if (d1 < d0) {
 					std::swap(d0, d1);
@@ -130,7 +107,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				}
 
 				for (size_t i = 2; i < palette.size(); ++i) {
-					double d = pixel.MagSq(palette.GetIndex(i));
+					double d = pixel.MagSq(palette.GetColour(i));
 
 					if (d < d0) {
 						d1 = d0; i1 = i0;
@@ -140,8 +117,8 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					}
 				}
 
-				info.p0 = palette.GetIndex(i0);
-				info.p1 = palette.GetIndex(i1);
+				info.p0 = palette.GetColour(i0);
+				info.p1 = palette.GetColour(i1);
 
 				// Calculate Alpha value
 				Colour d = info.p1 - info.p0;
@@ -157,7 +134,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// ===== APPLY DITHER =====
 
 			// This is to cancel out the (-0.5) inside GetThreshold() function
-			const double threshold = GetThreshold(x, y) + 0.5;
+			const double threshold = Threshold::GetThreshold(x, y) + 0.5;
 
 			//SetColourMathMode(m_distanceMode);
 			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
@@ -362,10 +339,10 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 
 	if (m_mono) {
 		// get darkest and lightest colour in palette
-		min = palette.GetIndex(0).MonoGetLightness();
+		min = palette.GetColour(0).MonoGetLightness();
 		max = min;
 		for (size_t i = 1; i < palette.size(); ++i) {
-			const double l = palette.GetIndex(i).MonoGetLightness();
+			const double l = palette.GetColour(i).MonoGetLightness();
 			min = l < min ? l : min;
 			max = l > max ? l : max;
 		}
@@ -376,13 +353,13 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 		// if grayscale == true - first find earliest grayscale colour
 		for (size_t i = 0; i < palette.size(); ++i) {
 			++startI;
-			if (palette.GetIndex(i).IsGrayscale()) {
-				closest = palette.GetIndex(i);
+			if (palette.GetColour(i).IsGrayscale()) {
+				closest = palette.GetColour(i);
 				break;
 			}
 		}
 	} else {
-		closest = palette.GetIndex(0);
+		closest = palette.GetColour(0);
 		startI = 1;
 	}
 
@@ -391,7 +368,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 	double closestDist = m_mono ? col.MonoDistance(closest, min, max) : col.MagSq(closest);
 
 	for (size_t i = startI; i < palette.size(); ++i) {
-		const Colour current = palette.GetIndex(i);
+		const Colour current = palette.GetColour(i);
 
 		// When grayscale == true - only check grayscale colours
 		// When grayscale == false - check all colours
@@ -408,22 +385,6 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 	closest.SetAlpha(col.GetAlpha());
 
 	return closest;
-}
-
-double Dither::GetThreshold(const int x, const int y) {
-	double threshold = 0.;
-	if (m_matrixType == "bluenoise16") {
-		threshold = (double)m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)] / 256.;
-	} else if (m_matrixType == "ign") {
-		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
-
-		threshold = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
-		//threshold *= 255;
-	} else {
-		threshold = (double)m_bayer16[MatrixIndex(x % 16, y % 16, 16)] / 256.;
-	}
-	
-	return threshold - 0.5;
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
@@ -477,7 +438,7 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		double newAlpha = col.GetAlpha();
 
 		const double r = 1. / static_cast<double>(m_ditherAlphaFactor);
-		const double M = GetThreshold(x, y);
+		const double M = Threshold::GetThreshold(x, y);
 
 		newAlpha += M * r;
 		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);

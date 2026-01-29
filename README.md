@@ -9,14 +9,14 @@ Comments in settings.json not supported
 
 ```json
 {
-	"ditherType": "fs",
+	"ditherType": "ordered",
 	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer",
+	"matrixType": "bayer32",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered"
@@ -54,7 +54,10 @@ Comments in settings.json not supported
 
 #### `matrixType`
 Matrix used for ordered dithering  
-- `bayer` Bayer 16x16 matrix  
+- `bayerN`
+	- Where N is the size of the bayer matrix
+	- N must be a power of two
+	- Be careful of high values of N
 - `blueNoise16` Blue Noise 16x16 matrix
 - `ign` Interleaved Gradient Noise
 

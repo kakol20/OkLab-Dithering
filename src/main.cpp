@@ -3,6 +3,7 @@
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
+#include "wrapper/Threshold.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -53,16 +54,20 @@ int main(int argc, char* argv[]) {
 
 	Image img(256, 256, 3);
 	for (int x = 0; x < 256; ++x) {
-		const uint8_t col = static_cast<uint8_t>(x);
 		for (int y = 0; y < 256; ++y) {
-			const size_t index = img.GetIndex(x, y);
+			int tileX = x / 16;
+			int tileY = y / 16;
 
-			img.SetData(index + 0, col);
-			img.SetData(index + 1, col);
-			img.SetData(index + 2, col);
+			uint8_t gray = static_cast<uint8_t>(tileY * 16 + tileX);
+
+			size_t index = img.GetIndex(x, y);
+
+			img.SetData(index + 0, gray);
+			img.SetData(index + 1, gray);
+			img.SetData(index + 2, gray);
 		}
 	}
-	img.Write("data/gs-gradient.png");
+	img.Write("data/gs-tiles.png");
 
 #else
 #ifdef _DEBUG
@@ -80,12 +85,13 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string imageLoc = "data/test.png";
-	std::string imageLoc = "data/grayscale.png";
-	//std::string imageLoc = "data/lenna.png";
+	std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
+	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
+	//std::string imageLoc = "data/gs-tiles.png";
+	//std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -241,11 +247,11 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
-	// No big noticeable difference between a 16x16 blue noise map vs a 32x32 blue noise map
-	if (settings["matrixType"] != "bayer" && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
+	if (!Threshold::IsValidBayerSetting(settings["matrixType"]) && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
 		Log::WriteOneLine("Invalid matrixType: " + settings["matrixType"]);
 		invalidType = true;
 	}
+	Threshold::GenerateThreshold(settings["matrixType"]);
 
 	if (invalidType) {
 		Log::Save();

@@ -42,11 +42,6 @@ public:
 	static void SetColourMathMode(const std::string& mode);
 
 private:
-	static std::array<uint8_t, 1024> m_blueNoise32;
-	static std::array<uint8_t, 256> m_bayer16;
-	static std::array<uint8_t, 256> m_blueNoise16;
-
-	static inline size_t MatrixIndex(const int x, const int y, const int size) { return size_t(x + y * size); };
 
 	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
 
@@ -54,7 +49,7 @@ private:
 	static bool m_mono, m_ditherAlpha;
 	static unsigned int m_ditherAlphaFactor;
 
-	static double GetThreshold(const int x, const int y);
+	//static double GetThreshold(const int x, const int y);
 
 	//static void DitherAlphaChannel(Image& image, const int x, const int y);
 	static void DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight);
