@@ -9,14 +9,14 @@ Comments in settings.json not supported
 
 ```json
 {
-	"ditherType": "fs",
+	"ditherType": "ordered",
 	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer16",
+	"matrixType": "bayer32",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered"
