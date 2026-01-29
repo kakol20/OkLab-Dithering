@@ -3,6 +3,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <cctype>
 
 std::string Threshold::m_matrixType = "bayer16";
 int Threshold::m_bayerSize = 16;
@@ -32,8 +33,7 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
 	if (IsValidBayerSetting(m_matrixType)) {
-		const std::string prefix = "bayer";
-		std::string numberPart = m_matrixType.substr(prefix.size());
+		std::string numberPart = m_matrixType.substr(5);
 
 		m_bayerSize = std::stoi(numberPart);
 		m_bayer = GenerateBayerHalf(m_bayerSize);
@@ -42,7 +42,7 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 
 double Threshold::GetThreshold(const int x, const int y) {
 	double out = 0.;
-	if (m_matrixType == "bayer16") {
+	if (IsValidBayerSetting(m_matrixType)) {
 		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]);
 		out /= static_cast<double>(m_bayerSize * m_bayerSize);
 	} else if (m_matrixType == "ign") {
@@ -56,7 +56,20 @@ double Threshold::GetThreshold(const int x, const int y) {
 }
 
 bool Threshold::IsValidBayerSetting(const std::string& matrixType) {
-	return m_matrixType == "bayer16";
+	// Must be at least "bayerN"
+	if (matrixType.size() <= 5) return false;
+
+	// First 5 chars must be exactly "bayer"
+	if (matrixType.compare(0, 5, "bayer") != 0) return false;
+
+	for (size_t i = 5; i < matrixType.size(); ++i) {
+		if (!std::isdigit(static_cast<unsigned char>(matrixType[i])))
+			return false;
+	}
+
+	const int size = std::stoi(matrixType.substr(5));
+
+	return IsPowerOfTwo(size);
 }
 
 std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {

@@ -54,7 +54,10 @@ Comments in settings.json not supported
 
 #### `matrixType`
 Matrix used for ordered dithering  
-- `bayer16` Bayer 16x16 matrix  
+- `bayerN`
+	- Where N is the size of the bayer matrix
+	- N must be a power of two
+	- Be careful of high values of N
 - `blueNoise16` Blue Noise 16x16 matrix
 - `ign` Interleaved Gradient Noise
 
