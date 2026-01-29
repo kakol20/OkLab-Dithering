@@ -16,7 +16,7 @@ Comments in settings.json not supported
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer",
+	"matrixType": "bayer16",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered"
@@ -54,7 +54,7 @@ Comments in settings.json not supported
 
 #### `matrixType`
 Matrix used for ordered dithering  
-- `bayer` Bayer 16x16 matrix  
+- `bayer16` Bayer 16x16 matrix  
 - `blueNoise16` Blue Noise 16x16 matrix
 - `ign` Interleaved Gradient Noise
 

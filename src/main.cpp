@@ -3,6 +3,7 @@
 #include "image/Image.h"
 #include "image/Palette.h"
 #include "wrapper/Log.h"
+#include "wrapper/Threshold.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -246,11 +247,11 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
-	// No big noticeable difference between a 16x16 blue noise map vs a 32x32 blue noise map
-	if (settings["matrixType"] != "bayer" && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
+	if (!Threshold::IsValidBayerSetting(settings["matrixType"]) && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
 		Log::WriteOneLine("Invalid matrixType: " + settings["matrixType"]);
 		invalidType = true;
 	}
+	Threshold::GenerateThreshold(settings["matrixType"]);
 
 	if (invalidType) {
 		Log::Save();

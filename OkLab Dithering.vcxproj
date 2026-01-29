@@ -154,6 +154,7 @@
     <ClCompile Include="src\wrapper\Log.cpp" />
     <ClCompile Include="src\image\Image.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\wrapper\Threshold.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\image\Dither.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="src\wrapper\Log.h" />
     <ClInclude Include="src\image\Image.h" />
     <ClInclude Include="src\wrapper\Maths.hpp" />
+    <ClInclude Include="src\wrapper\Threshold.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
