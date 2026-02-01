@@ -85,7 +85,8 @@ Colour Colour::FromHex(const char* hex) {
 }
 
 void Colour::Clamp() {
-	if (m_mathMode == MathMode::sRGB) {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
 		m_srgb.r = m_srgb.r > 1. ? 1. : m_srgb.r;
 		m_srgb.r = m_srgb.r < 0. ? 0. : m_srgb.r;
 
@@ -94,7 +95,20 @@ void Colour::Clamp() {
 
 		m_srgb.b = m_srgb.b > 1. ? 1. : m_srgb.b;
 		m_srgb.b = m_srgb.b < 0. ? 0. : m_srgb.b;
-	} else if (m_mathMode == MathMode::Linear_RGB) {
+		break;
+	case Colour::MathMode::OkLab:
+		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
+		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
+
+		OkLabFallback();
+		break;
+	case Colour::MathMode::OkLab_Lightness:
+		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
+		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
+
+		OkLabFallback();
+		break;
+	case Colour::MathMode::Linear_RGB:
 		m_lrgb.r = m_lrgb.r > 1. ? 1. : m_lrgb.r;
 		m_lrgb.r = m_lrgb.r < 0. ? 0. : m_lrgb.r;
 
@@ -103,11 +117,13 @@ void Colour::Clamp() {
 
 		m_lrgb.b = m_lrgb.b > 1. ? 1. : m_lrgb.b;
 		m_lrgb.b = m_lrgb.b < 0. ? 0. : m_lrgb.b;
-	} else {
-		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
-		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
-		OkLabFallback();
+		break;
+	default:
+		break;
 	}
+
+	m_alpha = m_alpha > 1. ? 1. : m_alpha;
+	m_alpha = m_alpha < 0. ? 0. : m_alpha;
 }
 
 Colour& Colour::operator/=(const Colour& other) {
@@ -413,18 +429,27 @@ void Colour::ToGrayscale() {
 }
 
 void Colour::Abs() {
-	if (m_mathMode == MathMode::sRGB) {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
 		m_srgb.r = std::abs(m_srgb.r);
 		m_srgb.g = std::abs(m_srgb.g);
 		m_srgb.b = std::abs(m_srgb.b);
-	} else if (m_mathMode == MathMode::Linear_RGB) {
-		m_lrgb.r = std::abs(m_lrgb.r);
-		m_lrgb.g = std::abs(m_lrgb.g);
-		m_lrgb.b = std::abs(m_lrgb.b);
-	} else {
+		break;
+	case Colour::MathMode::OkLab:
 		m_oklab.l = std::abs(m_oklab.l);
 		m_oklab.a = std::abs(m_oklab.a);
 		m_oklab.b = std::abs(m_oklab.b);
+		break;
+	case Colour::MathMode::OkLab_Lightness:
+		m_oklab.l = std::abs(m_oklab.l);
+		break;
+	case Colour::MathMode::Linear_RGB:
+		m_lrgb.r = std::abs(m_lrgb.r);
+		m_lrgb.g = std::abs(m_lrgb.g);
+		m_lrgb.b = std::abs(m_lrgb.b);
+		break;
+	default:
+		break;
 	}
 
 	m_alpha = std::abs(m_alpha);
