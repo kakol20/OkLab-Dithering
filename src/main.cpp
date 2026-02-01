@@ -85,10 +85,10 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
-	//std::string imageLoc = "data/grayscale.png";
+	std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
 	//std::string imageLoc = "data/gs-tiles.png";
 	//std::string imageLoc = "data/lenna.png";
@@ -100,10 +100,10 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/wplace_premium.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
-	//std::string paletteLocStr = "data/bw.palette";
+	std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -212,6 +212,9 @@ int main(int argc, char* argv[]) {
 		Log::HoldConsole();
 		return EXIT_FAILURE;
 	}
+
+	Log::EndLine();
+
 	bool invalidType = false;
 	if (settings["ditherType"] == "floyd" || settings["ditherType"] == "floyd-steinberg" ||
 		settings["ditherType"] == "steinberg" || settings["ditherType"] == "fs") {
@@ -221,7 +224,7 @@ int main(int argc, char* argv[]) {
 	} else if (settings["ditherType"] == "none") {
 		settings["ditherType"] = "none";
 	} else {
-		Log::WriteOneLine("Invalid ditherType: " + settings["ditherType"]);
+		Log::WriteOneLine("Invalid ditherType: " + static_cast<std::string>(settings["ditherType"]));
 		invalidType = true;
 	}
 
@@ -233,25 +236,26 @@ int main(int argc, char* argv[]) {
 	} else if (settings["ditherAlphaType"] == "none") {
 		settings["ditherAlphaType"] = "none";
 	} else {
-		Log::WriteOneLine("Invalid ditherAlphaType: " + settings["ditherAlphaType"]);
+		Log::WriteOneLine("Invalid ditherAlphaType: " + static_cast<std::string>(settings["ditherAlphaType"]));
 		invalidType = true;
 	}
 
 	if (!CheckColourMathMode(settings["distanceMode"])) {
-		Log::WriteOneLine("Invalid distanceMode: " + settings["distanceMode"]);
+		Log::WriteOneLine("Invalid distanceMode: " + static_cast<std::string>(settings["distanceMode"]));
 		invalidType = true;
 	}
 
 	if (!CheckColourMathMode(settings["mathMode"])) {
-		Log::WriteOneLine("Invalid mathMode: " + settings["mathMode"]);
+		Log::WriteOneLine("Invalid mathMode: " + static_cast<std::string>(settings["mathMode"]));
 		invalidType = true;
 	}
 
 	if (!Threshold::IsValidBayerSetting(settings["matrixType"]) && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
-		Log::WriteOneLine("Invalid matrixType: " + settings["matrixType"]);
+		Log::WriteOneLine("Invalid matrixType: " + static_cast<std::string>(settings["matrixType"]));
 		invalidType = true;
+	} else {
+		Threshold::GenerateThreshold(settings["matrixType"]);
 	}
-	Threshold::GenerateThreshold(settings["matrixType"]);
 
 	if (invalidType) {
 		Log::Save();
