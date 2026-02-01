@@ -69,6 +69,8 @@ bool Threshold::IsValidBayerSetting(const std::string& matrixType) {
 
 	const int size = std::stoi(matrixType.substr(5));
 
+	if (size < 2) return false;
+
 	return IsPowerOfTwo(size);
 }
 
