@@ -139,7 +139,8 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			//SetColourMathMode(m_distanceMode);
 			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
-			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
+			Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
+
 			nearest.SetAlpha(pixel.GetAlpha());
 			//Colour nearest = pixel;
 
