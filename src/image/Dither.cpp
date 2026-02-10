@@ -139,7 +139,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			//SetColourMathMode(m_distanceMode);
 			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
-			Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
+			//Colour nearest = info.alpha
+
+			////Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
+			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
 
 			nearest.SetAlpha(pixel.GetAlpha());
 			//Colour nearest = pixel;
@@ -203,6 +206,9 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
+			// Can't use memoisation for Floyd-Steinberg Dithering as the error diffusion means 
+			// that the same colour can end up being different colours when it is reached again
+
 			Colour oldPixel = colours[indexCol];
 
 			SetColourMathMode(m_distanceMode);
@@ -260,6 +266,8 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
+	std::map<Colour, Colour> noDitherMem;
+
 	// Create a copy of of image in Colour form
 	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
 	std::vector<Colour> colours;
@@ -292,7 +300,16 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = colours[indexCol];
+			Colour ogPixel = colours[indexCol];
+			
+			Colour pixel = ogPixel;
+
+			// Memoisation to speed up process when there are many repeated colours in the image
+			if (noDitherMem.find(ogPixel) != noDitherMem.end()) {
+				pixel = noDitherMem[ogPixel];
+				SetColourToImage(pixel, image, x, y);
+				continue;
+			}
 
 			if (m_mono) pixel.ToGrayscale();
 
@@ -302,6 +319,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight);
 
 			SetColourToImage(pixel, image, x, y);
+			noDitherMem[ogPixel] = pixel;
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
@@ -314,6 +332,12 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			}
 		}
 	}
+	Log::WriteOneLine("  Mem Size: " + Log::ToString(noDitherMem.size()));
+#ifdef _DEBUG
+	{
+		bool temp = true;
+	}
+#endif
 }
 
 void Dither::SetSettings(

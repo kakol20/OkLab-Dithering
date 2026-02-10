@@ -346,7 +346,7 @@ double Colour::MagSq(const Colour& other) const {
 			Maths::Pow2(m_oklab.a - other.m_oklab.a) +
 			Maths::Pow2(m_oklab.b - other.m_oklab.b);
 	case MathMode::OkLab_Lightness:
-		return std::abs(m_oklab.l - other.m_oklab.l);
+		return (m_oklab.l - other.m_oklab.l) * (m_oklab.l - other.m_oklab.l);
 	case MathMode::Linear_RGB:
 		return Maths::Pow2(m_lrgb.r - other.m_lrgb.r) +
 			Maths::Pow2(m_lrgb.g - other.m_lrgb.g) +
