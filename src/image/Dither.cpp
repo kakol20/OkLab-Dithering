@@ -115,10 +115,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				info.p1 = palette.GetColour(i1);
 
 				// Calculate Alpha value
-				Colour d = info.p1 - info.p0;
-				double denom = d.LengthSq();
+				Colour dC = info.p1 - info.p0;
+				double denom = dC.LengthSq();
 
-				info.alpha = d.Dot(pixel - info.p0);
+				info.alpha = dC.Dot(pixel - info.p0);
 				info.alpha /= denom;
 				info.alpha = std::clamp(info.alpha, 0., 1.);
 
