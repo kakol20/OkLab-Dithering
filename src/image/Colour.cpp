@@ -684,8 +684,13 @@ Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;
+
+	if (m_alpha <= 0.) {
+		m_srgb = { 0., 0., 0. };
+	} else {
+		m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;
@@ -695,8 +700,13 @@ void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const ui
 }
 
 void Colour::SetsRGB_D(const double r, const double g, const double b, const double a) {
-	m_srgb = { r, g, b };
 	m_alpha = a;
+
+	if (m_alpha <= 0.) {
+		m_srgb = { 0., 0., 0. };
+	} else {
+		m_srgb = { r, g, b };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;
@@ -707,7 +717,12 @@ void Colour::SetsRGB_D(const double r, const double g, const double b, const dou
 
 void Colour::SetOkLab(const double l, const double a, const double b, const double alpha) {
 	m_alpha = alpha;
-	m_oklab = { l, a, b };
+
+	if (m_alpha <= 0.) {
+		m_oklab = { 0., 0., 0. };
+	} else {
+		m_oklab = { l, a, b };
+	}
 
 	m_isGrayscale = false;
 	if (a == 0. && b == 0.) m_isGrayscale = true;
@@ -731,7 +746,12 @@ void Colour::SetHex(const char* hex) {
 
 void Colour::SetLRGB(const double r, const double g, const double b, const double a) {
 	m_alpha = a;
-	m_lrgb = { r, g, b };
+	
+	if (m_alpha <= 0) {
+		m_lrgb = { 0., 0., 0. };
+	} else {
+		m_lrgb = { r, g, b };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;
