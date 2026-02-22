@@ -2,6 +2,7 @@
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
+#include "misc/DevTools.h"
 #include "wrapper/Log.h"
 #include "wrapper/Threshold.h"
 #include <algorithm>
@@ -20,8 +21,6 @@
 
 using json = nlohmann::json;
 
-//#define DEV_MODE
-
 //const double Maths::Pi = 3.1415926535;
 //const double Maths::Tau = 6.283185307;
 //const double Maths::RadToDeg = 180. / Maths::Pi;
@@ -36,39 +35,7 @@ int main(int argc, char* argv[]) {
 	// For generating blue noise array from blue noise texture
 	//#define DEV_MODE
 #ifdef DEV_MODE
-	//// https://github.com/Calinou/free-blue-noise-textures
-	//Image blueNoise("dev/32_LDR_LLL1_0.png");
-	//Log::WriteOneLine("Grayscale: " + Log::ToString(blueNoise.IsGrayscale()));
-
-	//Log::Write("\n{\n");
-	//for (int y = 0; y < blueNoise.GetHeight(); ++y) {
-	//	Log::Write("\t");
-	//	for (int x = 0; x < blueNoise.GetWidth(); ++x) {
-	//		const uint8_t val = blueNoise.GetData(blueNoise.GetIndex(x, y));
-	//		const std::string valStr = Log::ToString((unsigned int)val, 3, ' ');
-	//		Log::Write(valStr + ", ");
-	//	}
-	//	Log::EndLine();
-	//}
-	//Log::Write("};\n");
-
-	Image img(256, 256, 3);
-	for (int x = 0; x < 256; ++x) {
-		for (int y = 0; y < 256; ++y) {
-			int tileX = x / 16;
-			int tileY = y / 16;
-
-			uint8_t gray = static_cast<uint8_t>(tileY * 16 + tileX);
-
-			size_t index = img.GetIndex(x, y);
-
-			img.SetData(index + 0, gray);
-			img.SetData(index + 1, gray);
-			img.SetData(index + 2, gray);
-		}
-	}
-	img.Write("data/gs-tiles.png");
-
+	DevTools::GenerateGSTiles();
 #else
 #ifdef _DEBUG
 	std::ifstream settingsLoc("data/settings.json");
@@ -90,8 +57,8 @@ int main(int argc, char* argv[]) {
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
-	//std::string imageLoc = "data/gs-tiles.png";
-	std::string imageLoc = "data/lenna.png";
+	std::string imageLoc = "data/gs-tiles.png";
+	//std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -100,10 +67,10 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/wplace_premium.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
-	//std::string paletteLocStr = "data/bw.palette";
+	std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
