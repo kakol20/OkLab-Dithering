@@ -76,7 +76,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// ===== CHECK MEMOISATION =====
 
 			DitherInfo info;
-			
+
 			if (ditherMem.find(pixel) != ditherMem.end()) {
 				// Found
 				info = ditherMem[pixel];
@@ -87,10 +87,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				info.alpha = 0.;
 
 				ditherMem[pixel] = info;
-			}
-			else {
+			} else {
 				// Find p0 and p1
-				
+
 				size_t i0 = 0, i1 = 1;
 				//double d0 = pixel.MagSq(palette.GetColour(0));
 				//double d1 = pixel.MagSq(palette.GetColour(1));
@@ -144,8 +143,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				info.p1 = palette.GetColour(i1);
 
 				// Calculate Alpha value
-				
-				Colour dC;
 
 				if (m_mono) {
 					Colour p1_gs = info.p1;
@@ -156,15 +153,21 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					p0_gs.ToGrayscale();
 					pixel_gs.ToGrayscale();
 
-					dC = p1_gs - p0_gs;
-					info.alpha = dC.Dot(pixel_gs - p0_gs);
+					const double p0_d = std::sqrt(p0_gs.MagSq(pixel_gs));
+					const double p1_d = std::sqrt(p1_gs.MagSq(pixel_gs));
+
+					const double sum_d = p0_d + p1_d;
+
+					info.alpha = p0_d / sum_d;
 				} else {
-					dC = info.p1 - info.p0;
-					info.alpha = dC.Dot(pixel - info.p0);
+					const double p0_d = std::sqrt(info.p0.MagSq(pixel));
+					const double p1_d = std::sqrt(info.p1.MagSq(pixel));
+
+					const double sum_d = p0_d + p1_d;
+
+					info.alpha = p0_d / sum_d;
 				}
 
-				double denom = dC.LengthSq();
-				info.alpha /= denom;
 				info.alpha = std::clamp(info.alpha, 0., 1.);
 
 				ditherMem[pixel] = info;
@@ -245,7 +248,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
-			// Can't use memoisation for Floyd-Steinberg Dithering as the error diffusion means 
+			// Can't use memoisation for Floyd-Steinberg Dithering as the error diffusion means
 			// that the same colour can end up being different colours when it is reached again
 
 			Colour oldPixel = colours[indexCol];
@@ -340,7 +343,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 			Colour ogPixel = colours[indexCol];
-			
+
 			Colour pixel = ogPixel;
 
 			// Memoisation to speed up process when there are many repeated colours in the image
