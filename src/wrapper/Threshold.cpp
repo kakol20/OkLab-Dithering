@@ -29,6 +29,15 @@ std::array<unsigned int, 256> Threshold::m_blueNoise16{
 	 75, 190,  17, 209,  47,  96,  15, 135, 230,  81,  19, 123, 224, 206, 154, 181
 };
 
+/// <summary>
+/// Based on Parker Square
+/// </summary>
+std::array<unsigned int, 9> Threshold::m_parkerDither{
+	29,  1, 47,
+	41, 37,  1,
+	23, 41, 29
+};
+
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
@@ -49,7 +58,9 @@ double Threshold::GetThreshold(const int x, const int y) {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
 		out = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
 	} else if (m_matrixType == "bluenoise16") {
-		out = static_cast<double>(m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)] / 256.);
+		out = static_cast<double>(m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)]) / 256.;
+	} else if (m_matrixType == "parkerdither") {
+		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 100.;
 	}
 
 	return out - 0.5;
@@ -72,6 +83,18 @@ bool Threshold::IsValidBayerSetting(const std::string& matrixType) {
 	if (size < 2) return false;
 
 	return IsPowerOfTwo(size);
+}
+
+bool Threshold::IsValidSetting(const std::string& matrixType) {
+	if (IsValidBayerSetting(matrixType)) return true;
+
+	// settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign"
+
+	if (matrixType == "bluenoise16") return true;
+	if (matrixType == "ign") return true;
+	if (matrixType == "parkerdither") return true;
+
+	return false;
 }
 
 std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {

@@ -56,8 +56,8 @@ int main(int argc, char* argv[]) {
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
-	//std::string imageLoc = "data/gs-gradient.png";
-	std::string imageLoc = "data/gs-tiles.png";
+	std::string imageLoc = "data/gs-gradient.png";
+	//std::string imageLoc = "data/gs-tiles.png";
 	//std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
@@ -166,6 +166,7 @@ int main(int argc, char* argv[]) {
 			Log::WriteOneLine(it->first + ": " + Log::ToString((bool)settings[it->first]));
 		} else if (it->second == json::value_t::string) {
 			std::string value = settings[it->first];
+			// Lower case for case insensitive setting
 			std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 			settings[it->first] = value;
 			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
@@ -217,7 +218,7 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
-	if (!Threshold::IsValidBayerSetting(settings["matrixType"]) && settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign") {
+	if (!Threshold::IsValidSetting(settings["matrixType"])) {
 		Log::WriteOneLine("Invalid matrixType: " + static_cast<std::string>(settings["matrixType"]));
 		invalidType = true;
 	} else {
