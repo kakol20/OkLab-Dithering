@@ -1,4 +1,5 @@
 #pragma once
+#include "../wrapper/Threshold.h"
 #include "Colour.h"
 #include "Image.h"
 #include "Palette.h"
@@ -52,5 +53,5 @@ private:
 	//static double GetThreshold(const int x, const int y);
 
 	//static void DitherAlphaChannel(Image& image, const int x, const int y);
-	static void DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight);
+	static void DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight, const Threshold& threshold);
 };

@@ -221,8 +221,6 @@ int main(int argc, char* argv[]) {
 	if (!Threshold::IsValidSetting(settings["matrixType"])) {
 		Log::WriteOneLine("Invalid matrixType: " + static_cast<std::string>(settings["matrixType"]));
 		invalidType = true;
-	} else {
-		Threshold::GenerateThreshold(settings["matrixType"]);
 	}
 
 	if (invalidType) {
