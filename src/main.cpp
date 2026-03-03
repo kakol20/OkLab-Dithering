@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	// For generating blue noise array from blue noise texture
 	//#define DEV_MODE
 #ifdef DEV_MODE
-	DevTools::GenerateGSTiles();
+	DevTools::Run();
 #else
 #ifdef _DEBUG
 	std::ifstream settingsLoc("data/settings.json");
@@ -68,8 +68,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string paletteLocStr = "data/wplace_premium.palette";
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	//std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);

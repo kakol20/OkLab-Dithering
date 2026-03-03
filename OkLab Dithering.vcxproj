@@ -230,6 +230,7 @@
     <ClInclude Include="src\wrapper\Threshold.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\settings.json" />
     <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

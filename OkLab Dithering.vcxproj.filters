@@ -68,5 +68,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="data\settings.json" />
   </ItemGroup>
 </Project>

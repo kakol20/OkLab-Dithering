@@ -18,15 +18,31 @@ public:
 
 private:
 	int m_bayerSize = 2;
+	int m_blueNoiseSize = 2;
 	std::string m_matrixType = "bayer16";
 
 	inline size_t MatrixIndex(const int x, const int y, const int size) const { return size_t(x + y * size); };
 
 	std::vector<unsigned int> GenerateBayerHalf(const int n);
+	void GenerateBlueNoise(const int size);
+
+	double BlueNoiseEnergy(std::vector<unsigned int>& grid, const unsigned int a, const int x, const int y) const;
 
 	static bool IsPowerOfTwo(const int n) { return n > 0 && (n & (n - 1)) == 0; };
 
+	/// <summary>
+	/// Any size >= 2 that is a power of 2 is allowed
+	/// </summary>
+	/// <param name="matrixType"></param>
+	/// <returns></returns>
 	static bool IsValidBayerSetting(const std::string& matrixType);
+
+	/// <summary>
+	/// Any size >= 2 is allowed
+	/// </summary>
+	/// <param name="matrixType"></param>
+	/// <returns></returns>
+	static bool IsValidBlueNoiseSetting(const std::string& matrixType);
 
 	std::vector<unsigned int> m_bayer{ 0, 2, 3, 1 };
 
@@ -48,6 +64,8 @@ private:
 		215, 232,  63, 127,  82, 237, 216, 117, 158, 255, 184,  33, 242, 102,  12, 132,
 		 75, 190,  17, 209,  47,  96,  15, 135, 230,  81,  19, 123, 224, 206, 154, 181
 	};
+
+	std::vector<unsigned int> m_blueNoise;
 
 
 	/// <summary>

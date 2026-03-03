@@ -6,7 +6,11 @@ public:
 	DevTools() {};
 	~DevTools() {};
 
+	static void Run();
+
+private:
 	static void GenerateGSTiles();
+	static void GenerateBlueNoise();
 };
 
 

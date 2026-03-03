@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <random>
+#include <algorithm>
 
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
@@ -13,6 +15,11 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 
 		m_bayerSize = std::stoi(numberPart);
 		m_bayer = GenerateBayerHalf(m_bayerSize);
+	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
+		std::string numberPart = m_matrixType.substr(9);
+
+		m_blueNoiseSize = std::stoi(numberPart);
+		GenerateBlueNoise(m_blueNoiseSize);
 	}
 }
 
@@ -21,11 +28,12 @@ double Threshold::GetThreshold(const int x, const int y) const {
 	if (IsValidBayerSetting(m_matrixType)) {
 		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]);
 		out /= static_cast<double>(m_bayerSize * m_bayerSize);
+	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
+		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]);
+		out /= static_cast<double>(m_blueNoiseSize * m_blueNoiseSize);
 	} else if (m_matrixType == "ign") {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
 		out = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
-	} else if (m_matrixType == "bluenoise16") {
-		out = static_cast<double>(m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)]) / 256.;
 	} else if (m_matrixType == "parkerdither") {
 		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 50.;
 	}
@@ -52,14 +60,33 @@ bool Threshold::IsValidBayerSetting(const std::string& matrixType) {
 	return IsPowerOfTwo(size);
 }
 
+bool Threshold::IsValidBlueNoiseSetting(const std::string& matrixType) {
+	// Must be at least "bluenoiseN"
+	if (matrixType.size() <= 9) return false;
+
+	// First 9 chars must be exactly "bluenoise"
+	if (matrixType.compare(0, 9, "bluenoise") != 0) return false;
+
+	for (size_t i = 9; i < matrixType.size(); ++i) {
+		if (!std::isdigit(static_cast<unsigned char>(matrixType[i])))
+			return false;
+	}
+
+	const int size = std::stoi(matrixType.substr(9));
+
+	if (size < 2) return false;
+	return true;
+}
+
 bool Threshold::IsValidSetting(const std::string& matrixType) {
 	if (IsValidBayerSetting(matrixType)) return true;
+	if (IsValidBlueNoiseSetting(matrixType)) return true;
 
 	// settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign"
 
-	if (matrixType == "bluenoise16") return true;
 	if (matrixType == "ign") return true;
 	if (matrixType == "parkerdither") return true;
+	//if (matrixType == "bluenoise16") return true;
 
 	return false;
 }
@@ -84,4 +111,19 @@ std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {
 	}
 
 	return out;
+}
+
+void Threshold::GenerateBlueNoise(const int size) {
+	// https://abau.io/blog/blue_noise_dithering/
+	m_blueNoise = std::vector<unsigned int>(size * size);
+	for (size_t i = 0; i < static_cast<size_t>(size) * size; ++i) m_blueNoise[i] = static_cast<unsigned int>(i);
+
+	std::mt19937 rng(20260303);
+	std::shuffle(m_blueNoise.begin(), m_blueNoise.end(), rng);
+}
+
+double Threshold::BlueNoiseEnergy(std::vector<unsigned int>& grid, const unsigned int a, const int x, const int y) const {
+	size_t ia = static_cast<size_t>(y) * m_blueNoiseSize + x;
+
+	return 0.0;
 }
