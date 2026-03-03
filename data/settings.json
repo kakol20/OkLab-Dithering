@@ -1,6 +1,6 @@
 {
-	"ditherType": "ordered",
-	"distanceMode": "srgb",
+	"ditherType": "fs",
+	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,

@@ -54,10 +54,10 @@ int main(int argc, char* argv[]) {
 
 	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
-	//std::string imageLoc = "data/alphaTest-gradient.png";
+	std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
-	std::string imageLoc = "data/gs-tiles.png";
+	//std::string imageLoc = "data/gs-tiles.png";
 	//std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
@@ -68,9 +68,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	//std::string paletteLocStr = "data/wplace_premium.palette";
-	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
-	std::string paletteLocStr = "data/bw.palette";
+	//std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
