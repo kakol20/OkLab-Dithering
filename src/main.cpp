@@ -317,9 +317,11 @@ int main(int argc, char* argv[]) {
 
 	if (settings["ditherType"] != "none" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
 
-	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
+	if (image.HasAlphaChannel()) {
+		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
 
-	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "fs") outputLoc += "-fs";
+		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "fs") outputLoc += "-fs";
+	}
 
 	outputLoc += ".png";
 
