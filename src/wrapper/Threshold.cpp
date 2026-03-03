@@ -60,7 +60,7 @@ double Threshold::GetThreshold(const int x, const int y) {
 	} else if (m_matrixType == "bluenoise16") {
 		out = static_cast<double>(m_blueNoise16[MatrixIndex(x % 16, y % 16, 16)]) / 256.;
 	} else if (m_matrixType == "parkerdither") {
-		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 100.;
+		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 50.;
 	}
 
 	return out - 0.5;

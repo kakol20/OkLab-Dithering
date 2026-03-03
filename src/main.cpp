@@ -56,8 +56,8 @@ int main(int argc, char* argv[]) {
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
-	std::string imageLoc = "data/gs-gradient.png";
-	//std::string imageLoc = "data/gs-tiles.png";
+	//std::string imageLoc = "data/gs-gradient.png";
+	std::string imageLoc = "data/gs-tiles.png";
 	//std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
