@@ -54,7 +54,8 @@ int main(int argc, char* argv[]) {
 
 	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
-	std::string imageLoc = "data/alphaTest-gradient.png";
+	std::string imageLoc = "data/alphaTest-tiles.png";
+	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
 	//std::string imageLoc = "data/gs-tiles.png";
@@ -315,6 +316,10 @@ int main(int argc, char* argv[]) {
 	outputLoc += "-" + (std::string)settings["distanceMode"];
 
 	if (settings["ditherType"] != "none" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
+
+	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
+
+	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "fs") outputLoc += "-fs";
 
 	outputLoc += ".png";
 

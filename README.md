@@ -76,7 +76,7 @@ Matrix used for ordered dithering
 ### `ditherAlphaType`
 - Same options as `ditherType`  
 	- Dithering algorithm for alpha channel
-	- Uses `matrixType` for the threshold matrix if `ditherType` is `ordered`
+	- Uses `matrixType` for the threshold matrix
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
