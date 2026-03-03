@@ -85,7 +85,8 @@ Colour Colour::FromHex(const char* hex) {
 }
 
 void Colour::Clamp() {
-	if (m_mathMode == MathMode::sRGB) {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
 		m_srgb.r = m_srgb.r > 1. ? 1. : m_srgb.r;
 		m_srgb.r = m_srgb.r < 0. ? 0. : m_srgb.r;
 
@@ -94,7 +95,20 @@ void Colour::Clamp() {
 
 		m_srgb.b = m_srgb.b > 1. ? 1. : m_srgb.b;
 		m_srgb.b = m_srgb.b < 0. ? 0. : m_srgb.b;
-	} else if (m_mathMode == MathMode::Linear_RGB) {
+		break;
+	case Colour::MathMode::OkLab:
+		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
+		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
+
+		OkLabFallback();
+		break;
+	case Colour::MathMode::OkLab_Lightness:
+		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
+		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
+
+		OkLabFallback();
+		break;
+	case Colour::MathMode::Linear_RGB:
 		m_lrgb.r = m_lrgb.r > 1. ? 1. : m_lrgb.r;
 		m_lrgb.r = m_lrgb.r < 0. ? 0. : m_lrgb.r;
 
@@ -103,11 +117,13 @@ void Colour::Clamp() {
 
 		m_lrgb.b = m_lrgb.b > 1. ? 1. : m_lrgb.b;
 		m_lrgb.b = m_lrgb.b < 0. ? 0. : m_lrgb.b;
-	} else {
-		m_oklab.l = m_oklab.l > 1. ? 1. : m_oklab.l;
-		m_oklab.l = m_oklab.l < 0. ? 0. : m_oklab.l;
-		OkLabFallback();
+		break;
+	default:
+		break;
 	}
+
+	m_alpha = m_alpha > 1. ? 1. : m_alpha;
+	m_alpha = m_alpha < 0. ? 0. : m_alpha;
 }
 
 Colour& Colour::operator/=(const Colour& other) {
@@ -330,7 +346,7 @@ double Colour::MagSq(const Colour& other) const {
 			Maths::Pow2(m_oklab.a - other.m_oklab.a) +
 			Maths::Pow2(m_oklab.b - other.m_oklab.b);
 	case MathMode::OkLab_Lightness:
-		return std::abs(m_oklab.l - other.m_oklab.l);
+		return (m_oklab.l - other.m_oklab.l) * (m_oklab.l - other.m_oklab.l);
 	case MathMode::Linear_RGB:
 		return Maths::Pow2(m_lrgb.r - other.m_lrgb.r) +
 			Maths::Pow2(m_lrgb.g - other.m_lrgb.g) +
@@ -413,18 +429,27 @@ void Colour::ToGrayscale() {
 }
 
 void Colour::Abs() {
-	if (m_mathMode == MathMode::sRGB) {
+	switch (m_mathMode) {
+	case Colour::MathMode::sRGB:
 		m_srgb.r = std::abs(m_srgb.r);
 		m_srgb.g = std::abs(m_srgb.g);
 		m_srgb.b = std::abs(m_srgb.b);
-	} else if (m_mathMode == MathMode::Linear_RGB) {
-		m_lrgb.r = std::abs(m_lrgb.r);
-		m_lrgb.g = std::abs(m_lrgb.g);
-		m_lrgb.b = std::abs(m_lrgb.b);
-	} else {
+		break;
+	case Colour::MathMode::OkLab:
 		m_oklab.l = std::abs(m_oklab.l);
 		m_oklab.a = std::abs(m_oklab.a);
 		m_oklab.b = std::abs(m_oklab.b);
+		break;
+	case Colour::MathMode::OkLab_Lightness:
+		m_oklab.l = std::abs(m_oklab.l);
+		break;
+	case Colour::MathMode::Linear_RGB:
+		m_lrgb.r = std::abs(m_lrgb.r);
+		m_lrgb.g = std::abs(m_lrgb.g);
+		m_lrgb.b = std::abs(m_lrgb.b);
+		break;
+	default:
+		break;
 	}
 
 	m_alpha = std::abs(m_alpha);
@@ -659,8 +684,13 @@ Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
-	m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
 	m_alpha = (double)a / 255.;
+
+	if (m_alpha <= 0.) {
+		m_srgb = { 0., 0., 0. };
+	} else {
+		m_srgb = { (double)r / 255., (double)g / 255., (double)b / 255. };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;
@@ -670,8 +700,13 @@ void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const ui
 }
 
 void Colour::SetsRGB_D(const double r, const double g, const double b, const double a) {
-	m_srgb = { r, g, b };
 	m_alpha = a;
+
+	if (m_alpha <= 0.) {
+		m_srgb = { 0., 0., 0. };
+	} else {
+		m_srgb = { r, g, b };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;
@@ -682,7 +717,12 @@ void Colour::SetsRGB_D(const double r, const double g, const double b, const dou
 
 void Colour::SetOkLab(const double l, const double a, const double b, const double alpha) {
 	m_alpha = alpha;
-	m_oklab = { l, a, b };
+
+	if (m_alpha <= 0.) {
+		m_oklab = { 0., 0., 0. };
+	} else {
+		m_oklab = { l, a, b };
+	}
 
 	m_isGrayscale = false;
 	if (a == 0. && b == 0.) m_isGrayscale = true;
@@ -706,7 +746,12 @@ void Colour::SetHex(const char* hex) {
 
 void Colour::SetLRGB(const double r, const double g, const double b, const double a) {
 	m_alpha = a;
-	m_lrgb = { r, g, b };
+	
+	if (m_alpha <= 0) {
+		m_lrgb = { 0., 0., 0. };
+	} else {
+		m_lrgb = { r, g, b };
+	}
 
 	m_isGrayscale = false;
 	if (r == g && r == b) m_isGrayscale = true;

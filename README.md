@@ -23,6 +23,8 @@ Comments in settings.json not supported
 }
 ```
 
+###### All string settings are case insensitive
+
 #### `ditherType`
 - `ordered` for ordered dithering  
 	- With new ordered dithering method `mathMode` is not used
@@ -59,7 +61,8 @@ Matrix used for ordered dithering
 	- N must be a power of two
 	- Be careful of high values of N
 - `blueNoise16` Blue Noise 16x16 matrix
-- `ign` Interleaved Gradient Noise
+- `ign` Interleaved Gradient Noise  
+- `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 
 ### `ditherAlpha`
 - `true` or `false`  
@@ -73,7 +76,7 @@ Matrix used for ordered dithering
 ### `ditherAlphaType`
 - Same options as `ditherType`  
 	- Dithering algorithm for alpha channel
-	- Uses `matrixType` for the threshold matrix if `ditherType` is `ordered`
+	- Uses `matrixType` for the threshold matrix
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

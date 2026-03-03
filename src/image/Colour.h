@@ -123,7 +123,7 @@ public:
 	/// </summary>
 	/// <param name="other"></param>
 	/// <returns>
-	/// <para>NOTE: if MathMode == OkLab_Lightness - the absoulute difference</para>
+	/// <para>NOTE: if MathMode == OkLab_Lightness - the absoulute difference squared</para>
 	/// <para>between L values will be outputted instead</para>
 	/// </returns>
 	double MagSq(const Colour& other) const;

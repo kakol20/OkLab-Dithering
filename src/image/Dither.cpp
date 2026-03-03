@@ -25,6 +25,12 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
+	Threshold pixelThreshold;
+	pixelThreshold.GenerateThreshold(m_matrixType);
+
+	Threshold alphaThreshold;
+	alphaThreshold.GenerateThreshold(m_matrixType);
+
 	// Create a copy of of image in Colour form
 	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
 	std::vector<Colour> colours;
@@ -76,30 +82,40 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// ===== CHECK MEMOISATION =====
 
 			DitherInfo info;
-			
+
 			if (ditherMem.find(pixel) != ditherMem.end()) {
 				// Found
 				info = ditherMem[pixel];
 			} else if (palette.size() <= 1) {
 				info.p0 = palette.GetColour(0);
-				info.p1 = palette.GetColour(1);
+				info.p1 = palette.GetColour(0);
 
-				// Calculate Alpha value
-				Colour d = info.p1 - info.p0;
-				double denom = d.LengthSq();
-
-				info.alpha = d.Dot(pixel - info.p0);
-				info.alpha /= denom;
-				info.alpha = std::clamp(info.alpha, 0., 1.);
+				info.alpha = 0.;
 
 				ditherMem[pixel] = info;
-			}
-			else {
+			} else {
 				// Find p0 and p1
-				
+
 				size_t i0 = 0, i1 = 1;
-				double d0 = pixel.MagSq(palette.GetColour(0));
-				double d1 = pixel.MagSq(palette.GetColour(1));
+				//double d0 = pixel.MagSq(palette.GetColour(0));
+				//double d1 = pixel.MagSq(palette.GetColour(1));
+
+				double d0 = 0., d1 = 0.;
+				if (m_mono) {
+					Colour ci0 = palette.GetColour(0);
+					Colour ci1 = palette.GetColour(1);
+					Colour pixel_gs = pixel;
+
+					ci0.ToGrayscale();
+					ci1.ToGrayscale();
+					pixel_gs.ToGrayscale();
+
+					d0 = pixel_gs.MagSq(ci0);
+					d1 = pixel_gs.MagSq(ci1);
+				} else {
+					d0 = pixel.MagSq(palette.GetColour(0));
+					d1 = pixel.MagSq(palette.GetColour(1));
+				}
 
 				if (d1 < d0) {
 					std::swap(d0, d1);
@@ -107,7 +123,19 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				}
 
 				for (size_t i = 2; i < palette.size(); ++i) {
-					double d = pixel.MagSq(palette.GetColour(i));
+					double d;
+
+					if (m_mono) {
+						Colour pal_gs = palette.GetColour(i);
+						Colour pixel_gs = pixel;
+
+						pal_gs.ToGrayscale();
+						pixel_gs.ToGrayscale();
+
+						d = pixel_gs.MagSq(pal_gs);
+					} else {
+						d = pixel.MagSq(palette.GetColour(i));
+					}
 
 					if (d < d0) {
 						d1 = d0; i1 = i0;
@@ -121,11 +149,31 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				info.p1 = palette.GetColour(i1);
 
 				// Calculate Alpha value
-				Colour d = info.p1 - info.p0;
-				double denom = d.LengthSq();
 
-				info.alpha = d.Dot(pixel - info.p0);
-				info.alpha /= denom;
+				if (m_mono) {
+					Colour p1_gs = info.p1;
+					Colour p0_gs = info.p0;
+					Colour pixel_gs = pixel;
+
+					p1_gs.ToGrayscale();
+					p0_gs.ToGrayscale();
+					pixel_gs.ToGrayscale();
+
+					const double p0_d = std::sqrt(p0_gs.MagSq(pixel_gs));
+					const double p1_d = std::sqrt(p1_gs.MagSq(pixel_gs));
+
+					const double sum_d = p0_d + p1_d;
+
+					info.alpha = p0_d / sum_d;
+				} else {
+					const double p0_d = std::sqrt(info.p0.MagSq(pixel));
+					const double p1_d = std::sqrt(info.p1.MagSq(pixel));
+
+					const double sum_d = p0_d + p1_d;
+
+					info.alpha = p0_d / sum_d;
+				}
+
 				info.alpha = std::clamp(info.alpha, 0., 1.);
 
 				ditherMem[pixel] = info;
@@ -134,17 +182,20 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// ===== APPLY DITHER =====
 
 			// This is to cancel out the (-0.5) inside GetThreshold() function
-			const double threshold = Threshold::GetThreshold(x, y) + 0.5;
+			const double threshold = pixelThreshold.GetThreshold(x, y) + 0.5;
 
 			//SetColourMathMode(m_distanceMode);
 			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
 
-			Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
+			//Colour nearest = info.alpha
+
+			////Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
+			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
 
 			nearest.SetAlpha(pixel.GetAlpha());
 			//Colour nearest = pixel;
 
-			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight);
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
 			SetColourToImage(nearest, image, x, y);
 
@@ -168,6 +219,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 void Dither::FloydDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
+
+	Threshold alphaThreshold;
+	alphaThreshold.GenerateThreshold(m_matrixType);
 
 	// Create a copy of of image in Colour form
 	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
@@ -203,11 +257,16 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
+			// Can't use memoisation for Floyd-Steinberg Dithering as the error diffusion means
+			// that the same colour can end up being different colours when it is reached again
+
 			Colour oldPixel = colours[indexCol];
+			const double alpha = oldPixel.GetAlpha();
 
 			SetColourMathMode(m_distanceMode);
 			Colour newPixel = ClosestColour(oldPixel, palette, image.IsGrayscale());
-			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(newPixel, colours, x, y, imgWidth, imgHeight);
+			newPixel.SetAlpha(alpha);
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(newPixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
 			SetColourToImage(newPixel, image, x, y);
 
@@ -260,6 +319,11 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	const int imgWidth = image.GetWidth();
 	const int imgHeight = image.GetHeight();
 
+	Threshold alphaThreshold;
+	alphaThreshold.GenerateThreshold(m_matrixType);
+
+	std::map<Colour, Colour> noDitherMem;
+
 	// Create a copy of of image in Colour form
 	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
 	std::vector<Colour> colours;
@@ -292,14 +356,36 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 		for (int y = 0; y < imgHeight; ++y) {
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
-			Colour pixel = colours[indexCol];
+
+			Colour ogPixel = colours[indexCol];
+			const double alpha = ogPixel.GetAlpha();
+
+			Colour pixel = ogPixel;
+
+			// Memoisation to speed up process when there are many repeated colours in the image
+			if (noDitherMem.find(ogPixel) != noDitherMem.end()) {
+				pixel = noDitherMem[ogPixel];
+				pixel.SetAlpha(alpha);
+
+				if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
+
+				SetColourToImage(pixel, image, x, y);
+				continue;
+			}
 
 			if (m_mono) pixel.ToGrayscale();
 
 			SetColourMathMode(m_distanceMode);
 
 			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
-			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight);
+			pixel.SetAlpha(alpha);
+
+			if (alpha > 0. && alpha < 1.) 
+				bool temp = true;
+
+			noDitherMem[ogPixel] = pixel;
+
+			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
 			SetColourToImage(pixel, image, x, y);
 
@@ -314,6 +400,12 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			}
 		}
 	}
+	Log::WriteOneLine("  Mem Size: " + Log::ToString(noDitherMem.size()));
+#ifdef _DEBUG
+	{
+		bool temp = true;
+	}
+#endif
 }
 
 void Dither::SetSettings(
@@ -388,7 +480,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 	return closest;
 }
 
-void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight) {
+void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight, const Threshold& threshold) {
 	// Skip fully opaque or fully transparent pixels
 	if (col.GetAlpha() == 1. || col.GetAlpha() == 0) return;
 
@@ -439,7 +531,7 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		double newAlpha = col.GetAlpha();
 
 		const double r = 1. / static_cast<double>(m_ditherAlphaFactor);
-		const double M = Threshold::GetThreshold(x, y);
+		const double M = threshold.GetThreshold(x, y);
 
 		newAlpha += M * r;
 		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);
