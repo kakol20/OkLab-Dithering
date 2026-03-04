@@ -16,7 +16,7 @@ Comments in settings.json not supported
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer32",
+	"matrixType": "bayer16",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered"
@@ -60,7 +60,8 @@ Matrix used for ordered dithering
 	- Where N is the size of the bayer matrix
 	- N must be a power of two
 	- Be careful of high values of N
-- `blueNoise16` Blue Noise 16x16 matrix
+- `blueNoise16N`
+	- Where N is the size of the blue noise matrix
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 
