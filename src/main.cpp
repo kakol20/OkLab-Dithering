@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::string imageLoc = "data/test.png";
+	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-tiles.png";
-	//std::string imageLoc = "data/alphaTest-gradient.png";
+	std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
 	//std::string imageLoc = "data/gs-tiles.png";
