@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cfloat>
 
 bool Dither::m_mono = false;
 bool Dither::m_ditherAlpha = false;
@@ -77,8 +78,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 			Colour pixel = colours[indexCol];
 
-			//SetColourMathMode(m_mathMode);
-
 			// ===== CHECK MEMOISATION =====
 
 			DitherInfo info;
@@ -94,61 +93,33 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 				ditherMem[pixel] = info;
 			} else {
-				// Find p0 and p1
+				// ========== Find P0 ==========
+				info.p0 = ClosestColour(pixel, palette, image.IsGrayscale());
 
-				size_t i0 = 0, i1 = 1;
-				//double d0 = pixel.MagSq(palette.GetColour(0));
-				//double d1 = pixel.MagSq(palette.GetColour(1));
+				// ========== Find P1 ==========
+				Colour dir = pixel - info.p0;
+				double bestDist = DBL_MAX;
+				info.p1 = info.p0;
 
-				double d0 = 0., d1 = 0.;
-				if (m_mono) {
-					Colour ci0 = palette.GetColour(0);
-					Colour ci1 = palette.GetColour(1);
-					Colour pixel_gs = pixel;
+				for (size_t i = 0; i < palette.size(); ++i) {
+					Colour p = palette.GetColour(i);
 
-					ci0.ToGrayscale();
-					ci1.ToGrayscale();
-					pixel_gs.ToGrayscale();
+					if (p == info.p0) continue;
 
-					d0 = pixel_gs.MagSq(ci0);
-					d1 = pixel_gs.MagSq(ci1);
-				} else {
-					d0 = pixel.MagSq(palette.GetColour(0));
-					d1 = pixel.MagSq(palette.GetColour(1));
-				}
+					Colour dp = p - info.p0;
+					double proj = dp.Dot(dir);
 
-				if (d1 < d0) {
-					std::swap(d0, d1);
-					std::swap(i0, i1);
-				}
+					// Must be in forward direction
+					if (proj <= 0.) continue;
 
-				for (size_t i = 2; i < palette.size(); ++i) {
-					double d;
-
-					if (m_mono) {
-						Colour pal_gs = palette.GetColour(i);
-						Colour pixel_gs = pixel;
-
-						pal_gs.ToGrayscale();
-						pixel_gs.ToGrayscale();
-
-						d = pixel_gs.MagSq(pal_gs);
-					} else {
-						d = pixel.MagSq(palette.GetColour(i));
-					}
-
-					if (d < d0) {
-						d1 = d0; i1 = i0;
-						d0 = d;  i0 = i;
-					} else if (d < d1) {
-						d1 = d;  i1 = i;
+					double d2 = dp.LengthSq();
+					if (d2 < bestDist) {
+						bestDist = d2;
+						info.p1 = p;
 					}
 				}
 
-				info.p0 = palette.GetColour(i0);
-				info.p1 = palette.GetColour(i1);
-
-				// Calculate Alpha value
+				// ========== Calculate Alpha value ==========
 
 				if (m_mono) {
 					Colour p1_gs = info.p1;
@@ -159,19 +130,17 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					p0_gs.ToGrayscale();
 					pixel_gs.ToGrayscale();
 
-					const double p0_d = std::sqrt(p0_gs.MagSq(pixel_gs));
-					const double p1_d = std::sqrt(p1_gs.MagSq(pixel_gs));
+					const Colour d = p1_gs - p0_gs;
+					const double denom = d.LengthSq();
 
-					const double sum_d = p0_d + p1_d;
-
-					info.alpha = p0_d / sum_d;
+					info.alpha = d.Dot(pixel_gs - p0_gs) / denom;
+				} else if (info.p1 == info.p0) {
+					info.alpha = 0.;
 				} else {
-					const double p0_d = std::sqrt(info.p0.MagSq(pixel));
-					const double p1_d = std::sqrt(info.p1.MagSq(pixel));
+					const Colour d = info.p1 - info.p0;
+					const double denom = d.LengthSq();
 
-					const double sum_d = p0_d + p1_d;
-
-					info.alpha = p0_d / sum_d;
+					info.alpha = d.Dot(pixel - info.p0) / denom;
 				}
 
 				info.alpha = std::clamp(info.alpha, 0., 1.);
