@@ -148,6 +148,14 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				info.p0 = palette.GetColour(i0);
 				info.p1 = palette.GetColour(i1);
 
+				// ========== Order p0 and p1 by distance to black ==========
+
+				const Colour black(0., 0., 0.);
+				const double p0_d = black.MagSq(info.p0);
+				const double p1_d = black.MagSq(info.p1);
+
+				if (p1_d < p0_d) std::swap(info.p0, info.p1);
+
 				// Calculate Alpha value
 
 				if (m_mono) {
@@ -380,7 +388,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
 			pixel.SetAlpha(alpha);
 
-			if (alpha > 0. && alpha < 1.) 
+			if (alpha > 0. && alpha < 1.)
 				bool temp = true;
 
 			noDitherMem[ogPixel] = pixel;

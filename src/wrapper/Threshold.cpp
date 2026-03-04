@@ -41,7 +41,7 @@ double Threshold::GetThreshold(const int x, const int y) const {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
 		out = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
 	} else if (m_matrixType == "parkerdither") {
-		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 50.;
+		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 100.;
 	}
 
 	return out - 0.5;
