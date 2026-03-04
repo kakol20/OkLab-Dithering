@@ -19,7 +19,7 @@ public:
 	/// <summary>
 	/// Average spread between one colour and other colours
 	/// </summary>
-	Colour GetAverageSpread() const { return m_avgSpread; }
+	Colour GetAverageSpread() const { return m_avgSpread; };
 
 private:
 	std::vector<Colour> m_colours;
