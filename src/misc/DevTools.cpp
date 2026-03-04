@@ -3,10 +3,17 @@
 #include "DevTools.h"
 
 #include "../image/Image.h"
+#include "../wrapper/Threshold.h"
+#include <cmath>
 #include <cstdint>
+#include <string>
 
 //void DevTools::GenerateGSTiles() {
 //}
+
+void DevTools::Run() {
+	GenerateBlueNoise();
+}
 
 void DevTools::GenerateGSTiles() {
 	//// https://github.com/Calinou/free-blue-noise-textures
@@ -47,5 +54,27 @@ void DevTools::GenerateGSTiles() {
 		}
 	}
 	img.Write("data/gs-tiles.png");
+}
+void DevTools::GenerateBlueNoise() {
+	const std::string type = "bluenoise32";
+	const int size = 32;
+
+	Threshold blueNoise;
+	blueNoise.GenerateThreshold(type);
+
+	Image img(size, size, 1);
+	for (int x = 0; x < size; ++x) {
+		for (int y = 0; y < size; ++y) {
+			double val = blueNoise.GetThreshold(x, y) + 0.5;
+			val = std::floor(val * 255.);
+			val = val > 255. ? 255. : val < 0. ? 0. : val;
+
+			const size_t index = img.GetIndex(x, y);
+			img.SetData(index, static_cast<uint8_t>(val));
+		}
+	}
+
+	std::string outputLoc = "dev/" + type + ".png";
+	img.Write(outputLoc.c_str());
 }
 #endif // DEV_MODE

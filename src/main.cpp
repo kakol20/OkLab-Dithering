@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	// For generating blue noise array from blue noise texture
 	//#define DEV_MODE
 #ifdef DEV_MODE
-	DevTools::GenerateGSTiles();
+	DevTools::Run();
 #else
 #ifdef _DEBUG
 	std::ifstream settingsLoc("data/settings.json");
@@ -54,12 +54,12 @@ int main(int argc, char* argv[]) {
 
 	//std::string imageLoc = "data/test.png";
 	//std::string imageLoc = "data/alphaTest.png";
-	std::string imageLoc = "data/alphaTest-tiles.png";
+	//std::string imageLoc = "data/alphaTest-tiles.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
 	//std::string imageLoc = "data/gs-tiles.png";
-	//std::string imageLoc = "data/lenna.png";
+	std::string imageLoc = "data/lenna.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
 	if (imageType == Image::ImageType::NA) {
 		Log::WriteOneLine("Image not found");
@@ -68,8 +68,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string paletteLocStr = "data/wplace_premium.palette";
-	std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	//std::string paletteLocStr = "data/bw.palette";
 	std::ifstream paletteLoc(paletteLocStr);
@@ -317,9 +317,11 @@ int main(int argc, char* argv[]) {
 
 	if (settings["ditherType"] != "none" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
 
-	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
+	if (image.HasAlphaChannel()) {
+		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
 
-	if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "fs") outputLoc += "-fs";
+		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "fs") outputLoc += "-fs";
+	}
 
 	outputLoc += ".png";
 
