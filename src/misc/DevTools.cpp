@@ -56,11 +56,12 @@ void DevTools::GenerateGSTiles() {
 	img.Write("data/gs-tiles.png");
 }
 void DevTools::GenerateBlueNoise() {
-	const std::string type = "bluenoise16";
+	const std::string type = "bluenoise32";
+	const int size = 32;
+
 	Threshold blueNoise;
 	blueNoise.GenerateThreshold(type);
 
-	const int size = 16;
 	Image img(size, size, 1);
 	for (int x = 0; x < size; ++x) {
 		for (int y = 0; y < size; ++y) {
@@ -73,7 +74,7 @@ void DevTools::GenerateBlueNoise() {
 		}
 	}
 
-	std::string outputLoc = "data/dev/" + type + ".png";
+	std::string outputLoc = "dev/" + type + ".png";
 	img.Write(outputLoc.c_str());
 }
 #endif // DEV_MODE

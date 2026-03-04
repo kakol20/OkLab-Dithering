@@ -1,11 +1,15 @@
 #include "Threshold.h"
-#include <array>
-#include <cmath>
-#include <string>
-#include <vector>
-#include <cctype>
-#include <random>
+
+#include "../misc/Random.h"
 #include <algorithm>
+#include <array>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
+#include <random>
+#include <string>
+#include <utility>
+#include <vector>
 
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
@@ -115,15 +119,73 @@ std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {
 
 void Threshold::GenerateBlueNoise(const int size) {
 	// https://abau.io/blog/blue_noise_dithering/
-	m_blueNoise = std::vector<unsigned int>(size * size);
-	for (size_t i = 0; i < static_cast<size_t>(size) * size; ++i) m_blueNoise[i] = static_cast<unsigned int>(i);
 
-	std::mt19937 rng(20260303);
+	Random::Seed = 20260303;
+	std::mt19937 rng(Random::Seed);
+
+	m_blueNoise = std::vector<unsigned int>(size * size);
+	for (size_t i = 0; i < static_cast<size_t>(size) * size; ++i) {
+		m_blueNoise[i] = static_cast<unsigned int>(i);
+		//m_blueNoise[i] = Random::RandUInt(0, (size * size) - 1);
+	}
+
 	std::shuffle(m_blueNoise.begin(), m_blueNoise.end(), rng);
+
+	int maxIter = 40000;
+	for (int i = 0; i < maxIter; ++i) {
+		// select two random
+		size_t ia = static_cast<size_t>(Random::RandUInt(0, (size * size) - 1));
+		size_t ib = static_cast<size_t>(Random::RandUInt(0, (size * size) - 1));
+		if (ia == ib) continue;
+
+		unsigned int a = m_blueNoise[ia];
+		unsigned int b = m_blueNoise[ib];
+
+		// Find energy before and after swapping pixels.
+		double startEnergy = BlueNoiseEnergy(a, (int)ia % size, (int)ia / size) + BlueNoiseEnergy(b, (int)ib % size, (int)ib / size);
+		std::swap(m_blueNoise[ia], m_blueNoise[ib]);
+		double endEnergy = BlueNoiseEnergy(a, (int)ia % size, (int)ia / size) + BlueNoiseEnergy(b, (int)ib % size, (int)ib / size);
+
+		// If the energy was lower before the swap, then swap back.
+		if (startEnergy < endEnergy) std::swap(m_blueNoise[ia], m_blueNoise[ib]);
+	}
 }
 
-double Threshold::BlueNoiseEnergy(std::vector<unsigned int>& grid, const unsigned int a, const int x, const int y) const {
+double Threshold::BlueNoiseEnergy(const unsigned int a, const int x, const int y) const {
 	size_t ia = static_cast<size_t>(y) * m_blueNoiseSize + x;
 
-	return 0.0;
+	double total = 0.;
+	for (int dy = -4; dy <= 4; ++dy) {
+		for (int dx = -4; dx <= 4; ++dx) {
+			if (dx == 0 && dy == 0) continue;
+
+			int bx = (x + dx + m_blueNoiseSize) % m_blueNoiseSize;
+			int by = (y + dy + m_blueNoiseSize) % m_blueNoiseSize;
+
+			size_t ib = static_cast<size_t>(by) * m_blueNoiseSize + bx;
+			unsigned int b = m_blueNoise[ib];
+
+			// toroidal (wrapped) distance
+
+			const double n = (m_blueNoiseSize * m_blueNoiseSize) - 1.;
+
+			double ds = std::abs(static_cast<double>((int)b - (int)a));
+			if (ds > n * 0.5) {
+				ds = n - ds;
+			}
+			//ds /= (m_blueNoiseSize * m_blueNoiseSize) - 1.;
+
+			double di = std::abs(static_cast<double>((int)ib - (int)ia));
+			if (di > n * 0.5) {
+				di = n - di;
+			}
+			//di /= (m_blueNoiseSize * m_blueNoiseSize) - 1.;
+
+			double test = -((ds * ds) / (2.1 * 2.1)) - std::pow(di, 1. / 2.);
+
+			total += std::exp(test);
+		}
+	}
+
+	return total;
 }
