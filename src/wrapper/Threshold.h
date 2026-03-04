@@ -26,7 +26,11 @@ private:
 	std::vector<unsigned int> GenerateBayerHalf(const int n);
 	void GenerateBlueNoise(const int size);
 
-	double BlueNoiseEnergy(const unsigned int a, const int x, const int y) const;
+	std::vector<double> GenerateBlueNoiseField(const int n, const uint32_t seed = 1);
+
+	inline int Wrap(const int v, const int n) { return (v % n + n) % n; }
+
+	inline double ToroidalDist2(int x0, int y0, int x1, int y1, int n);
 
 	static bool IsPowerOfTwo(const int n) { return n > 0 && (n & (n - 1)) == 0; };
 

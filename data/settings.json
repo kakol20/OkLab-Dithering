@@ -1,12 +1,12 @@
 {
-	"ditherType": "none",
+	"ditherType": "ordered",
 	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bluenoise128",
+	"matrixType": "bluenoise16",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered"
