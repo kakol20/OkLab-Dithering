@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <vector>
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
@@ -366,27 +367,68 @@ bool Colour::operator==(const Colour& other) const {
 }
 
 bool Colour::operator<(const Colour& other) const {
-	switch (m_mathMode) {
-	case Colour::MathMode::sRGB:
+	if (m_mathMode == Colour::MathMode::sRGB) {
 		return std::tie(m_srgb.r, m_srgb.g, m_srgb.b, m_alpha) <
 			std::tie(other.m_srgb.r, other.m_srgb.g, other.m_srgb.b, other.m_alpha);
-	case Colour::MathMode::OkLab:
+	} else if (m_mathMode == Colour::MathMode::OkLab) {
 		return std::tie(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha) <
 			std::tie(other.m_oklab.l, other.m_oklab.a, other.m_oklab.b, other.m_alpha);
-	case Colour::MathMode::OkLab_Lightness:
+	} else if (m_mathMode == Colour::MathMode::OkLab_Lightness) {
 		return std::tie(m_oklab.l, m_alpha) <
 			std::tie(other.m_oklab.l, other.m_alpha);
-	case Colour::MathMode::Linear_RGB:
+	} else if (m_mathMode == Colour::MathMode::Linear_RGB) {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
-	case Colour::MathMode::OkLCh:
-		if (m_oklch.h != other.m_oklch.h) return m_oklch.h < other.m_oklch.h;
-		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
+	} else {
+		bool sameHueGroup = false;
+
+		std::vector<Colour> hueGroups{
+				Colour((uint8_t)255, 0, 0),
+				Colour((uint8_t)255, 255, 0),
+				Colour((uint8_t)0, 255, 0),
+				Colour((uint8_t)0, 255, 255),
+				Colour((uint8_t)0, 0, 255),
+				Colour((uint8_t)255, 0, 255)
+		};
+
+		//if ((m_oklch.h > 0 && m_oklch.h <= hueGroups[0].m_oklch.h) && (other.m_oklch.h > 0 && other.m_oklch.h <= hueGroups[0].m_oklch.h)) {
+		//	// in red
+		//	sameHueGroup = true;
+		//} else if (m_oklch.h <= hueGroups[0].m_oklch.h && other.m_oklch.h <= hueGroups[0].m_oklch.h)
+		for (size_t i = 1; i < hueGroups.size(); ++i) {
+			if ((m_oklch.h > hueGroups[i - 1].m_oklch.h && other.m_oklch.h > hueGroups[i - 1].m_oklch.h) &&
+				(m_oklch.h <= hueGroups[i].m_oklch.h && other.m_oklch.h <= hueGroups[i].m_oklch.h)) {
+				sameHueGroup = true;
+			}
+		}
+
+		struct InRed {
+			bool belowRed, aboveMagenta;
+		};
+		InRed current {
+			m_oklch.h <= hueGroups[0].m_oklch.h,
+			m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h
+		};
+		InRed otherC {
+			other.m_oklch.h <= hueGroups[0].m_oklch.h,
+			other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h
+		};
+
+		if ((current.belowRed && otherC.belowRed) ||
+			(current.aboveMagenta && otherC.aboveMagenta) ||
+			(current.belowRed && otherC.aboveMagenta) ||
+			(current.aboveMagenta && otherC.belowRed)) sameHueGroup = true;
+
+		// detect grayscale
+		if ((m_oklch.c == 0. || other.m_oklch.c == 0) && m_oklch.c != other.m_oklch.c) sameHueGroup = false;
+
+		if (!sameHueGroup) return m_oklch.h < other.m_oklch.h;
 		if (m_oklch.l != other.m_oklch.l) return m_oklch.l < other.m_oklch.l;
+		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
 		return m_alpha < other.m_alpha;
-	default:
-		return false;
 	}
+
+	return false;
 }
 
 std::string Colour::LRGBDebug() const {

@@ -21,6 +21,8 @@ void DevTools::Run() {
 	Log::EndLine();
 	Log::Clear();
 	PaletteValues();
+
+	//Misc();
 }
 
 void DevTools::GenerateGSTiles() {
@@ -53,7 +55,7 @@ void DevTools::GenerateGSTiles() {
 void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
-	Palette palette = "data/custom.palette";
+	Palette palette = "data/custom64.palette";
 	//
 	//for (size_t i = 0; i < palette.size(); ++i) {
 	//	Log::Write(palette.GetColour(i).sRGBUintDebug());
@@ -76,16 +78,16 @@ void DevTools::GenerateBlueNoisePalette() {
 	palette.emplace_back(0.8, 0., 0.);
 	palette.emplace_back((uint8_t)255, 255, 255);
 	palette.emplace_back((uint8_t)255, 0, 0);
-	palette.emplace_back((uint8_t)0, 255, 0);
 	palette.emplace_back((uint8_t)255, 255, 0);
+	palette.emplace_back((uint8_t)0, 255, 0);
+	palette.emplace_back((uint8_t)0, 255, 255);
 	palette.emplace_back((uint8_t)0, 0, 255);
 	palette.emplace_back((uint8_t)255, 0, 255);
-	palette.emplace_back((uint8_t)0, 255, 255);
 
 	// ========== GENERATE ==========
 
 	const size_t m = 5;
-	Random::Seed = 20260310;
+	Random::Seed = 0;
 
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 	const size_t startSize = palette.size();
@@ -124,6 +126,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	}
 
 	// ========== SAVE COLOURS ==========
+	// As palette file
 	Colour::SetMathMode(Colour::MathMode::OkLCh);
 	std::sort(palette.begin(), palette.end());
 	for (size_t i = 0; i < palette.size(); ++i) {
@@ -131,7 +134,28 @@ void DevTools::GenerateBlueNoisePalette() {
 		
 		if (i < palette.size() - 1) Log::EndLine();
 	}
-	Log::Save("data/custom.palette");
+	Log::Save("data/custom" + Log::ToString(size) + ".palette");
+
+	// As Image
+	const double size_d = std::ceil(std::sqrt(static_cast<double>(palette.size())));
+	const int size_i = static_cast<int>(size_d);
+
+	const int width = static_cast<int>(std::ceil(std::sqrt(palette.size())));
+	const int height = static_cast<int>(std::ceil(static_cast<double>(palette.size()) / width));
+
+	Image palImg(width, height, 4);
+	palImg.Clear();
+	for (size_t i = 0; i < palette.size(); ++i) {
+		size_t imgI = i * 4;
+		Colour::sRGB_UInt srgbUint = palette[i].GetsRGB_UInt();
+
+		palImg.SetData(imgI + 0, srgbUint.r);
+		palImg.SetData(imgI + 1, srgbUint.g);
+		palImg.SetData(imgI + 2, srgbUint.b);
+		palImg.SetData(imgI + 3, 255);
+	}
+
+	palImg.Write(("dev/custom" + Log::ToString(size) + "-pal.png").c_str());
 }
 
 void DevTools::GenerateBlueNoise() {
@@ -155,5 +179,17 @@ void DevTools::GenerateBlueNoise() {
 
 	std::string outputLoc = "dev/" + type + ".png";
 	img.Write(outputLoc.c_str());
+}
+void DevTools::Misc() {
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+	Colour col1((uint8_t)0, 0, 0);
+	Colour col2((uint8_t)0, 0, 255);
+
+	double dist = std::sqrt(col1.MagSq(col2));
+	double count = std::ceil(dist / 0.2) + 1;
+	Log::WriteOneLine(Log::ToString(dist));
+	Log::WriteOneLine(Log::ToString(count));
+
+	Log::HoldConsole();
 }
 #endif // DEV_MODE

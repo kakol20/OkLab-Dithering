@@ -16,6 +16,8 @@ private:
 	static void GenerateBlueNoisePalette();
 
 	static void GenerateBlueNoise();
+
+	static void Misc();
 };
 
 
