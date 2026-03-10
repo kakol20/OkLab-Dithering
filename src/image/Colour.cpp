@@ -409,6 +409,13 @@ std::string Colour::sRGBUintDebug() const {
 		Log::ToString((unsigned int)srgb_int.b, 3, ' ');
 }
 
+std::string Colour::OkLChDebug() const {
+	std::string lStr = Log::LeadingCharacter(Log::ToString(m_oklch.l, 4), 7, ' ');
+	std::string cStr = Log::LeadingCharacter(Log::ToString(m_oklch.c, 4), 7, ' ');
+	std::string hStr = Log::LeadingCharacter(Log::ToString(m_oklch.h * (180. / M_PI), 2), 7, ' ');
+	return lStr + ' ' + cStr + ' ' + hStr;
+}
+
 std::string Colour::GetHex() const {
 	sRGB_UInt srgbUint = GetsRGB_UInt();
 
@@ -479,12 +486,6 @@ double Colour::Dot(const Colour& other) const {
 		return m_lrgb.r * other.m_lrgb.r +
 			m_lrgb.g * other.m_lrgb.g +
 			m_lrgb.b * other.m_lrgb.b;
-	case Colour::MathMode::OkLCh:
-		Colour out = *this;
-		out.OkLChToOkLAB();
-		return out.m_oklab.l * other.m_oklab.l +
-			out.m_oklab.a * other.m_oklab.a +
-			out.m_oklab.b * other.m_oklab.b;
 	default:
 		return 0.0;
 	}
@@ -749,6 +750,7 @@ void Colour::OkLabToOkLCh() {
 		std::sqrt(m_oklab.a * m_oklab.a + m_oklab.b * m_oklab.b),
 		std::atan2(m_oklab.b, m_oklab.a)
 	};
+	if (m_oklch.h < 0.) m_oklch.h += M_PI * 2.;
 }
 
 void Colour::OkLChToOkLAB() {

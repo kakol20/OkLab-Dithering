@@ -30,6 +30,8 @@ public:
 
 	static void Sound(const long long duration = 0);
 
+	static void Clear() { m_console = ""; };
+
 	/// <summary>
 	/// Does not automatically close console
 	/// </summary>

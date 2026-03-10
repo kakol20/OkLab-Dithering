@@ -2,16 +2,23 @@
 
 #include "DevTools.h"
 
+#include "../image/Colour.h"
 #include "../image/Image.h"
 #include "../image/Palette.h"
 #include "../wrapper/Log.h"
 #include "../wrapper/Threshold.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 void DevTools::Run() {
 	//GenerateBlueNoise();
+	GenerateBlueNoisePalette();
+	Log::EndLine();
+	Log::EndLine();
+	Log::Clear();
 	PaletteValues();
 }
 
@@ -45,14 +52,44 @@ void DevTools::GenerateGSTiles() {
 void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
-	Palette palette = "data/wplace_premium.palette";
+	Palette palette = "data/custom.palette";
 	//
 	//for (size_t i = 0; i < palette.size(); ++i) {
 	//	Log::Write(palette.GetColour(i).sRGBUintDebug());
 	//	Log::EndLine();
 	//}
 
-	Log::Save("dev/wplace_premium_colors.txt");
+	Log::Save("dev/colors.txt");
+}
+
+void DevTools::GenerateBlueNoisePalette() {
+	std::vector<Colour> palette;
+	palette.reserve(64);
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+
+	// Set intial mandatory colours
+	palette.emplace_back((uint8_t)0, 0, 0);
+	palette.emplace_back((uint8_t)22, 22, 22);
+	palette.emplace_back((uint8_t)72, 72, 72);
+	palette.emplace_back((uint8_t)128, 128, 128);
+	palette.emplace_back((uint8_t)190, 190, 190);
+	palette.emplace_back((uint8_t)255, 255, 255);
+	palette.emplace_back((uint8_t)255, 0, 0);
+	palette.emplace_back((uint8_t)0, 255, 0);
+	palette.emplace_back((uint8_t)255, 255, 0);
+	palette.emplace_back((uint8_t)0, 0, 255);
+	palette.emplace_back((uint8_t)255, 0, 255);
+	palette.emplace_back((uint8_t)0, 255, 255);
+
+	// ========== SAVE COLOURS ==========
+	Colour::SetMathMode(Colour::MathMode::OkLCh);
+	std::sort(palette.begin(), palette.end());
+	for (size_t i = 0; i < palette.size(); ++i) {
+		Log::Write(palette[i].GetHex());
+		
+		if (i < palette.size() - 1) Log::EndLine();
+	}
+	Log::Save("data/custom.palette");
 }
 
 void DevTools::GenerateBlueNoise() {

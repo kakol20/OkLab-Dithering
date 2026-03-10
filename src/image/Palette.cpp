@@ -25,8 +25,9 @@ Palette::Palette(const char* file) {
 			std::string hexOut = '#' + hex;
 			std::string rgbOut = "rgb(" + col.sRGBUintDebug() + ')';
 			std::string labOut = "oklab(" + col.OkLabDebug() + ')';
+			std::string lchOut = "oklch(" + col.OkLChDebug() + ')';
 
-			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut);
+			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut + " - " + lchOut);
 		}
 	}
 	Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));

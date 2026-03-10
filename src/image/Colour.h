@@ -126,6 +126,7 @@ public:
 	std::string LRGBDebug() const;
 	std::string OkLabDebug() const;
 	std::string sRGBUintDebug() const;
+	std::string OkLChDebug() const;
 
 	std::string GetHex() const;
 
