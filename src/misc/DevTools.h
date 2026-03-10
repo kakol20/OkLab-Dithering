@@ -9,8 +9,9 @@ public:
 	static void Run();
 
 private:
-	static void GenerateGSTiles();
 	static void GenerateBlueNoise();
+	static void GenerateGSTiles();
+	static void PaletteValues();
 };
 
 

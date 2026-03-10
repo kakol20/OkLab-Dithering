@@ -3,34 +3,20 @@
 #include "DevTools.h"
 
 #include "../image/Image.h"
+#include "../image/Palette.h"
+#include "../wrapper/Log.h"
 #include "../wrapper/Threshold.h"
 #include <cmath>
 #include <cstdint>
 #include <string>
 
-//void DevTools::GenerateGSTiles() {
-//}
-
 void DevTools::Run() {
-	GenerateBlueNoise();
+	//GenerateBlueNoise();
+	PaletteValues();
 }
 
 void DevTools::GenerateGSTiles() {
 	//// https://github.com/Calinou/free-blue-noise-textures
-	//Image blueNoise("dev/32_LDR_LLL1_0.png");
-	//Log::WriteOneLine("Grayscale: " + Log::ToString(blueNoise.IsGrayscale()));
-
-	//Log::Write("\n{\n");
-	//for (int y = 0; y < blueNoise.GetHeight(); ++y) {
-	//	Log::Write("\t");
-	//	for (int x = 0; x < blueNoise.GetWidth(); ++x) {
-	//		const uint8_t val = blueNoise.GetData(blueNoise.GetIndex(x, y));
-	//		const std::string valStr = Log::ToString((unsigned int)val, 3, ' ');
-	//		Log::Write(valStr + ", ");
-	//	}
-	//	Log::EndLine();
-	//}
-	//Log::Write("};\n");
 
 	Image img(301, 301, 3);
 	for (int x = 0; x < 301; ++x) {
@@ -55,6 +41,20 @@ void DevTools::GenerateGSTiles() {
 	}
 	img.Write("data/gs-tiles.png");
 }
+
+void DevTools::PaletteValues() {
+	//Log::Write("Test\n");
+
+	Palette palette = "data/wplace_premium.palette";
+	//
+	//for (size_t i = 0; i < palette.size(); ++i) {
+	//	Log::Write(palette.GetColour(i).sRGBUintDebug());
+	//	Log::EndLine();
+	//}
+
+	Log::Save("dev/wplace_premium_colors.txt");
+}
+
 void DevTools::GenerateBlueNoise() {
 	const std::string type = "bluenoise32";
 	const int size = 32;
