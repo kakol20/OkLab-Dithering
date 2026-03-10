@@ -68,11 +68,11 @@ void DevTools::GenerateBlueNoisePalette() {
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 
 	// Set intial mandatory colours
-	palette.emplace_back((uint8_t)0, 0, 0);
-	palette.emplace_back((uint8_t)22, 22, 22);
-	palette.emplace_back((uint8_t)72, 72, 72);
-	palette.emplace_back((uint8_t)128, 128, 128);
-	palette.emplace_back((uint8_t)190, 190, 190);
+	palette.emplace_back(0., 0., 0.);
+	palette.emplace_back(0.2, 0., 0.);
+	palette.emplace_back(0.4, 0., 0.);
+	palette.emplace_back(0.6, 0., 0.);
+	palette.emplace_back(0.8, 0., 0.);
 	palette.emplace_back((uint8_t)255, 255, 255);
 	palette.emplace_back((uint8_t)255, 0, 0);
 	palette.emplace_back((uint8_t)0, 255, 0);

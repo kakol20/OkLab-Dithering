@@ -379,8 +379,8 @@ bool Colour::operator<(const Colour& other) const {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
 	case Colour::MathMode::OkLCh:
-		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
 		if (m_oklch.h != other.m_oklch.h) return m_oklch.h < other.m_oklch.h;
+		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
 		if (m_oklch.l != other.m_oklch.l) return m_oklch.l < other.m_oklch.l;
 		return m_alpha < other.m_alpha;
 	default:
