@@ -55,6 +55,16 @@ public:
 	/// <returns></returns>
 	static Colour FromHex(const char* hex);
 
+	/// <summary>
+	/// Get Colour via OKLCh value
+	/// </summary>
+	/// <param name="l"></param>
+	/// <param name="c"></param>
+	/// <param name="h"></param>
+	/// <param name="alpha"></param>
+	/// <returns></returns>
+	static Colour FromLCH(const double l, const double c, const double h, const double alpha = 1.);
+
 	// ========== ARITHMETIC ==========
 
 	/// <summary>
@@ -64,7 +74,7 @@ public:
 	/// <param name="Oklab"></param>
 	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
 	/// <param name="Linear_RGB"></param>
-	enum class MathMode { sRGB, OkLab, OkLab_Lightness, Linear_RGB };
+	enum class MathMode { sRGB, OkLab, OkLab_Lightness, Linear_RGB, OkLCh };
 
 	/// <summary>
 	/// <para>Clamp value based on m_mathMode</para>
@@ -104,6 +114,7 @@ public:
 	struct sRGB { double r, g, b; };
 	struct sRGB_UInt { uint8_t r, g, b, a; };
 	struct OkLab { double l, a, b; };
+	struct OkLCh { double l, c, h; };
 
 	/// <summary>
 	/// Linear RGB
@@ -115,6 +126,8 @@ public:
 	std::string LRGBDebug() const;
 	std::string OkLabDebug() const;
 	std::string sRGBUintDebug() const;
+
+	std::string GetHex() const;
 
 	// ========== OTHER ==========
 
@@ -148,13 +161,14 @@ public:
 	void ToGrayscale();
 
 	void Abs();
-	static Colour Min(const Colour& a, const Colour& b);
+	//static Colour Min(const Colour& a, const Colour& b);
 	void PureBlack(const uint8_t alpha = 255);
 
 private:
 	LRGB m_lrgb;
 	OkLab m_oklab;
 	sRGB m_srgb;
+	OkLCh m_oklch;
 
 	double m_alpha;
 
@@ -165,6 +179,7 @@ private:
 	static MathMode m_mathMode;
 
 	void OkLabFallback();
+	void OkLChFallback();
 
 	// Convert sRGB to Linear RGB
 	void sRGBtoLRGB();
@@ -175,6 +190,9 @@ private:
 	void LRGBtoOkLab();
 	// Convert OkLab to Linear RGB
 	void OkLabtoLRGB();
+
+	void OkLabToOkLCh();
+	void OkLChToOkLAB();
 
 public:
 	sRGB GetsRGB() const { return m_srgb; };
@@ -191,4 +209,5 @@ public:
 	void SetOkLab(const double l, const double a, const double b, const double alpha = 1.);
 	void SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a = 255);
 	void SetsRGB_D(const double r, const double g, const double b, const double a = 1.);
+	void SetOkLCh(const double l, const double c, const double h, const double a = 1.);
 };
