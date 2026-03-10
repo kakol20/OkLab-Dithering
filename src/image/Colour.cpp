@@ -55,6 +55,7 @@ Colour& Colour::operator=(const Colour& other) {
 	m_lrgb = other.m_lrgb;
 	m_oklab = other.m_oklab;
 	m_srgb = other.m_srgb;
+	m_oklch = other.m_oklch;
 	return *this;
 }
 

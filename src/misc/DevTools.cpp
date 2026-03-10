@@ -5,6 +5,7 @@
 #include "../image/Colour.h"
 #include "../image/Image.h"
 #include "../image/Palette.h"
+#include "../misc/Random.h"
 #include "../wrapper/Log.h"
 #include "../wrapper/Threshold.h"
 #include <algorithm>
@@ -64,8 +65,8 @@ void DevTools::PaletteValues() {
 
 void DevTools::GenerateBlueNoisePalette() {
 	std::vector<Colour> palette;
-	palette.reserve(64);
-	Colour::SetMathMode(Colour::MathMode::OkLab);
+	const size_t size = 64;
+	palette.reserve(size);
 
 	// Set intial mandatory colours
 	palette.emplace_back(0., 0., 0.);
@@ -80,6 +81,47 @@ void DevTools::GenerateBlueNoisePalette() {
 	palette.emplace_back((uint8_t)0, 0, 255);
 	palette.emplace_back((uint8_t)255, 0, 255);
 	palette.emplace_back((uint8_t)0, 255, 255);
+
+	// ========== GENERATE ==========
+
+	const size_t m = 5;
+	Random::Seed = 20260310;
+
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+	const size_t startSize = palette.size();
+	for (size_t i = startSize; i < size; ++i) {
+		Colour furthestCol;
+		double furthestDist = 0.;
+		
+		const size_t candidateCount = palette.size() * m + 1;
+
+		for (size_t j = 0; j < candidateCount; ++j) {
+			const uint8_t currColR = static_cast<uint8_t>(Random::RandUInt(0, 255));
+			const uint8_t currColG = static_cast<uint8_t>(Random::RandUInt(0, 255));
+			const uint8_t currColB = static_cast<uint8_t>(Random::RandUInt(0, 255));
+
+			if (currColR == 48 && currColG == 169 && currColB == 32) {
+				bool temp = true;
+			}
+
+			Colour currCol(currColR, currColG, currColB);
+			double closestDist = 0;
+
+			for (size_t k = 0; k < palette.size(); ++k) {
+				double currentDist = currCol.MagSq(palette[k]);
+
+				if (k == 0) closestDist = currentDist;
+				if (currentDist < closestDist) closestDist = currentDist;
+			}
+
+			if (closestDist > furthestDist) {
+				furthestCol = currCol;
+				furthestDist = closestDist;
+			}
+		}
+
+		palette.push_back(furthestCol);
+	}
 
 	// ========== SAVE COLOURS ==========
 	Colour::SetMathMode(Colour::MathMode::OkLCh);
