@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <limits>
 
 void DevTools::Run() {
 	//GenerateBlueNoise();
@@ -56,26 +57,45 @@ void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
 	Palette palette = "data/custom64.palette";
-	//
-	//for (size_t i = 0; i < palette.size(); ++i) {
-	//	Log::Write(palette.GetColour(i).sRGBUintDebug());
-	//	Log::EndLine();
-	//}
+	
+	// average distance to nearest
+	Colour::SetMathMode(Colour::MathMode::OkLab);
+	double total = 0.;
+	for (size_t i = 0; i < palette.size(); ++i) {
+		double nearestDist = -1;
+
+		for (size_t j = 0; j < palette.size(); ++j) {
+			if (i == j) continue;
+			if (nearestDist < 0) {
+				nearestDist = palette.GetColour(i).MagSq(palette.GetColour(j));
+				continue;
+			}
+
+			double currentDist = palette.GetColour(i).MagSq(palette.GetColour(j));
+			if (currentDist < nearestDist) nearestDist = currentDist;
+		}
+
+		total += nearestDist;
+	}
+	total /= static_cast<double>(palette.size());
+	Log::WriteOneLine("Average Distance to Nearest: " + Log::ToString(total, 4));
 
 	Log::Save("dev/colors.txt");
 }
 
 void DevTools::GenerateBlueNoisePalette() {
 	std::vector<Colour> palette;
-	const size_t size = 64;
+	const size_t size = 128;
 	palette.reserve(size);
 
 	// Set intial mandatory colours
 	palette.emplace_back(0., 0., 0.);
-	palette.emplace_back(0.2, 0., 0.);
-	palette.emplace_back(0.4, 0., 0.);
-	palette.emplace_back(0.6, 0., 0.);
-	palette.emplace_back(0.8, 0., 0.);
+	palette.emplace_back(1. / 7., 0., 0.);
+	palette.emplace_back(2. / 7., 0., 0.);
+	palette.emplace_back(3. / 7., 0., 0.);
+	palette.emplace_back(4. / 7., 0., 0.);
+	palette.emplace_back(5. / 7., 0., 0.);
+	palette.emplace_back(6. / 7., 0., 0.);
 	palette.emplace_back((uint8_t)255, 255, 255);
 	palette.emplace_back((uint8_t)255, 0, 0);
 	palette.emplace_back((uint8_t)255, 255, 0);

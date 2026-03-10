@@ -380,7 +380,6 @@ bool Colour::operator<(const Colour& other) const {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
 	} else {
-		bool sameHueGroup = false;
 
 		std::vector<Colour> hueGroups{
 				Colour((uint8_t)255, 0, 0),
@@ -391,38 +390,31 @@ bool Colour::operator<(const Colour& other) const {
 				Colour((uint8_t)255, 0, 255)
 		};
 
-		//if ((m_oklch.h > 0 && m_oklch.h <= hueGroups[0].m_oklch.h) && (other.m_oklch.h > 0 && other.m_oklch.h <= hueGroups[0].m_oklch.h)) {
-		//	// in red
-		//	sameHueGroup = true;
-		//} else if (m_oklch.h <= hueGroups[0].m_oklch.h && other.m_oklch.h <= hueGroups[0].m_oklch.h)
-		for (size_t i = 1; i < hueGroups.size(); ++i) {
-			if ((m_oklch.h > hueGroups[i - 1].m_oklch.h && other.m_oklch.h > hueGroups[i - 1].m_oklch.h) &&
-				(m_oklch.h <= hueGroups[i].m_oklch.h && other.m_oklch.h <= hueGroups[i].m_oklch.h)) {
-				sameHueGroup = true;
+		size_t currHueGroup = 0;
+		size_t otherHueGroup = 0;
+
+		for (size_t i = 0; i < hueGroups.size(); ++i) {
+			if (!(m_oklch.h > 0.)) break;
+
+			if (m_oklch.h <= hueGroups[i].m_oklch.h) {
+				currHueGroup = i + 1;
+				break;
 			}
 		}
+		if (m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) currHueGroup = hueGroups.size() + 1;
 
-		struct InRed {
-			bool belowRed, aboveMagenta;
-		};
-		InRed current {
-			m_oklch.h <= hueGroups[0].m_oklch.h,
-			m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h
-		};
-		InRed otherC {
-			other.m_oklch.h <= hueGroups[0].m_oklch.h,
-			other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h
-		};
+		for (size_t i = 0; i < hueGroups.size(); ++i) {
+			if (!(other.m_oklch.h > 0.)) break;
 
-		if ((current.belowRed && otherC.belowRed) ||
-			(current.aboveMagenta && otherC.aboveMagenta) ||
-			(current.belowRed && otherC.aboveMagenta) ||
-			(current.aboveMagenta && otherC.belowRed)) sameHueGroup = true;
+			if (other.m_oklch.h <= hueGroups[i].m_oklch.h) {
+				otherHueGroup = i + 1;
+				break;
+			}
+		}
+		if (other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) otherHueGroup = hueGroups.size() + 1;
 
-		// detect grayscale
-		if ((m_oklch.c == 0. || other.m_oklch.c == 0) && m_oklch.c != other.m_oklch.c) sameHueGroup = false;
+		if (currHueGroup != otherHueGroup) return currHueGroup < otherHueGroup;
 
-		if (!sameHueGroup) return m_oklch.h < other.m_oklch.h;
 		if (m_oklch.l != other.m_oklch.l) return m_oklch.l < other.m_oklch.l;
 		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
 		return m_alpha < other.m_alpha;
