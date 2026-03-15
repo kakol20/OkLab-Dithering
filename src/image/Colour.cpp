@@ -1,11 +1,20 @@
+#define _USE_MATH_DEFINES
+
 #include "../wrapper/Log.h"
 #include "../wrapper/Maths.hpp"
 #include "Colour.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <iomanip>
+#include <ios>
+#include <sstream>
 #include <string>
 #include <tuple>
+#include <vector>
+
+constexpr double M_TAU = M_PI * 2;
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
@@ -15,6 +24,7 @@ Colour::Colour() {
 	m_lrgb = { 0., 0., 0. };
 	m_oklab = { 0., 0., 0. };
 	m_srgb = { 0, 0, 0 };
+	m_oklch = { 0., 0., 0. };
 }
 
 Colour::Colour(const Colour& other) {
@@ -23,6 +33,7 @@ Colour::Colour(const Colour& other) {
 	m_lrgb = other.m_lrgb;
 	m_oklab = other.m_oklab;
 	m_srgb = other.m_srgb;
+	m_oklch = other.m_oklch;
 }
 
 Colour::Colour(const double l, const double a, const double b, const double alpha) {
@@ -47,6 +58,7 @@ Colour& Colour::operator=(const Colour& other) {
 	m_lrgb = other.m_lrgb;
 	m_oklab = other.m_oklab;
 	m_srgb = other.m_srgb;
+	m_oklch = other.m_oklch;
 	return *this;
 }
 
@@ -54,12 +66,19 @@ void Colour::Update() {
 	if (m_mathMode == MathMode::sRGB) {
 		sRGBtoLRGB();
 		LRGBtoOkLab();
+		OkLabToOkLCh();
 	} else if (m_mathMode == MathMode::Linear_RGB) {
 		LRGBtosRGB();
 		LRGBtoOkLab();
+		OkLabToOkLCh();
+	} else if (m_mathMode == MathMode::OkLCh) {
+		OkLChToOkLAB();
+		OkLabtoLRGB();
+		LRGBtosRGB();
 	} else {
 		OkLabtoLRGB();
 		LRGBtosRGB();
+		OkLabToOkLCh();
 	}
 }
 
@@ -81,6 +100,12 @@ Colour Colour::FromOkLab(const double l, const double a, const double b, const d
 
 Colour Colour::FromHex(const char* hex) {
 	Colour out(hex);
+	return out;
+}
+
+Colour Colour::FromLCH(const double l, const double c, const double h, const double alpha) {
+	Colour out;
+	out.SetOkLCh(l, c, h, alpha);
 	return out;
 }
 
@@ -118,6 +143,14 @@ void Colour::Clamp() {
 		m_lrgb.b = m_lrgb.b > 1. ? 1. : m_lrgb.b;
 		m_lrgb.b = m_lrgb.b < 0. ? 0. : m_lrgb.b;
 		break;
+	case Colour::MathMode::OkLCh:
+		m_oklch.l = m_oklch.l > 1. ? 1. : m_oklch.l;
+		m_oklch.l = m_oklch.l < 0. ? 0. : m_oklch.l;
+
+		m_oklch.h = m_oklch.h > M_PI * 2. ? M_PI * 2. : m_oklch.h;
+		m_oklch.h = m_oklch.h < 0. ? 0. : m_oklch.h;
+		OkLChFallback();
+		break;
 	default:
 		break;
 	}
@@ -146,6 +179,13 @@ Colour& Colour::operator/=(const Colour& other) {
 		m_lrgb.g /= other.m_lrgb.g;
 		m_lrgb.b /= other.m_lrgb.b;
 		break;
+	case MathMode::OkLCh:
+		OkLChToOkLAB();
+		m_oklab.l /= other.m_oklab.l;
+		m_oklab.a /= other.m_oklab.a;
+		m_oklab.b /= other.m_oklab.b;
+		OkLabToOkLCh();
+		break;
 	}
 	return *this;
 }
@@ -169,6 +209,13 @@ Colour& Colour::operator*=(const Colour& other) {
 		m_lrgb.r *= other.m_lrgb.r;
 		m_lrgb.g *= other.m_lrgb.g;
 		m_lrgb.b *= other.m_lrgb.b;
+		break;
+	case MathMode::OkLCh:
+		OkLChToOkLAB();
+		m_oklab.l *= other.m_oklab.l;
+		m_oklab.a *= other.m_oklab.a;
+		m_oklab.b *= other.m_oklab.b;
+		OkLabToOkLCh();
 		break;
 	}
 	return *this;
@@ -194,6 +241,13 @@ Colour& Colour::operator+=(const Colour& other) {
 		m_lrgb.g += other.m_lrgb.g;
 		m_lrgb.b += other.m_lrgb.b;
 		break;
+	case MathMode::OkLCh:
+		OkLChToOkLAB();
+		m_oklab.l += other.m_oklab.l;
+		m_oklab.a += other.m_oklab.a;
+		m_oklab.b += other.m_oklab.b;
+		OkLabToOkLCh();
+		break;
 	}
 	return *this;
 }
@@ -218,6 +272,13 @@ Colour& Colour::operator-=(const Colour& other) {
 		m_lrgb.g -= other.m_lrgb.g;
 		m_lrgb.b -= other.m_lrgb.b;
 		break;
+	case MathMode::OkLCh:
+		OkLChToOkLAB();
+		m_oklab.l -= other.m_oklab.l;
+		m_oklab.a -= other.m_oklab.a;
+		m_oklab.b -= other.m_oklab.b;
+		OkLabToOkLCh();
+		break;
 	}
 	return *this;
 }
@@ -241,6 +302,15 @@ Colour& Colour::operator*=(const double scalar) {
 		m_lrgb.r *= scalar;
 		m_lrgb.g *= scalar;
 		m_lrgb.b *= scalar;
+		break;
+	case MathMode::OkLCh:
+		OkLChToOkLAB();
+		m_oklab.l *= scalar;
+		m_oklab.a *= scalar;
+		m_oklab.b *= scalar;
+		OkLabToOkLCh();
+		break;
+	default:
 		break;
 	}
 	return *this;
@@ -290,28 +360,92 @@ bool Colour::operator==(const Colour& other) const {
 	case Colour::MathMode::Linear_RGB:
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) ==
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
+	case Colour::MathMode::OkLCh:
+		return std::tie(m_oklch.l, m_oklch.c, m_oklch.h, m_alpha) ==
+		std::tie(other.m_oklch.l, m_oklch.c, m_oklch.h, other.m_alpha);
 	default:
 		return false;
 	}
 }
 
 bool Colour::operator<(const Colour& other) const {
-	switch (m_mathMode) {
-	case Colour::MathMode::sRGB:
+	if (m_mathMode == Colour::MathMode::sRGB) {
 		return std::tie(m_srgb.r, m_srgb.g, m_srgb.b, m_alpha) <
 			std::tie(other.m_srgb.r, other.m_srgb.g, other.m_srgb.b, other.m_alpha);
-	case Colour::MathMode::OkLab:
+	} else if (m_mathMode == Colour::MathMode::OkLab) {
 		return std::tie(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha) <
 			std::tie(other.m_oklab.l, other.m_oklab.a, other.m_oklab.b, other.m_alpha);
-	case Colour::MathMode::OkLab_Lightness:
+	} else if (m_mathMode == Colour::MathMode::OkLab_Lightness) {
 		return std::tie(m_oklab.l, m_alpha) <
 			std::tie(other.m_oklab.l, other.m_alpha);
-	case Colour::MathMode::Linear_RGB:
+	} else if (m_mathMode == Colour::MathMode::Linear_RGB) {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
-	default:
-		return false;
+	} else {
+		/*std::vector<Colour> hueGroups{
+				Colour((uint8_t)255, 0, 0),
+				Colour((uint8_t)255, 255, 0),
+				Colour((uint8_t)0, 255, 0),
+				Colour((uint8_t)0, 255, 255),
+				Colour((uint8_t)0, 0, 255),
+				Colour((uint8_t)255, 0, 255)
+		};
+
+		size_t currHueGroup = 0;
+		size_t otherHueGroup = 0;
+
+		for (size_t i = 0; i < hueGroups.size(); ++i) {
+			if (!(m_oklch.h > 0.)) break;
+
+			if (m_oklch.h <= hueGroups[i].m_oklch.h) {
+				currHueGroup = i + 1;
+				break;
+			}
+		}
+		if (m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) currHueGroup = hueGroups.size() + 1;
+
+		for (size_t i = 0; i < hueGroups.size(); ++i) {
+			if (!(other.m_oklch.h > 0.)) break;
+
+			if (other.m_oklch.h <= hueGroups[i].m_oklch.h) {
+				otherHueGroup = i + 1;
+				break;
+			}
+		}
+		if (other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) otherHueGroup = hueGroups.size() + 1;
+
+		if (currHueGroup != otherHueGroup) return currHueGroup < otherHueGroup;*/
+
+		const Colour red(static_cast<uint8_t>(255), 0, 0);
+		const double n = 12.;
+		const double offset = -red.m_oklch.h + (M_PI / n);
+
+		double currH = m_oklch.h + offset;
+		double otherH = other.m_oklch.h + offset;
+
+		// Wrapped clamp
+		currH = currH < 0. ? currH + M_TAU : currH;
+		otherH = otherH < 0. ? otherH + M_TAU : otherH;
+
+		currH = currH >= M_TAU ? currH - M_TAU : currH;
+		otherH = otherH >= M_TAU ? otherH - M_TAU : otherH;
+
+		// Rounding
+		currH = (std::floor((n * currH) / M_TAU) * M_TAU) / (n - 1.);
+		otherH = (std::floor((n * otherH) / M_TAU) * M_TAU) / (n - 1.);
+
+		// check grayscale
+		if (m_oklch.c == 0) currH = -1.;
+		if (other.m_oklch.c == 0) otherH = -1.;
+
+		if (currH != otherH) return currH < otherH;
+
+		if (m_oklch.l != other.m_oklch.l) return m_oklch.l < other.m_oklch.l;
+		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
+		return m_alpha < other.m_alpha;
 	}
+
+	return false;
 }
 
 std::string Colour::LRGBDebug() const {
@@ -333,6 +467,26 @@ std::string Colour::sRGBUintDebug() const {
 	return Log::ToString((unsigned int)srgb_int.r, 3, ' ') + ' ' +
 		Log::ToString((unsigned int)srgb_int.g, 3, ' ') + ' ' +
 		Log::ToString((unsigned int)srgb_int.b, 3, ' ');
+}
+
+std::string Colour::OkLChDebug() const {
+	std::string lStr = Log::LeadingCharacter(Log::ToString(m_oklch.l, 4), 7, ' ');
+	std::string cStr = Log::LeadingCharacter(Log::ToString(m_oklch.c, 4), 7, ' ');
+	std::string hStr = Log::LeadingCharacter(Log::ToString(m_oklch.h * (180. / M_PI), 2), 7, ' ');
+	return lStr + ' ' + cStr + ' ' + hStr;
+}
+
+std::string Colour::GetHex() const {
+	sRGB_UInt srgbUint = GetsRGB_UInt();
+
+	const unsigned int r = static_cast<unsigned int>(srgbUint.r) << 16;
+	const unsigned int g = static_cast<unsigned int>(srgbUint.g) << 8;
+	const unsigned int b = static_cast<unsigned int>(srgbUint.b);
+	const unsigned int col = r + g + b;
+
+	std::stringstream stream;
+	stream << std::setfill('0') << std::setw(6) << std::uppercase << std::hex << col;
+	return stream.str();
 }
 
 double Colour::MagSq(const Colour& other) const {
@@ -408,6 +562,8 @@ double Colour::MonoGetLightness() const {
 		return 0.2126 * m_srgb.r + 0.7152 * m_srgb.g + 0.0722 * m_srgb.b;
 	} else if (m_mathMode == MathMode::Linear_RGB) {
 		return 0.2126 * m_lrgb.r + 0.7152 * m_lrgb.g + 0.0722 * m_lrgb.b;
+	} else if (m_mathMode == MathMode::OkLCh) {
+		return m_oklch.l;
 	} else {
 		return m_oklab.l;
 	}
@@ -420,6 +576,9 @@ void Colour::ToGrayscale() {
 	} else if (m_mathMode == MathMode::Linear_RGB) {
 		double l = MonoGetLightness();
 		m_lrgb = { l, l, l };
+	} else if (m_mathMode == MathMode::OkLCh) {
+		m_oklch.c = 0.;
+		m_oklch.h = 0.;
 	} else {
 		m_oklab.a = 0.;
 		m_oklab.b = 0.;
@@ -455,27 +614,6 @@ void Colour::Abs() {
 	m_alpha = std::abs(m_alpha);
 }
 
-Colour Colour::Min(const Colour& a, const Colour& b) {
-	Colour out;
-	if (m_mathMode == MathMode::sRGB) {
-		out.m_srgb.r = a.m_srgb.r < b.m_srgb.r ? a.m_srgb.r : b.m_srgb.r;
-		out.m_srgb.g = a.m_srgb.g < b.m_srgb.g ? a.m_srgb.g : b.m_srgb.g;
-		out.m_srgb.b = a.m_srgb.b < b.m_srgb.b ? a.m_srgb.b : b.m_srgb.b;
-	} else if (m_mathMode == MathMode::Linear_RGB) {
-		out.m_lrgb.r = a.m_lrgb.r < b.m_lrgb.r ? a.m_lrgb.r : b.m_lrgb.r;
-		out.m_lrgb.g = a.m_lrgb.g < b.m_lrgb.g ? a.m_lrgb.g : b.m_lrgb.g;
-		out.m_lrgb.b = a.m_lrgb.b < b.m_lrgb.b ? a.m_lrgb.b : b.m_lrgb.b;
-	} else {
-		out.m_oklab.l = a.m_oklab.l < b.m_oklab.l ? a.m_oklab.l : b.m_oklab.l;
-		out.m_oklab.a = a.m_oklab.a < b.m_oklab.a ? a.m_oklab.a : b.m_oklab.a;
-		out.m_oklab.b = a.m_oklab.b < b.m_oklab.b ? a.m_oklab.b : b.m_oklab.b;
-	}
-	out.m_alpha = a.m_alpha < b.m_alpha ? a.m_alpha : b.m_alpha;
-
-	//out.Update();
-	return out;
-}
-
 void Colour::PureBlack(const uint8_t alpha) {
 	/*
 		m_alpha = other.m_alpha;
@@ -487,22 +625,40 @@ void Colour::PureBlack(const uint8_t alpha) {
 	m_srgb = { 0., 0., 0. };
 	m_lrgb = { 0., 0., 0. };
 	m_oklab = { 0., 0., 0. };
+	m_oklch = { 0., 0., 0. };
 	m_isGrayscale = true;
 
 	m_alpha = static_cast<double>(alpha) / 255.;
 }
 
 void Colour::OkLabFallback() {
-	if (m_oklab.l == 1. || m_oklab.l == 0.) {
+	if (m_oklab.l >= 1. || m_oklab.l <= 0.) {
+		m_oklab.l = std::clamp(m_oklab.l, 0., 1.);
 		m_oklab.a = 0.;
 		m_oklab.b = 0.;
 		return;
 	}
 
-	const int maxIter = 12;
-	struct LCH { double l, c, h; };
-
 	Colour s0 = Colour::FromOkLab(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha);
+	s0.OkLChFallback();
+	
+	m_oklab = s0.m_oklab;
+	OkLabToOkLCh();
+	OkLabtoLRGB();
+	LRGBtosRGB();
+}
+
+void Colour::OkLChFallback() {
+	if (m_oklch.l >= 1. || m_oklch.l <= 0.) {
+		m_oklch.l = std::clamp(m_oklch.l, 0., 1.);
+		m_oklch.c = 0.;
+		m_oklch.h = 0.;
+		return;
+	}
+
+	const int maxIter = 12;
+
+	Colour s0 = Colour::FromLCH(m_oklch.l, m_oklch.c, m_oklch.h, m_alpha);
 
 	auto inGamut = [](const Colour& s) {
 		return s.m_srgb.r >= 0. && s.m_srgb.r <= 1. &&
@@ -512,23 +668,10 @@ void Colour::OkLabFallback() {
 
 	if (inGamut(s0)) return;
 
-	LCH lch = {
-		m_oklab.l,
-		std::sqrt(m_oklab.a * m_oklab.a + m_oklab.b * m_oklab.b),
-		std::atan2(m_oklab.b, m_oklab.a)
-	};
-
-	auto LChToLab = [](const LCH& v) {
-		OkLab out = { v.l, v.c * std::cos(v.h), v.c * std::sin(v.h) };
-		return out;
-		};
-
-	double lo = 0., hi = lch.c;
+	double lo = 0., hi = s0.m_oklch.c;
 	for (int i = 0; i < maxIter; ++i) {
 		double mid = 0.5 * (lo + hi);
-		OkLab test = LChToLab({ lch.l, mid, lch.h });
-
-		Colour s = FromOkLab(test.l, test.a, test.b);
+		Colour s = FromLCH(s0.m_oklch.l, mid, s0.m_oklch.h);
 
 		if (inGamut(s)) {
 			lo = mid;
@@ -537,7 +680,10 @@ void Colour::OkLabFallback() {
 		}
 	}
 
-	m_oklab = LChToLab({ lch.l, lo, lch.h });
+	m_oklch = { s0.m_oklch.l, lo, s0.m_oklch.h };
+	OkLChToOkLAB();
+	OkLabtoLRGB();
+	LRGBtosRGB();
 }
 
 void Colour::sRGBtoLRGB() {
@@ -658,6 +804,23 @@ void Colour::OkLabtoLRGB() {
 	}
 }
 
+void Colour::OkLabToOkLCh() {
+	m_oklch = {
+		m_oklab.l,
+		std::sqrt(m_oklab.a * m_oklab.a + m_oklab.b * m_oklab.b),
+		std::atan2(m_oklab.b, m_oklab.a)
+	};
+	if (m_oklch.h < 0.) m_oklch.h += M_TAU;
+}
+
+void Colour::OkLChToOkLAB() {
+	m_oklab = {
+		m_oklch.l,
+		m_oklch.c * std::cos(m_oklch.h),
+		m_oklch.c * std::sin(m_oklch.h)
+	};
+}
+
 Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
 	double r = m_srgb.r * 256.;
 	double g = m_srgb.g * 256.;
@@ -697,6 +860,7 @@ void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const ui
 
 	sRGBtoLRGB();
 	LRGBtoOkLab();
+	OkLabToOkLCh();
 }
 
 void Colour::SetsRGB_D(const double r, const double g, const double b, const double a) {
@@ -713,6 +877,23 @@ void Colour::SetsRGB_D(const double r, const double g, const double b, const dou
 
 	sRGBtoLRGB();
 	LRGBtoOkLab();
+	OkLabToOkLCh();
+}
+
+void Colour::SetOkLCh(const double l, const double c, const double h, const double a) {
+	m_alpha = a;
+	if (m_alpha <= 0.) {
+		m_oklch = { 0., 0., 0. };
+	} else {
+		m_oklch = { l, c, h };
+	}
+
+	m_isGrayscale = false;
+	if (c == 0.) m_isGrayscale = true;
+
+	OkLChToOkLAB();
+	OkLabtoLRGB();
+	LRGBtosRGB();
 }
 
 void Colour::SetOkLab(const double l, const double a, const double b, const double alpha) {
@@ -729,6 +910,7 @@ void Colour::SetOkLab(const double l, const double a, const double b, const doub
 
 	OkLabtoLRGB();
 	LRGBtosRGB();
+	OkLabToOkLCh();
 }
 
 void Colour::SetHex(const char* hex) {
@@ -758,4 +940,5 @@ void Colour::SetLRGB(const double r, const double g, const double b, const doubl
 
 	LRGBtosRGB();
 	LRGBtoOkLab();
+	OkLabToOkLCh();
 }

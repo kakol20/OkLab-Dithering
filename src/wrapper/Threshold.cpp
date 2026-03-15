@@ -154,7 +154,7 @@ std::vector<double> Threshold::GenerateBlueNoiseField(const int n, const uint32_
 		field[i] = dist(rng);
 
 	// Repulsion iterations
-	const int iterations = 8;
+	const int iterations = 10;
 	const double sigma2 = (n * n) * 0.0025;
 
 	for (int it = 0; it < iterations; ++it) {
