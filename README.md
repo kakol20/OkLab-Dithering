@@ -60,7 +60,7 @@ Matrix used for ordered dithering
 	- Where N is the size of the bayer matrix
 	- N must be a power of two
 	- Be careful of high values of N
-- `blueNoise16N`
+- `blueNoiseN`
 	- Where N is the size of the blue noise matrix
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
