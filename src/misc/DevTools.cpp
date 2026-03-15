@@ -85,17 +85,23 @@ void DevTools::PaletteValues() {
 
 void DevTools::GenerateBlueNoisePalette() {
 	std::vector<Colour> palette;
-	const size_t size = 128;
+	const size_t size = 64;
 	palette.reserve(size);
+
+	//palette.emplace_back(1. / 7., 0., 0.);
+	//palette.emplace_back(2. / 7., 0., 0.);
+	//palette.emplace_back(3. / 7., 0., 0.);
+	//palette.emplace_back(4. / 7., 0., 0.);
+	//palette.emplace_back(5. / 7., 0., 0.);
+	//palette.emplace_back(6. / 7., 0., 0.);
+
+	palette.emplace_back(0.2, 0., 0.);
+	palette.emplace_back(0.4, 0., 0.);
+	palette.emplace_back(0.6, 0., 0.);
+	palette.emplace_back(0.8, 0., 0.);
 
 	// Set intial mandatory colours
 	palette.emplace_back(0., 0., 0.);
-	palette.emplace_back(1. / 7., 0., 0.);
-	palette.emplace_back(2. / 7., 0., 0.);
-	palette.emplace_back(3. / 7., 0., 0.);
-	palette.emplace_back(4. / 7., 0., 0.);
-	palette.emplace_back(5. / 7., 0., 0.);
-	palette.emplace_back(6. / 7., 0., 0.);
 	palette.emplace_back((uint8_t)255, 255, 255);
 	palette.emplace_back((uint8_t)255, 0, 0);
 	palette.emplace_back((uint8_t)255, 255, 0);

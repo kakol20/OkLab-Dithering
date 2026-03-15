@@ -14,6 +14,8 @@
 #include <tuple>
 #include <vector>
 
+constexpr double M_TAU = M_PI * 2;
+
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
 
 Colour::Colour() {
@@ -380,8 +382,7 @@ bool Colour::operator<(const Colour& other) const {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
 	} else {
-
-		std::vector<Colour> hueGroups{
+		/*std::vector<Colour> hueGroups{
 				Colour((uint8_t)255, 0, 0),
 				Colour((uint8_t)255, 255, 0),
 				Colour((uint8_t)0, 255, 0),
@@ -413,7 +414,31 @@ bool Colour::operator<(const Colour& other) const {
 		}
 		if (other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) otherHueGroup = hueGroups.size() + 1;
 
-		if (currHueGroup != otherHueGroup) return currHueGroup < otherHueGroup;
+		if (currHueGroup != otherHueGroup) return currHueGroup < otherHueGroup;*/
+
+		const Colour red(static_cast<uint8_t>(255), 0, 0);
+		const double n = 12.;
+		const double offset = -red.m_oklch.h + (M_PI / n);
+
+		double currH = m_oklch.h + offset;
+		double otherH = other.m_oklch.h + offset;
+
+		// Wrapped clamp
+		currH = currH < 0. ? currH + M_TAU : currH;
+		otherH = otherH < 0. ? otherH + M_TAU : otherH;
+
+		currH = currH >= M_TAU ? currH - M_TAU : currH;
+		otherH = otherH >= M_TAU ? otherH - M_TAU : otherH;
+
+		// Rounding
+		currH = (std::floor((n * currH) / M_TAU) * M_TAU) / (n - 1.);
+		otherH = (std::floor((n * otherH) / M_TAU) * M_TAU) / (n - 1.);
+
+		// check grayscale
+		if (m_oklch.c == 0) currH = -1.;
+		if (other.m_oklch.c == 0) otherH = -1.;
+
+		if (currH != otherH) return currH < otherH;
 
 		if (m_oklch.l != other.m_oklch.l) return m_oklch.l < other.m_oklch.l;
 		if (m_oklch.c != other.m_oklch.c) return m_oklch.c < other.m_oklch.c;
@@ -785,7 +810,7 @@ void Colour::OkLabToOkLCh() {
 		std::sqrt(m_oklab.a * m_oklab.a + m_oklab.b * m_oklab.b),
 		std::atan2(m_oklab.b, m_oklab.a)
 	};
-	if (m_oklch.h < 0.) m_oklch.h += M_PI * 2.;
+	if (m_oklch.h < 0.) m_oklch.h += M_TAU;
 }
 
 void Colour::OkLChToOkLAB() {
