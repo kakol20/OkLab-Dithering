@@ -47,11 +47,11 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 double Threshold::GetThreshold(const int x, const int y) const {
 	double out = 0.5;
 	if (IsValidBayerSetting(m_matrixType)) {
-		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]);
-		out /= static_cast<double>(m_bayerSize * m_bayerSize);
+		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]) + 1.;
+		out /= static_cast<double>(m_bayerSize * m_bayerSize) + 1.;
 	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
 		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]);
-		out /= static_cast<double>(m_blueNoiseSize * m_blueNoiseSize);
+		out /= static_cast<double>(m_blueNoiseSize * m_blueNoiseSize) + 1.;
 	} else if (m_matrixType == "ign") {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
 		out = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
