@@ -13,6 +13,21 @@
 //#include <cstdlib>
 //#include <utility>
 
+const std::array<uint8_t, 9> Threshold::m_parkerDither{
+		29,  1, 47,
+		41, 37,  1,
+		23, 41, 29
+};
+
+const std::array<uint8_t, 54> Threshold::m_heartDither{
+	2, 0, 2, 1, 2, 1, 0, 1, 0,
+	2, 2, 2, 1, 1, 1, 0, 0, 0,
+	1, 2, 1, 0, 1, 0, 2, 0, 2,
+	1, 1, 1, 0, 0, 0, 2, 2, 2,
+	0, 1, 0, 2, 0, 2, 1, 2, 1,
+	0, 0, 0, 2, 2, 2, 1, 1, 1
+};
+
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
@@ -30,7 +45,7 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 }
 
 double Threshold::GetThreshold(const int x, const int y) const {
-	double out = 0.;
+	double out = 0.5;
 	if (IsValidBayerSetting(m_matrixType)) {
 		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]);
 		out /= static_cast<double>(m_bayerSize * m_bayerSize);
@@ -42,6 +57,9 @@ double Threshold::GetThreshold(const int x, const int y) const {
 		out = std::fmod(52.9829189 * std::fmod(0.06711056 * double(x) + 0.00583715 * double(y), 1.), 1.);
 	} else if (m_matrixType == "parkerdither") {
 		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 100.;
+	} else if (m_matrixType == "heart") {
+		out = static_cast<double>(m_heartDither[static_cast<size_t>((x % 9) + (y % 6) * 9)]) + 1.;
+		out /= 4.;
 	}
 
 	return out - 0.5;
@@ -85,13 +103,15 @@ bool Threshold::IsValidBlueNoiseSetting(const std::string& matrixType) {
 }
 
 bool Threshold::IsValidSetting(const std::string& matrixType) {
+	if (matrixType == "ign") return true;
+	if (matrixType == "parkerdither") return true;
+	if (matrixType == "heart") return true;
+
+
 	if (IsValidBayerSetting(matrixType)) return true;
 	if (IsValidBlueNoiseSetting(matrixType)) return true;
 
 	// settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign"
-
-	if (matrixType == "ign") return true;
-	if (matrixType == "parkerdither") return true;
 	//if (matrixType == "bluenoise16") return true;
 
 	return false;

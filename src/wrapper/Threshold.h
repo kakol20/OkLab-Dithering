@@ -55,9 +55,7 @@ private:
 	/// <summary>
 	/// Based on Parker Square
 	/// </summary>
-	std::array<uint8_t, 9> m_parkerDither{
-		29,  1, 47,
-		41, 37,  1,
-		23, 41, 29
-	};
+	static const std::array<uint8_t, 9> m_parkerDither;
+
+	static const std::array<uint8_t, 54> m_heartDither;
 };
