@@ -126,9 +126,12 @@ std::string Log::ToString(const double value, const unsigned int precision) {
 
 std::string Log::ToString(const int value, const unsigned int precision, const char lead) {
 	std::stringstream out;
-	out << (value < 0) ? '-' : ' ';
-	out << std::setw(precision) << std::setfill(lead) << std::abs(value);
-
+	if (precision > 0) {
+		out << (value < 0) ? '-' : ' ';
+		out << std::setw(precision) << std::setfill(lead) << std::abs(value);
+	} else {
+		out << value;
+	}
 	return out.str();
 }
 

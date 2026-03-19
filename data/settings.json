@@ -1,13 +1,24 @@
 {
-	"ditherType": "none",
-	"distanceMode": "oklab",
+	"ditherType": "ordered",
+	"distanceMode": "srgb",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "parkerdither",
+	"matrixType": "bayershape4",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
-	"ditherAlphaType": "ordered"
+	"ditherAlphaType": "ordered",
+	"shape": {
+		"size": [ 3, 2 ],
+		"points": [
+			[ 0, 0 ],
+			[ 2, 0 ],
+			[ 0, 1 ],
+			[ 1, 1 ],
+			[ 2, 1 ],
+			[ 1, 2 ]
+		]
+	}
 }

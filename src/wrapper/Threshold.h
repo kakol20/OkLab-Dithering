@@ -14,16 +14,26 @@ public:
 
 	double GetThreshold(const int x, const int y) const;
 
+	static void SetShape(const int width, const int height, const std::vector<std::vector<int>>& points);
+
 	static bool IsValidSetting(const std::string& matrixType);
 
 private:
+	struct Shape {
+		int width = 0, height = 0;
+		std::vector<std::vector<int>> points;
+	};
+
 	int m_bayerSize = 2;
 	int m_blueNoiseSize = 2;
 	std::string m_matrixType = "bayer16";
 
+	static Shape m_shape;
+
 	inline size_t MatrixIndex(const int x, const int y, const int size) const { return size_t(x + y * size); };
 
 	std::vector<unsigned int> GenerateBayerHalf(const int n);
+	void GenerateBayeShape();
 	void GenerateBlueNoise(const int size);
 
 	std::vector<double> GenerateBlueNoiseField(const int n, const uint32_t seed = 1);
@@ -48,7 +58,14 @@ private:
 	/// <returns></returns>
 	static bool IsValidBlueNoiseSetting(const std::string& matrixType);
 
+	/// <summary>
+	/// Any size >= 2 that is a power of 2 is allowed
+	/// </summary>
+	/// <param name="matrixType"></param>
+	static bool IsValidBayerShapeSetting(const std::string& matrixType);
+
 	std::vector<unsigned int> m_bayer{ 0, 2, 3, 1 };
+	std::vector<unsigned int> m_bayerShape{ 0, 2, 3, 1 };
 
 	std::vector<unsigned int> m_blueNoise;
 
