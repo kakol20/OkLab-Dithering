@@ -230,7 +230,7 @@ void Threshold::GenerateBayerShape() {
 				y = y % height;
 
 				x = x < 0 ? x + width : x;
-				y = y < 0 ? y + width : y;
+				y = y < 0 ? y + height : y;
 
 				const size_t shapeIndex = static_cast<size_t>(x + y * width);
 
