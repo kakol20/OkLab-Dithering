@@ -65,6 +65,7 @@ Matrix used for ordered dithering
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 - `heart` a custom threshold map in the shape of pixel hearts
+- `circle` a custom threshold map in the style of half-tone
 
 ### `ditherAlpha`
 - `true` or `false`  
