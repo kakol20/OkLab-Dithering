@@ -58,4 +58,5 @@ private:
 	static const std::array<uint8_t, 9> m_parkerDither;
 
 	static const std::array<uint8_t, 54> m_heartDither;
+	static const std::array<uint8_t, 225> m_circleDither;
 };

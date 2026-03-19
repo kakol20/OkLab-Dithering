@@ -28,6 +28,24 @@ const std::array<uint8_t, 54> Threshold::m_heartDither{
 	0, 0, 0, 2, 2, 2, 1, 1, 1
 };
 
+const std::array<uint8_t, 225> Threshold::m_circleDither{
+	10, 9, 9, 8, 8, 7, 7, 7, 7, 7, 8, 8, 9, 9, 10,
+	 9, 8, 8, 7, 7, 6, 6, 6, 6, 6, 7, 7, 8, 8,  9,
+	 9, 8, 7, 6, 6, 5, 5, 5, 5, 5, 6, 6, 7, 8,  9,
+	 8, 7, 6, 6, 5, 4, 4, 4, 4, 4, 5, 6, 6, 7,  8,
+	 8, 7, 6, 5, 4, 4, 3, 3, 3, 4, 4, 5, 6, 7,  8,
+	 7, 6, 5, 4, 4, 3, 2, 2, 2, 3, 4, 4, 5, 6,  7,
+	 7, 6, 5, 4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6,  7,
+	 7, 6, 5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5, 6,  7,
+	 7, 6, 5, 4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6,  7,
+	 7, 6, 5, 4, 4, 3, 2, 2, 2, 3, 4, 4, 5, 6,  7,
+	 8, 7, 6, 5, 4, 4, 3, 3, 3, 4, 4, 5, 6, 7,  8,
+	 8, 7, 6, 6, 5, 4, 4, 4, 4, 4, 5, 6, 6, 7,  8,
+	 9, 8, 7, 6, 6, 5, 5, 5, 5, 5, 6, 6, 7, 8,  9,
+	 9, 8, 8, 7, 7, 6, 6, 6, 6, 6, 7, 7, 8, 8,  9,
+	10, 9, 9, 8, 8, 7, 7, 7, 7, 7, 8, 8, 9, 9, 10
+};																					  
+
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
@@ -59,7 +77,10 @@ double Threshold::GetThreshold(const int x, const int y) const {
 		out = static_cast<double>(m_parkerDither[MatrixIndex(x % 3, y % 3, 3)]) / 100.;
 	} else if (m_matrixType == "heart") {
 		out = static_cast<double>(m_heartDither[static_cast<size_t>((x % 9) + (y % 6) * 9)]) + 1.;
-		out /= 4.;
+		out /= 2. + 2.;
+	} else if (m_matrixType == "circle") {
+		out = static_cast<double>(m_circleDither[MatrixIndex(x % 15, y % 15, 15)]) + 1.;
+		out /= 10. + 2.;
 	}
 
 	return out - 0.5;
@@ -106,7 +127,7 @@ bool Threshold::IsValidSetting(const std::string& matrixType) {
 	if (matrixType == "ign") return true;
 	if (matrixType == "parkerdither") return true;
 	if (matrixType == "heart") return true;
-
+	if (matrixType == "circle") return true;
 
 	if (IsValidBayerSetting(matrixType)) return true;
 	if (IsValidBlueNoiseSetting(matrixType)) return true;
