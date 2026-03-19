@@ -247,9 +247,9 @@ void DevTools::DebugThreshold() {
 	Threshold::SetShape(sizes[0], sizes[1], points);
 
 	Threshold threshold;
-	threshold.GenerateThreshold("bayershape4");
+	threshold.GenerateThreshold("bayershape16");
 
-	Image img(sizes[0] * 4, sizes[1] * 4, 3);
+	Image img(sizes[0] * 16, sizes[1] * 16, 3);
 
 	for (int x = 0; x < img.GetWidth(); ++x) {
 		for (int y = 0; y < img.GetHeight(); ++y) {
@@ -268,6 +268,6 @@ void DevTools::DebugThreshold() {
 		}
 	}
 
-	img.Write("dev/bayershape4.png");
+	img.Write("dev/bayershape16.png");
 }
 #endif // DEV_MODE
