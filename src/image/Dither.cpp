@@ -539,7 +539,7 @@ void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x,
 		double newAlpha = col.GetAlpha();
 
 		const double r = 1. / static_cast<double>(m_ditherAlphaFactor);
-		const double M = threshold.GetThreshold(x, y);
+		const double M = threshold.GetThreshold(x, y) * -1;
 
 		newAlpha += M * r;
 		newAlpha = newAlpha < 0. ? 0. : (newAlpha > 1. ? 1. : newAlpha);
