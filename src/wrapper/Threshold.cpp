@@ -70,7 +70,7 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 		m_bayerSize = std::stoi(numberPart);
 		m_bayer = GenerateBayerHalf(m_bayerSize);
 
-		GenerateBayeShape();
+		GenerateBayerShape();
 	}
 }
 
@@ -80,7 +80,7 @@ double Threshold::GetThreshold(const int x, const int y) const {
 		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]) + 1.;
 		out /= static_cast<double>(m_bayerSize * m_bayerSize) + 1.;
 	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
-		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]);
+		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]) + 1.;
 		out /= static_cast<double>(m_blueNoiseSize * m_blueNoiseSize) + 1.;
 	} else if (m_matrixType == "ign") {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
@@ -93,6 +93,12 @@ double Threshold::GetThreshold(const int x, const int y) const {
 	} else if (m_matrixType == "circle") {
 		out = static_cast<double>(m_circleDither[MatrixIndex(x % 15, y % 15, 15)]) + 1.;
 		out /= 10. + 2.;
+	} else if (IsValidBayerShapeSetting(m_matrixType)) {
+		const int width = m_bayerSize * m_shape.width;
+		const int height = m_bayerSize * m_shape.height;
+
+		out = static_cast<double>(m_bayerShape[static_cast<size_t>((x % width) + (y % height) * width)]) + 1.;
+		out /= static_cast<double>(m_bayerSize * m_bayerSize) + 1.;
 	}
 
 	return out - 0.5;
@@ -199,7 +205,7 @@ std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {
 	return out;
 }
 
-void Threshold::GenerateBayeShape() {
+void Threshold::GenerateBayerShape() {
 	const int width = m_bayerSize * m_shape.width;
 	const int height = m_bayerSize * m_shape.height;
 

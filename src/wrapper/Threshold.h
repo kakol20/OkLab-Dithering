@@ -33,7 +33,7 @@ private:
 	inline size_t MatrixIndex(const int x, const int y, const int size) const { return size_t(x + y * size); };
 
 	std::vector<unsigned int> GenerateBayerHalf(const int n);
-	void GenerateBayeShape();
+	void GenerateBayerShape();
 	void GenerateBlueNoise(const int size);
 
 	std::vector<double> GenerateBlueNoiseField(const int n, const uint32_t seed = 1);

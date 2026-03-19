@@ -2,6 +2,7 @@
 
 #include "DevTools.h"
 
+#include "../../ext/json/json.hpp"
 #include "../image/Colour.h"
 #include "../image/Image.h"
 #include "../image/Palette.h"
@@ -11,17 +12,21 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
+#include <fstream>
+
+using json = nlohmann::json;
 
 void DevTools::Run() {
 	//GenerateBlueNoise();
-	GenerateBlueNoisePalette();
-	Log::EndLine();
-	Log::EndLine();
-	Log::Clear();
-	PaletteValues();
+	//GenerateBlueNoisePalette();
+	//Log::EndLine();
+	//Log::EndLine();
+	//Log::Clear();
+	//PaletteValues();
+	DebugThreshold();
 
 	//Misc();
 }
@@ -57,7 +62,7 @@ void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
 	Palette palette = "data/custom64.palette";
-	
+
 	// average distance to nearest
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 	double total = 0.;
@@ -120,7 +125,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	for (size_t i = startSize; i < size; ++i) {
 		Colour furthestCol;
 		double furthestDist = 0.;
-		
+
 		const size_t candidateCount = palette.size() * m + 1;
 
 		for (size_t j = 0; j < candidateCount; ++j) {
@@ -157,7 +162,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	std::sort(palette.begin(), palette.end());
 	for (size_t i = 0; i < palette.size(); ++i) {
 		Log::Write(palette[i].GetHex());
-		
+
 		if (i < palette.size() - 1) Log::EndLine();
 	}
 	Log::Save("data/custom" + Log::ToString(size) + ".palette");
@@ -217,5 +222,52 @@ void DevTools::Misc() {
 	Log::WriteOneLine(Log::ToString(count));
 
 	Log::HoldConsole();
+}
+void DevTools::DebugThreshold() {
+	std::ifstream settingsLoc("data/settings.json");
+	if (!(settingsLoc)) {
+		Log::WriteOneLine("JSON not found");
+		Log::Save();
+		Log::HoldConsole();
+		return;
+	}
+	json settings = json::parse(settingsLoc);
+	if (settings.is_discarded()) {
+		Log::Save();
+		Log::HoldConsole();
+		return;
+	}
+
+	std::vector<int> sizes;
+	settings["shape"]["size"].get_to(sizes);
+
+	std::vector<std::vector<int>> points;
+	settings["shape"]["points"].get_to(points);
+
+	Threshold::SetShape(sizes[0], sizes[1], points);
+
+	Threshold threshold;
+	threshold.GenerateThreshold("bayershape4");
+
+	Image img(sizes[0] * 4, sizes[1] * 4, 3);
+
+	for (int x = 0; x < img.GetWidth(); ++x) {
+		for (int y = 0; y < img.GetHeight(); ++y) {
+			if (x == 1 && y == 0) {
+				bool temp = true;
+			}
+
+			const size_t index = img.GetIndex(x, y);
+			const double value = threshold.GetThreshold(x, y) + 0.5;
+			const Colour col(value, 0., 0.);
+			const uint8_t colVal = col.GetsRGB_UInt().r;
+
+			img.SetData(index + 0, colVal);
+			img.SetData(index + 1, colVal);
+			img.SetData(index + 2, colVal);
+		}
+	}
+
+	img.Write("dev/bayershape4.png");
 }
 #endif // DEV_MODE
