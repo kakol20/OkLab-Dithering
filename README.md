@@ -10,16 +10,27 @@ Comments in settings.json not supported
 ```json
 {
 	"ditherType": "ordered",
-	"distanceMode": "oklab",
+	"distanceMode": "srgb",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
 	"mono": false,
 	"grayscale": false,
-	"matrixType": "bayer16",
+	"matrixType": "bluenoise128",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
-	"ditherAlphaType": "ordered"
+	"ditherAlphaType": "ordered",
+	"shape": {
+		"size": [ 3, 2 ],
+		"points": [
+			[ 0, 0 ],
+			[ 2, 0 ],
+			[ 0, 1 ],
+			[ 1, 1 ],
+			[ 2, 1 ],
+			[ 1, 2 ]
+		]
+	}
 }
 ```
 
@@ -66,6 +77,10 @@ Matrix used for ordered dithering
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 - `heart` a custom threshold map in the shape of pixel hearts
 - `circle` a custom threshold map in the style of half-tone
+- `bayerShapeN` 
+	- Where N is the size of the bayer matrix
+	- N must be a power of two
+	- Uses `shape` setting - [more](#shape)
 
 ### `ditherAlpha`
 - `true` or `false`  
@@ -80,6 +95,15 @@ Matrix used for ordered dithering
 - Same options as `ditherType`  
 	- Dithering algorithm for alpha channel
 	- Uses `matrixType` for the threshold matrix
+
+### `shape`
+- Object type
+	- `size` - The size of a cell in the form of a 1D Array - `[width, height]`
+		- Will result in a threshold map size of `(N * width, N * height)`
+	- `points` - A 2D array of points to apply the threshold value relative to the origin `(0, 0)`
+		- In the form of `[[x, y]...]` 
+		- Points can extend beyond the cell's size
+		- Any point extending beyond the map's full size will be wrapped
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

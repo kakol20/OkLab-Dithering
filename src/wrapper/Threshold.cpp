@@ -44,7 +44,11 @@ const std::array<uint8_t, 225> Threshold::m_circleDither{
 	 9, 8, 7, 6, 6, 5, 5, 5, 5, 5, 6, 6, 7, 8,  9,
 	 9, 8, 8, 7, 7, 6, 6, 6, 6, 6, 7, 7, 8, 8,  9,
 	10, 9, 9, 8, 8, 7, 7, 7, 7, 7, 8, 8, 9, 9, 10
-};																					  
+};
+
+Threshold::Shape Threshold::m_shape{
+	0, 0, std::vector<std::vector<int>>()
+};
 
 void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
@@ -60,6 +64,14 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 		m_blueNoiseSize = std::stoi(numberPart);
 		GenerateBlueNoise(m_blueNoiseSize);
 	}
+	else if (IsValidBayerShapeSetting(m_matrixType)) {
+		std::string numberPart = m_matrixType.substr(10);
+
+		m_bayerSize = std::stoi(numberPart);
+		m_bayer = GenerateBayerHalf(m_bayerSize);
+
+		GenerateBayerShape();
+	}
 }
 
 double Threshold::GetThreshold(const int x, const int y) const {
@@ -68,7 +80,7 @@ double Threshold::GetThreshold(const int x, const int y) const {
 		out = static_cast<double>(m_bayer[MatrixIndex(x % m_bayerSize, y % m_bayerSize, m_bayerSize)]) + 1.;
 		out /= static_cast<double>(m_bayerSize * m_bayerSize) + 1.;
 	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
-		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]);
+		out = static_cast<double>(m_blueNoise[MatrixIndex(x % m_blueNoiseSize, y % m_blueNoiseSize, m_blueNoiseSize)]) + 1.;
 		out /= static_cast<double>(m_blueNoiseSize * m_blueNoiseSize) + 1.;
 	} else if (m_matrixType == "ign") {
 		// https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
@@ -81,9 +93,22 @@ double Threshold::GetThreshold(const int x, const int y) const {
 	} else if (m_matrixType == "circle") {
 		out = static_cast<double>(m_circleDither[MatrixIndex(x % 15, y % 15, 15)]) + 1.;
 		out /= 10. + 2.;
+	} else if (IsValidBayerShapeSetting(m_matrixType)) {
+		const int width = m_bayerSize * m_shape.width;
+		const int height = m_bayerSize * m_shape.height;
+
+		out = static_cast<double>(m_bayerShape[static_cast<size_t>((x % width) + (y % height) * width)]) + 1.;
+		out /= static_cast<double>(m_bayerSize * m_bayerSize) + 1.;
 	}
 
 	return out - 0.5;
+}
+
+void Threshold::SetShape(const int width, const int height, const std::vector<std::vector<int>>& points) {
+	m_shape = {
+		width, height,
+		points
+	};
 }
 
 bool Threshold::IsValidBayerSetting(const std::string& matrixType) {
@@ -123,6 +148,25 @@ bool Threshold::IsValidBlueNoiseSetting(const std::string& matrixType) {
 	return true;
 }
 
+bool Threshold::IsValidBayerShapeSetting(const std::string& matrixType) {
+	// Must be at least "bayershapeN"
+	if (matrixType.size() <= 10) return false;
+
+	// First 5 chars must be exactly "bayer"
+	if (matrixType.compare(0, 10, "bayershape") != 0) return false;
+
+	for (size_t i = 10; i < matrixType.size(); ++i) {
+		if (!std::isdigit(static_cast<unsigned char>(matrixType[i])))
+			return false;
+	}
+
+	const int size = std::stoi(matrixType.substr(10));
+
+	if (size < 2) return false;
+
+	return IsPowerOfTwo(size);
+}
+
 bool Threshold::IsValidSetting(const std::string& matrixType) {
 	if (matrixType == "ign") return true;
 	if (matrixType == "parkerdither") return true;
@@ -131,6 +175,7 @@ bool Threshold::IsValidSetting(const std::string& matrixType) {
 
 	if (IsValidBayerSetting(matrixType)) return true;
 	if (IsValidBlueNoiseSetting(matrixType)) return true;
+	if (IsValidBayerShapeSetting(matrixType)) return true;
 
 	// settings["matrixType"] != "bluenoise16" && settings["matrixType"] != "ign"
 	//if (matrixType == "bluenoise16") return true;
@@ -158,6 +203,41 @@ std::vector<unsigned int> Threshold::GenerateBayerHalf(const int n) {
 	}
 
 	return out;
+}
+
+void Threshold::GenerateBayerShape() {
+	const int width = m_bayerSize * m_shape.width;
+	const int height = m_bayerSize * m_shape.height;
+
+	m_bayerShape.clear();
+	m_bayerShape.resize(static_cast<size_t>(width) * height);
+
+	for (int xi = 0; xi < m_bayerSize; ++xi) {
+		for (int yi = 0; yi < m_bayerSize; ++yi) {
+			const size_t bayerIndex = MatrixIndex(xi, yi, m_bayerSize);
+			const unsigned int value = m_bayer[bayerIndex];
+
+			// set origin
+			const int xo = xi * m_shape.width;
+			const int yo = yi * m_shape.height;
+
+			for (size_t i = 0; i < m_shape.points.size(); ++i) {
+				// set position and wrap
+				int x = xo + m_shape.points[i][0];
+				int y = yo + m_shape.points[i][1];
+
+				x = x % width;
+				y = y % height;
+
+				x = x < 0 ? x + width : x;
+				y = y < 0 ? y + width : y;
+
+				const size_t shapeIndex = static_cast<size_t>(x + y * width);
+
+				m_bayerShape[shapeIndex] = value;
+			}
+		}
+	}
 }
 
 void Threshold::GenerateBlueNoise(const int size) {

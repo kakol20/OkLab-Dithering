@@ -18,6 +18,8 @@ private:
 	static void GenerateBlueNoise();
 
 	static void Misc();
+
+	static void DebugThreshold();
 };
 
 

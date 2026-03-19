@@ -13,6 +13,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 // https://json.nlohmann.me/home/exceptions/#switch-off-exceptions
 #define JSON_TRY_USER if(true)
@@ -54,10 +55,10 @@ int main(int argc, char* argv[]) {
 
 	//std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
-	std::string imageLoc = "data/alphaTest-tiles.png";
+	//std::string imageLoc = "data/alphaTest-tiles.png";
 	//std::string imageLoc = "data/grayscale.png";
 	//std::string imageLoc = "data/gs-gradient.png";
-	//std::string imageLoc = "data/gs-tiles.png";
+	std::string imageLoc = "data/gs-tiles.png";
 	//std::string imageLoc = "data/lenna.png";
 	//std::string imageLoc = "data/test.png";
 	Image::ImageType imageType = Image::GetFileType(imageLoc.c_str());
@@ -68,12 +69,12 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string paletteLocStr = "data/bw.palette";
+	std::string paletteLocStr = "data/bw.palette";
 	//std::string paletteLocStr = "data/custom128.palette";
 	//std::string paletteLocStr = "data/custom64.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
-	std::string paletteLocStr = "data/wplace_premium.palette";
+	//std::string paletteLocStr = "data/wplace_premium.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {
 		Log::WriteOneLine("Palette not found");
@@ -154,7 +155,8 @@ int main(int argc, char* argv[]) {
 		{ "matrixType", json::value_t::string },
 		{ "ditherAlpha", json::value_t::boolean},
 		{ "ditherAlphaFactor", json::value_t::number_unsigned },
-		{ "ditherAlphaType", json::value_t::string }
+		{ "ditherAlphaType", json::value_t::string },
+		{ "shape", json::value_t::object }
 	};
 
 	bool allFound = true;
@@ -175,6 +177,8 @@ int main(int argc, char* argv[]) {
 			Log::WriteOneLine(it->first + ": \"" + (std::string)settings[it->first] + "\"");
 		} else if (it->second == json::value_t::number_unsigned) {
 			Log::WriteOneLine(it->first + ": " + Log::ToString(static_cast<unsigned int>(settings[it->first]), 0, '0'));
+		} else  if (it->second == json::value_t::object) {
+			Log::WriteOneLine(it->first + ": is detected as an object");
 		}
 	}
 
@@ -226,6 +230,93 @@ int main(int argc, char* argv[]) {
 		invalidType = true;
 	}
 
+	// ========== Verify "shape" setting ==========
+	std::unordered_map<std::string, json::value_t> shapeRequired = {
+		{"size", json::value_t::array},
+		{"points", json::value_t::array}
+	};
+	std::vector<int> sizes;
+	std::vector<std::vector<int>> points;
+	for (auto it = shapeRequired.begin(); it != shapeRequired.end(); ++it) {
+		if (!settings["shape"].contains(it->first)) {
+			Log::WriteOneLine("\"shape\" key not found: shape[" + it->first + "]");
+			invalidType = true;
+		} else if (settings["shape"][it->first].type() != it->second) {
+			Log::WriteOneLine("Wrong value type: shape[" + it->first + "]");
+			invalidType = true;
+		} else {
+			Log::WriteOneLine("shape[" + it->first + "]: is detected as an array");
+
+			if (it->first == "size") {
+				bool isValidArrType = true;
+				for (auto ij = settings["shape"]["size"].begin(); ij != settings["shape"]["size"].end(); ++ij) {
+					if ((*ij).type() != json::value_t::number_unsigned) {
+						isValidArrType = false;
+						break;
+					}
+				}
+				if (!isValidArrType) {
+					Log::WriteOneLine("  shape[size] has invalid item types");
+					invalidType = true;
+					continue;
+				}
+
+				settings["shape"]["size"].get_to(sizes);
+				if (sizes.size() != 2) {
+					Log::WriteOneLine("  shape[size] does not have two items");
+					invalidType = true;
+					continue;
+				}
+
+				Log::WriteOneLine("  [" + Log::ToString(sizes[0]) + ", " + Log::ToString(sizes[1]) + "]");
+			} else if (it->first == "points") {
+				bool isValidArrType = true;
+				for (auto ij = settings["shape"]["points"].begin(); ij != settings["shape"]["points"].end(); ++ij) {
+					if (!isValidArrType) break;
+
+					if ((*ij).type() != json::value_t::array) {
+						isValidArrType = false;
+						break;
+					}
+
+					// check items inside that item
+					for (auto ik = (*ij).begin(); ik != (*ij).end(); ++ik) {
+						if (!((*ik).type() == json::value_t::number_integer || (*ik).type() == json::value_t::number_unsigned)) {
+							isValidArrType = false;
+							break;
+						}
+					}
+					if (!isValidArrType) break;
+
+					std::vector<int> item;
+					(*ij).get_to(item);
+
+					if (item.size() != 2) {
+						Log::WriteOneLine("  shape[points][] does not have two items");
+						isValidArrType = false;
+						break;
+					}
+
+					points.push_back(item);
+				}
+
+				if (!isValidArrType) {
+					Log::WriteOneLine("  shape[points] has invalid item types");
+					invalidType = true;
+					continue;
+				}
+
+				Log::StartLine();
+				Log::Write("  ");
+				for (size_t i = 0; i < points.size(); ++i) {
+					Log::Write("[" + Log::ToString(points[i][0]) + ", " + Log::ToString(points[i][1]) + "]");
+					if (i < points.size() - 1) Log::Write(", ");
+				}
+				Log::EndLine();
+			}
+		}
+	}
+
 	if (invalidType) {
 		Log::Save();
 		Log::HoldConsole();
@@ -240,6 +331,7 @@ int main(int argc, char* argv[]) {
 		((bool)settings["hideSemiTransparent"] ? false : (bool)settings["ditherAlpha"]),
 		static_cast<unsigned int>(settings["ditherAlphaFactor"]),
 		settings["ditherAlphaType"]);
+	Threshold::SetShape(sizes[0], sizes[1], points);
 
 	// ========== GET IMAGE ==========
 
