@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
 
 Palette::Palette(const char* file) {
 	std::fstream p(file);
@@ -21,16 +22,23 @@ Palette::Palette(const char* file) {
 
 			Colour col(hex.c_str());
 			m_colours.push_back(col);
+		}
 
-			std::string hexOut = '#' + hex;
-			std::string rgbOut = "rgb(" + col.sRGBUintDebug() + ')';
-			std::string labOut = "oklab(" + col.OkLabDebug() + ')';
-			std::string lchOut = "oklch(" + col.OkLChDebug() + ')';
+		Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));
+
+		//Colour::SetMathMode(Colour::MathMode::OkLCh);
+
+		std::sort(m_colours.begin(), m_colours.end());
+
+		for (auto it = m_colours.begin(); it != m_colours.end(); ++it) {
+			std::string hexOut = "  #" + it->GetHex();
+			std::string rgbOut = "rgb(" + it->sRGBUintDebug() + ')';
+			std::string labOut = "oklab(" + it->OkLabDebug() + ')';
+			std::string lchOut = "oklch(" + it->OkLChDebug() + ')';
 
 			Log::WriteOneLine(hexOut + " - " + rgbOut + " - " + labOut + " - " + lchOut);
 		}
 	}
-	Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));
 }
 
 Palette::~Palette() {

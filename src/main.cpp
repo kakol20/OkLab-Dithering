@@ -1,4 +1,5 @@
 #include "../ext/json/json.hpp"
+#include "image/Colour.h"
 #include "image/Dither.h"
 #include "image/Image.h"
 #include "image/Palette.h"
@@ -370,6 +371,7 @@ int main(int argc, char* argv[]) {
 
 	Log::EndLine();
 	Log::WriteOneLine("===== GETTING PALETTE =====");
+	Colour::SetMathMode(Colour::MathMode::OkLCh);
 	Palette palette(paletteLocStr.c_str());
 
 	// ========== DITHERING ==========
