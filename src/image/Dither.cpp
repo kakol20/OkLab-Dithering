@@ -36,26 +36,32 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	std::vector<Colour> colours;
 	colours.reserve(coloursSize);
 
+	double imgMinL = 0.0, imgMaxL = 0.0;
+
 	Log::StartTime();
 	Log::WriteOneLine("ORDERED DITHERING...");
 
 	Log::WriteOneLine("  Copying Pixels");
 
+	SetColourMathMode(m_distanceMode);
+
+	Log::StartTime();
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
 			//Colour pixel = GetColourFromImage(image, x, y);
 			colours.emplace_back(GetColourFromImage(image, x, y));
 
-			// -- Check Time --
-			if (Log::CheckTimeSeconds(5.)) {
-				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
-
-				Log::WriteOneLine("    " + currStr + " / " + maxStr);
-
-				Log::StartTime();
+			if (x == 0 && y == 0) {
+				imgMinL = colours.back().MonoGetLightness();
+				imgMaxL = imgMinL;
+			} else {
+				double l = colours.back().MonoGetLightness();
+				if (l < imgMinL) imgMinL = l;
+				if (l > imgMaxL) imgMaxL = l;
 			}
+
+			Log::DebugProgress(double(x + y * imgWidth), double(2 * imgHeight * imgWidth), 5.);
 		}
 	}
 
@@ -66,27 +72,30 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	};
 
 	std::map<Colour, DitherInfo> ditherMem;
-
-	SetColourMathMode(m_distanceMode);
-
 	Log::WriteOneLine("  Dithering");
-	for (int x = 0; x < imgWidth; ++x) {
-		for (int y = 0; y < imgHeight; ++y) {
+	Log::StartTime();
+	for (int y = 0; y < imgHeight; ++y) {
+		for (int x = 0; x < imgWidth; ++x) {
+#ifdef _DEBUG
+			if (x == 10) {
+				bool temp = true;
+			}
+#endif // _DEBUG
+
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
 			Colour pixel = colours[indexCol];
+			double pixelAlpha = pixel.GetAlpha();
+			pixel.SetAlpha(1.); // to reduce size of ditherMem - search for colour regardless of alpha
 
-			//SetColourMathMode(m_mathMode);
-
-			// ===== CHECK MEMOISATION =====
+			// ===== CHECK MEMOIZATION =====
 
 			DitherInfo info;
 
 			if (ditherMem.find(pixel) != ditherMem.end()) {
-				// Found
-				info = ditherMem[pixel];
-			} else if (palette.size() <= 1) {
+				info = ditherMem[pixel]; // found
+			} else if (palette.size() <= 1) { // palette has one colour
 				info.p0 = palette.GetColour(0);
 				info.p1 = palette.GetColour(0);
 
@@ -94,86 +103,60 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 				ditherMem[pixel] = info;
 			} else {
-				// Find p0 and p1
-
-				size_t i0 = 0, i1 = 1;
-				//double d0 = pixel.MagSq(palette.GetColour(0));
-				//double d1 = pixel.MagSq(palette.GetColour(1));
-
-				double d0 = 0., d1 = 0.;
 				if (m_mono) {
-					Colour ci0 = palette.GetColour(0);
-					Colour ci1 = palette.GetColour(1);
-					Colour pixel_gs = pixel;
+					// TODO: finish
+					double currL = pixel.MonoGetLightness();
 
-					ci0.ToGrayscale();
-					ci1.ToGrayscale();
-					pixel_gs.ToGrayscale();
+					// normalise image min&max to palette min&max
+					currL = (currL - imgMinL) / (imgMaxL - imgMinL);
+					currL = (palette.back().MonoGetLightness() - palette.front().MonoGetLightness()) * currL;
+					currL += palette.front().MonoGetLightness();
 
-					d0 = pixel_gs.Mag(ci0);
-					d1 = pixel_gs.Mag(ci1);
+					for (size_t i = 0; i < palette.size() - 1; ++i) {
+						const double p0_l = palette.GetColour(i).MonoGetLightness();
+						const double p1_l = palette.GetColour(i + 1).MonoGetLightness();
+						if (currL >= p0_l && currL <= p1_l) {
+							info.p0 = palette.GetColour(i);
+							info.p1 = palette.GetColour(i + 1);
+
+							const double p0_d = currL - p0_l;
+							const double p1_d = p1_l - currL;
+
+							const double sum_d = p0_d + p1_d;
+
+							info.alpha = p0_d / sum_d;
+						}
+					}
 				} else {
-					d0 = pixel.Mag(palette.GetColour(0));
-					d1 = pixel.Mag(palette.GetColour(1));
-				}
+					size_t i0 = 0, i1 = 1; // find p0 and p1
 
-				if (d1 < d0) {
-					std::swap(d0, d1);
-					std::swap(i0, i1);
-				}
+					double d0 = pixel.Mag(palette.GetColour(0));
+					double d1 = pixel.Mag(palette.GetColour(1));
 
-				for (size_t i = 2; i < palette.size(); ++i) {
-					double d;
-
-					if (m_mono) {
-						Colour pal_gs = palette.GetColour(i);
-						Colour pixel_gs = pixel;
-
-						pal_gs.ToGrayscale();
-						pixel_gs.ToGrayscale();
-
-						d = pixel_gs.Mag(pal_gs);
-					} else {
-						d = pixel.Mag(palette.GetColour(i));
+					if (d1 < d0) {
+						std::swap(d0, d1);
+						std::swap(i0, i1);
 					}
 
-					if (d < d0) {
-						d1 = d0; i1 = i0;
-						d0 = d;  i0 = i;
-					} else if (d < d1) {
-						d1 = d;  i1 = i;
+					for (size_t i = 2; i < palette.size(); ++i) {
+						double d = pixel.Mag(palette.GetColour(i));
+
+						if (d < d0) {
+							d1 = d0; i1 = i0;
+							d0 = d;  i0 = i;
+						} else if (d < d1) {
+							d1 = d;  i1 = i;
+						}
 					}
-				}
 
-				info.p0 = palette.GetColour(i0);
-				info.p1 = palette.GetColour(i1);
+					info.p0 = palette.GetColour(i0);
+					info.p1 = palette.GetColour(i1);
 
-				// ========== Order p0 and p1 by distance to black ==========
+					const double p0_l = info.p0.GetOkLab().l;
+					const double p1_l = info.p1.GetOkLab().l;
 
-				//const Colour black(0., 0., 0.);
-				const double p0_l = info.p0.GetOkLab().l;
-				const double p1_l = info.p1.GetOkLab().l;
+					if (p0_l < p1_l) std::swap(info.p0, info.p1);
 
-				if (p0_l < p1_l) std::swap(info.p0, info.p1);
-
-				// Calculate Alpha value
-
-				if (m_mono) {
-					Colour p1_gs = info.p1;
-					Colour p0_gs = info.p0;
-					Colour pixel_gs = pixel;
-
-					p1_gs.ToGrayscale();
-					p0_gs.ToGrayscale();
-					pixel_gs.ToGrayscale();
-
-					const double p0_d = p0_gs.Mag(pixel_gs);
-					const double p1_d = p1_gs.Mag(pixel_gs);
-
-					const double sum_d = p0_d + p1_d;
-
-					info.alpha = p0_d / sum_d;
-				} else {
 					const double p0_d = info.p0.Mag(pixel);
 					const double p1_d = info.p1.Mag(pixel);
 
@@ -183,7 +166,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				}
 
 				info.alpha = std::clamp(info.alpha, 0., 1.);
-
 				ditherMem[pixel] = info;
 			}
 
@@ -192,36 +174,17 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			// This is to cancel out the (-0.5) inside GetThreshold() function
 			const double threshold = pixelThreshold.GetThreshold(x, y) + 0.5;
 
-			//SetColourMathMode(m_distanceMode);
-			//Colour nearest = ClosestColour(dithered, palette, image.IsGrayscale());
-
-			//Colour nearest = info.alpha
-
-			////Colour nearest = info.alpha <= threshold ? info.p0 : info.p1;
 			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
+			nearest.SetAlpha(pixelAlpha);
 
-			nearest.SetAlpha(pixel.GetAlpha());
-			//Colour nearest = pixel;
-
-			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, alphaThreshold);
+			if (image.HasAlphaChannel() && m_ditherAlpha) 
+				DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
 			SetColourToImage(nearest, image, x, y);
 
-			//if (m_ditherAlpha) DitherAlphaChannel(image, x, y);
-
-			// -- Check Time --
-			if (Log::CheckTimeSeconds(5.)) {
-				const std::string maxStr = Log::ToString(2 * imgHeight * imgWidth);
-				const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
-
-				Log::WriteOneLine("    " + currStr + " / " + maxStr);
-
-				Log::StartTime();
-			}
+			Log::DebugProgress(double(x + y * imgWidth), double(2 * imgHeight * imgWidth), 5.);
 		}
 	}
-
-	Log::WriteOneLine("    Dither Mem Size: " + Log::ToString(ditherMem.size()));
 }
 
 void Dither::FloydDither(Image& image, const Palette& palette) {

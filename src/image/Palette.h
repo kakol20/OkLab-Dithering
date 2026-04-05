@@ -21,6 +21,9 @@ public:
 	/// </summary>
 	Colour GetAverageSpread() const { return m_avgSpread; }
 
+	Colour back() const { return m_colours[m_size - 1]; }
+	Colour front() const { return m_colours[0]; }
+
 private:
 	std::vector<Colour> m_colours;
 	size_t m_size;
