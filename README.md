@@ -73,7 +73,7 @@ Matrix used for ordered dithering
 	- Be careful of high values of N
 - `blueNoiseN`
 	- Where N is the size of the blue noise matrix
-	- High values N will be slow - ```recommend values <= 32```
+	- High values N will be slow
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 - `heart` a custom threshold map in the shape of pixel hearts
