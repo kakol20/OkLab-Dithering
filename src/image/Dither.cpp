@@ -28,9 +28,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	Threshold pixelThreshold;
 	pixelThreshold.GenerateThreshold(m_matrixType);
 
-	Threshold alphaThreshold;
-	alphaThreshold.GenerateThreshold(m_matrixType);
-
 	// Create a copy of of image in Colour form
 	const size_t coloursSize = (size_t)image.GetHeight() * image.GetWidth();
 	std::vector<Colour> colours;
@@ -76,12 +73,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	Log::StartTime();
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
-#ifdef _DEBUG
-			if (x == 10) {
-				bool temp = true;
-			}
-#endif // _DEBUG
-
 			const size_t indexCol = size_t(x + y * imgWidth);
 			const size_t index = image.GetIndex(x, y);
 
@@ -104,7 +95,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				ditherMem[pixel] = info;
 			} else {
 				if (m_mono) {
-					// TODO: finish
 					double currL = pixel.MonoGetLightness();
 
 					// normalise image min&max to palette min&max
@@ -178,7 +168,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			nearest.SetAlpha(pixelAlpha);
 
 			if (image.HasAlphaChannel() && m_ditherAlpha) 
-				DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, alphaThreshold);
+				DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, pixelThreshold);
 
 			SetColourToImage(nearest, image, x, y);
 
