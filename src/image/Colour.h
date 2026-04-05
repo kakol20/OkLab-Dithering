@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <cmath>
 class Colour {
 public:
 	Colour();
@@ -142,11 +143,15 @@ public:
 	/// </returns>
 	double MagSq(const Colour& other) const;
 
+	double Mag(const Colour& other) const { return std::sqrt(MagSq(other)); }
+
 	/// <summary>
 	/// Const member function that returns the squared length (squared magnitude) of the object.
 	/// </summary>
 	/// <returns>The squared length as a double.</returns>
 	double LengthSq() const;
+
+	double Length() const { return std::sqrt(LengthSq()); }
 
 	double Dot(const Colour& other) const;
 

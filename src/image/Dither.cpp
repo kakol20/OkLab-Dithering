@@ -110,11 +110,11 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					ci1.ToGrayscale();
 					pixel_gs.ToGrayscale();
 
-					d0 = pixel_gs.MagSq(ci0);
-					d1 = pixel_gs.MagSq(ci1);
+					d0 = pixel_gs.Mag(ci0);
+					d1 = pixel_gs.Mag(ci1);
 				} else {
-					d0 = pixel.MagSq(palette.GetColour(0));
-					d1 = pixel.MagSq(palette.GetColour(1));
+					d0 = pixel.Mag(palette.GetColour(0));
+					d1 = pixel.Mag(palette.GetColour(1));
 				}
 
 				if (d1 < d0) {
@@ -132,9 +132,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 						pal_gs.ToGrayscale();
 						pixel_gs.ToGrayscale();
 
-						d = pixel_gs.MagSq(pal_gs);
+						d = pixel_gs.Mag(pal_gs);
 					} else {
-						d = pixel.MagSq(palette.GetColour(i));
+						d = pixel.Mag(palette.GetColour(i));
 					}
 
 					if (d < d0) {
@@ -150,11 +150,11 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 
 				// ========== Order p0 and p1 by distance to black ==========
 
-				const Colour black(0., 0., 0.);
-				const double p0_d = black.MagSq(info.p0);
-				const double p1_d = black.MagSq(info.p1);
+				//const Colour black(0., 0., 0.);
+				const double p0_l = info.p0.GetOkLab().l;
+				const double p1_l = info.p1.GetOkLab().l;
 
-				if (p1_d < p0_d) std::swap(info.p0, info.p1);
+				if (p0_l < p1_l) std::swap(info.p0, info.p1);
 
 				// Calculate Alpha value
 
@@ -167,15 +167,15 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					p0_gs.ToGrayscale();
 					pixel_gs.ToGrayscale();
 
-					const double p0_d = std::sqrt(p0_gs.MagSq(pixel_gs));
-					const double p1_d = std::sqrt(p1_gs.MagSq(pixel_gs));
+					const double p0_d = p0_gs.Mag(pixel_gs);
+					const double p1_d = p1_gs.Mag(pixel_gs);
 
 					const double sum_d = p0_d + p1_d;
 
 					info.alpha = p0_d / sum_d;
 				} else {
-					const double p0_d = std::sqrt(info.p0.MagSq(pixel));
-					const double p1_d = std::sqrt(info.p1.MagSq(pixel));
+					const double p0_d = info.p0.Mag(pixel);
+					const double p1_d = info.p1.Mag(pixel);
 
 					const double sum_d = p0_d + p1_d;
 
