@@ -1,5 +1,6 @@
 #include "Threshold.h"
 
+#include "../misc/Random.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -8,10 +9,10 @@
 #include <numeric>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
-//#include "../misc/Random.h"
-//#include <cstdlib>
-//#include <utility>
+#include <limits>
+#include "../wrapper/Log.h"
 
 const std::array<uint8_t, 9> Threshold::m_parkerDither{
 		29,  1, 47,
@@ -54,17 +55,19 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
 	if (IsValidBayerSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(5);
 
 		m_bayerSize = std::stoi(numberPart);
 		m_bayer = GenerateBayerHalf(m_bayerSize);
 	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(9);
 
 		m_blueNoiseSize = std::stoi(numberPart);
 		GenerateBlueNoise(m_blueNoiseSize);
-	}
-	else if (IsValidBayerShapeSetting(m_matrixType)) {
+	} else if (IsValidBayerShapeSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(10);
 
 		m_bayerSize = std::stoi(numberPart);
@@ -241,72 +244,64 @@ void Threshold::GenerateBayerShape() {
 }
 
 void Threshold::GenerateBlueNoise(const int size) {
-	// https://blog.demofox.org/2019/06/25/generating-blue-noise-textures-with-void-and-cluster/
+	// https://abau.io/blog/blue_noise_dithering/
+	struct Point {
+		int x, y;
+	};
 
-	const int N = size * size;
-	std::vector<double> noise = GenerateBlueNoiseField(size, 20260304);
-
-	std::vector<int> idx(N);
-	std::iota(idx.begin(), idx.end(), 0);
-
-	// Rank pixels by noise value
-	std::sort(idx.begin(), idx.end(),
-		[&](int a, int b) {
-			return noise[a] < noise[b];
-		});
-
-	// Build permutation
 	m_blueNoiseSize = size;
-	m_blueNoise = std::vector<unsigned int>(N);
-	for (int i = 0; i < N; ++i) {
-		m_blueNoise[idx[i]] = i;
-	}
-}
 
-std::vector<double> Threshold::GenerateBlueNoiseField(const int n, const uint32_t seed) {
-	const int N = n * n;
-	std::vector<double> field(N);
+	const int m = 5;
+	//const int K = 16;
 
-	std::mt19937 rng(seed);
-	std::uniform_real_distribution<double> dist(0., 1.);
+	m_blueNoise = std::vector<unsigned int>(size * size, 0);
 
-	// Initial White Noise
-	for (int i = 0; i < N; ++i)
-		field[i] = dist(rng);
+	std::vector<Point> points;
+	points.reserve(static_cast<size_t>(size * size));
 
-	// Repulsion iterations
-	const int iterations = 10;
-	const double sigma2 = (n * n) * 0.0025;
+	std::mt19937 rng(Random::Seed);
+	std::uniform_int_distribution<int> dist(0, size - 1);
 
-	for (int it = 0; it < iterations; ++it) {
-		std::vector<double> next = field;
+	Log::StartTime();
+	for (int i = 0; i < size * size; ++i) {
+		Point bestCandidate{};
 
-		for (int y = 0; y < n; ++y) {
-			for (int x = 0; x < n; ++x) {
-				int i = y * n + x;
-				double force = 0.;
+		double bestDist = -INFINITY;
+		const int K = size > 64 ? 16 : (int)points.size() * m + 1;
 
-				for (int oy = -3; oy <= 3; ++oy) {
-					for (int ox = -3; ox <= 3; ++ox) {
-						if (ox == 0 && oy == 0) continue;
+		for (int k = 0; k < K; ++k) {
+			Point candidate{ dist(rng), dist(rng) };
 
-						int nx = Wrap(x + ox, n);
-						int ny = Wrap(y + oy, n);
-						int j = ny * n + nx;
+			double minDist = INFINITY;
 
-						double d2 = ToroidalDist2(x, y, nx, ny, n);
-						double w = std::exp(-d2 / sigma2);
-						
-						force += (field[i] - field[j]) * w;
-					}
+			// Find distance to closest existing point
+			for (const Point& p : points) {
+				double d = std::sqrt(ToroidalDist2(candidate.x, candidate.y, p.x, p.y, size));
+				if (d < minDist) {
+					minDist = d;
 				}
-				next[i] += 0.1 * force;
+			}
+
+			// If first point, accept immediately
+			if (points.empty()) {
+				bestCandidate = candidate;
+				break;
+			}
+
+			if (minDist > bestDist) {
+				bestDist = minDist;
+				bestCandidate = candidate;
 			}
 		}
-		field.swap(next);
-	}
 
-	return field;
+		points.push_back(bestCandidate);
+
+		// Assign rank (normalized 0 → 1)
+		int index = bestCandidate.y * size + bestCandidate.x;
+		m_blueNoise[index] = i;
+
+		Log::DebugProgress(double(i), double(size* size - 1), 5);
+	}
 }
 
 inline double Threshold::ToroidalDist2(int x0, int y0, int x1, int y1, int n) {
