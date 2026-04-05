@@ -4,6 +4,7 @@
 #include <corecrt.h>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <ios>
@@ -76,6 +77,12 @@ void Log::StartLine() {
 }
 
 void Log::Save(const std::string save, const bool overwrite) {
+	const std::filesystem::path p = save;
+	const std::filesystem::path dir = p.parent_path();
+	if (!p.parent_path().empty() && !std::filesystem::exists(dir)) {
+		std::filesystem::create_directory(dir);
+	}
+
 	std::fstream consoleLog;
 
 	if (overwrite) {

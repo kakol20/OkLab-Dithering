@@ -1,8 +1,9 @@
 #include "Image.h"
+
 #include <cmath>
 #include <cstdint>
-#include <cstring>
-#include <string.h>
+#include <filesystem>
+#include <string>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -11,7 +12,6 @@
 #include "../../ext/stb/stb_image_write.h"
 
 #include "../wrapper/Log.h"
-
 
 Image::Image() {
 	m_h = 0;
@@ -107,16 +107,17 @@ bool Image::Read(const char* file, const int forceChannels) {
 		m_data = stbi_load(file, &m_w, &m_h, &m_channels, 0);
 	}
 
+	Log::StartLine();
 	if (m_data != NULL) {
-		Log::WriteOneLine("Read success ");
+		Log::Write("Read success ");
 	} else {
-		Log::WriteOneLine("Read failed ");
+		Log::Write("Read failed ");
 	}
 
 	m_size = (size_t)(m_w * m_h * m_channels);
 
-	Log::WriteOneLine(file);
-	//Log::EndLine();
+	Log::Write(file);
+	Log::EndLine();
 
 	return m_data != NULL;
 }
@@ -124,6 +125,12 @@ bool Image::Read(const char* file, const int forceChannels) {
 bool Image::Write(const char* file) const {
 	Image::ImageType type = Image::GetFileType(file);
 	int success = 0;
+
+	const std::filesystem::path p = file;
+	const std::filesystem::path dir = p.parent_path();
+	if (!p.parent_path().empty() && !std::filesystem::exists(dir)) {
+		std::filesystem::create_directory(dir);
+	}
 
 	switch (type) {
 	case Image::ImageType::PNG:

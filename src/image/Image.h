@@ -53,7 +53,7 @@ public:
 	void AddAlphaChannel();
 
 	/// <summary>
-	/// Converts grayscale to
+	/// Converts grayscale to non-grayscale
 	/// </summary>
 	void ToRGB();
 
