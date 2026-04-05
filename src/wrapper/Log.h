@@ -19,6 +19,7 @@ public:
 	static void StartTime();
 	static bool CheckTime(const long long milliseconds);
 	static bool CheckTimeSeconds(const double seconds);
+	static void DebugProgress(const double current, const double max, const double queryTimeSeconds);
 
 	static std::string ToString(const bool value);
 	static std::string ToString(const double value, const unsigned int precision = 6);

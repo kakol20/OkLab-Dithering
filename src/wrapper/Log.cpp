@@ -119,6 +119,17 @@ bool Log::CheckTimeSeconds(const double seconds) {
 	return Log::CheckTime((long long)(std::ceil(seconds * 1000)));
 }
 
+void Log::DebugProgress(const double current, const double max, const double queryTimeSeconds) {
+	if (Log::CheckTimeSeconds(queryTimeSeconds)) {
+		const std::string progress = Log::ToString((current / max) * 100, 2);
+		//const std::string currStr = Log::ToString(x + y * imgWidth, static_cast<unsigned int>(maxStr.size()), ' ');
+
+		Log::WriteOneLine("  " + Log::LeadingCharacter(progress, 6, ' ') + "%");
+
+		Log::StartTime();
+	}
+}
+
 std::string Log::ToString(const bool value) {
 	return value ? "true" : "false";
 }
