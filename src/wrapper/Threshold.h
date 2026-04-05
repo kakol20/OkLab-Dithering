@@ -24,6 +24,11 @@ private:
 		std::vector<std::vector<int>> points;
 	};
 
+	//struct IVec2 { int x = 0, y = 0; };
+	//struct Vec2 { 
+	//	double x = 0., y = 0.; 
+	//};
+
 	int m_bayerSize = 2;
 	int m_blueNoiseSize = 2;
 	std::string m_matrixType = "bayer16";
@@ -35,8 +40,6 @@ private:
 	std::vector<unsigned int> GenerateBayerHalf(const int n);
 	void GenerateBayerShape();
 	void GenerateBlueNoise(const int size);
-
-	std::vector<double> GenerateBlueNoiseField(const int n, const uint32_t seed = 1);
 
 	inline int Wrap(const int v, const int n) { return (v % n + n) % n; }
 

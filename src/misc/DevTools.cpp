@@ -20,13 +20,13 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	//GenerateBlueNoise();
+	GenerateBlueNoise();
 	//GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
 	//Log::Clear();
 	//PaletteValues();
-	DebugThreshold();
+	//DebugThreshold();
 
 	//Misc();
 }
@@ -190,8 +190,9 @@ void DevTools::GenerateBlueNoisePalette() {
 }
 
 void DevTools::GenerateBlueNoise() {
-	const std::string type = "bluenoise32";
 	const int size = 32;
+	const std::string type = "bluenoise" + Log::ToString(size);
+
 
 	Threshold blueNoise;
 	blueNoise.GenerateThreshold(type);
