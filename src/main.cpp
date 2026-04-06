@@ -390,7 +390,7 @@ int main(int argc, char* argv[]) {
 
 	if (settings["ditherType"] == "ordered") {
 		//Dither::SetColourMathMode(settings["mathMode"]);
-		palette.CalculateAverageSpread();
+		//palette.CalculateAverageSpread();
 		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
 		Dither::FloydDither(image, palette);

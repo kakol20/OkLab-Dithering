@@ -190,17 +190,34 @@ void DevTools::GenerateBlueNoisePalette() {
 }
 
 void DevTools::GenerateBlueNoise() {
-	const int size = 32;
-	const std::string type = "bluenoise" + Log::ToString(size);
+	const int size = 128;
+	//const std::string type = "bluenoise" + Log::ToString(size);
+	const std::string type = "ign";
 
 
 	Threshold blueNoise;
 	blueNoise.GenerateThreshold(type);
 
+	double min = 255.;
+	double max = 0.;
+
 	Image img(size, size, 1);
-	for (int x = 0; x < size; ++x) {
-		for (int y = 0; y < size; ++y) {
+
+	// get min and max
+	for (int y = 0; y < size; ++y) {
+		for (int x = 0; x < size; ++x) {
 			double val = blueNoise.GetThreshold(x, y) + 0.5;
+			
+			if (val < min) min = val;
+			if (val > max) max = val;
+		}
+	}
+
+	// save to image and normalise
+	for (int y = 0; y < size; ++y) {
+		for (int x = 0; x < size; ++x) {
+			double val = blueNoise.GetThreshold(x, y) + 0.5;
+			val = (val - min) / (max - min);
 			val = std::floor(val * 255.);
 			val = val > 255. ? 255. : val < 0. ? 0. : val;
 

@@ -267,7 +267,13 @@ void Threshold::GenerateBlueNoise(const int size) {
 		Point bestCandidate{};
 
 		double bestDist = -INFINITY;
+
+#ifdef _DEBUG
+		int K = size > 16 ? (int)points.size() * 1 + 1 : (int)points.size() * m + 1;
+		K = size >= 64 ? 16 : K;
+#else
 		const int K = size > 64 ? 16 : (int)points.size() * m + 1;
+#endif // _DEBUG
 
 		for (int k = 0; k < K; ++k) {
 			Point candidate{ dist(rng), dist(rng) };
