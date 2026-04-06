@@ -3,4 +3,4 @@
 /out
 *.log
 *.aps
-*.user
+*.vcxproj.user
