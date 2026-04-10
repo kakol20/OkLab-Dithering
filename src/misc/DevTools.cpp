@@ -242,6 +242,7 @@ void DevTools::Misc() {
 
 	Log::HoldConsole();
 }
+
 void DevTools::DebugThreshold() {
 	std::ifstream settingsLoc("data/settings.json");
 	if (!(settingsLoc)) {

@@ -128,34 +128,42 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEV_MODE|Win32'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEV_MODE_FAST|Win32'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEV_MODE|x64'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEV_MODE_FAST|x64'">
     <OutDir>$(SolutionDir)\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\$(ShortProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
