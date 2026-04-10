@@ -286,6 +286,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\misc\BN_Helper.cpp" />
     <ClCompile Include="src\image\Dither.cpp" />
     <ClCompile Include="src\image\Colour.cpp" />
     <ClCompile Include="src\image\Palette.cpp" />
@@ -297,6 +298,7 @@
     <ClCompile Include="src\wrapper\Threshold.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\misc\BN_Helper.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\image\Dither.h" />
     <ClInclude Include="src\image\Colour.h" />

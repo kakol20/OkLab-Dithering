@@ -1,6 +1,8 @@
 #pragma once
 #ifdef DEV_MODE
 
+#include <cstdint>
+
 class DevTools {
 public:
 	DevTools() {};
@@ -20,6 +22,9 @@ private:
 	static void Misc();
 
 	static void DebugThreshold();
+
+	static void GenerateBlueNoise(const uint32_t size, const char* filename);
+	static void ReadBlueNoiseBin();
 };
 
 
