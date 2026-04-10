@@ -20,7 +20,7 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	GenerateBlueNoise();
+	ThresholdToImage();
 	//GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
@@ -189,7 +189,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	palImg.Write(("dev/custom" + Log::ToString(size) + "-pal.png").c_str());
 }
 
-void DevTools::GenerateBlueNoise() {
+void DevTools::ThresholdToImage() {
 	const int size = 128;
 	//const std::string type = "bluenoise" + Log::ToString(size);
 	const std::string type = "ign";
@@ -229,6 +229,7 @@ void DevTools::GenerateBlueNoise() {
 	std::string outputLoc = "dev/" + type + ".png";
 	img.Write(outputLoc.c_str());
 }
+
 void DevTools::Misc() {
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 	Colour col1((uint8_t)0, 0, 0);

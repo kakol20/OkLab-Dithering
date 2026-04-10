@@ -15,7 +15,7 @@ private:
 	// Generate a palette using blue noise
 	static void GenerateBlueNoisePalette();
 
-	static void GenerateBlueNoise();
+	static void ThresholdToImage();
 
 	static void Misc();
 
