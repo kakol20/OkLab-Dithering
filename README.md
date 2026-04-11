@@ -73,7 +73,7 @@ Matrix used for ordered dithering
 	- Be careful of high values of N
 - `blueNoiseN`
 	- Where N is the size of the blue noise matrix
-	- High values N will be slow
+	- N can only be: ```16, 32, 64 & 128```
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 - `heart` a custom threshold map in the shape of pixel hearts
@@ -108,4 +108,5 @@ Matrix used for ordered dithering
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
-[stb_image](https://github.com/nothings/stb) 
+[stb_image](https://github.com/nothings/stb)  
+[noise2d](https://github.com/johnconwell/noise2d)

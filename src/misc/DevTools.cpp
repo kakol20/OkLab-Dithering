@@ -3,6 +3,7 @@
 #include "DevTools.h"
 
 #include "../../ext/json/json.hpp"
+#include "../../res/resource.h"
 #include "../image/Colour.h"
 #include "../image/Image.h"
 #include "../image/Palette.h"
@@ -12,21 +13,35 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <string>
+#include <cstring>
 #include <vector>
-#include <fstream>
+#include <windows.h>
+
+#include "../misc/BN_Helper.h"
 
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	GenerateBlueNoise();
+	//ThresholdToImage();
 	//GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
 	//Log::Clear();
 	//PaletteValues();
 	//DebugThreshold();
+
+	//GenerateBlueNoise(16, "res/blueNoise16.bin");
+	//GenerateBlueNoise(32, "res/blueNoise32.bin");
+	//GenerateBlueNoise(64, "res/blueNoise64.bin");
+	//GenerateBlueNoise(128, "res/blueNoise128.bin");
+	ReadBlueNoiseBin(IDI_BN16);
+	ReadBlueNoiseBin(IDI_BN32);
+	ReadBlueNoiseBin(IDI_BN64);
+	ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
 }
@@ -189,7 +204,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	palImg.Write(("dev/custom" + Log::ToString(size) + "-pal.png").c_str());
 }
 
-void DevTools::GenerateBlueNoise() {
+void DevTools::ThresholdToImage() {
 	const int size = 128;
 	//const std::string type = "bluenoise" + Log::ToString(size);
 	const std::string type = "ign";
@@ -229,6 +244,7 @@ void DevTools::GenerateBlueNoise() {
 	std::string outputLoc = "dev/" + type + ".png";
 	img.Write(outputLoc.c_str());
 }
+
 void DevTools::Misc() {
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 	Colour col1((uint8_t)0, 0, 0);
@@ -241,6 +257,7 @@ void DevTools::Misc() {
 
 	Log::HoldConsole();
 }
+
 void DevTools::DebugThreshold() {
 	std::ifstream settingsLoc("data/settings.json");
 	if (!(settingsLoc)) {
@@ -287,5 +304,66 @@ void DevTools::DebugThreshold() {
 	}
 
 	img.Write("dev/bayershape16.png");
+}
+
+void DevTools::GenerateBlueNoise(const uint32_t size, const char* filename) {
+	Random::Seed = 20260410;
+
+	const std::filesystem::path p = filename;
+	const std::filesystem::path dir = p.parent_path();
+	if (!p.parent_path().empty() && !std::filesystem::exists(dir)) {
+		std::filesystem::create_directory(dir);
+	}
+
+	std::ofstream out(filename, std::ios::binary);
+	if (!out) return;
+
+	std::vector<uint32_t> data = BN_Helper::Generate((int)size, Random::Seed);
+
+	uint32_t dataSize = static_cast<uint32_t>(data.size());
+	out.write(reinterpret_cast<const char*>(&dataSize), sizeof(dataSize));
+	out.write(reinterpret_cast<const char*>(data.data()), dataSize * sizeof(uint32_t));
+}
+
+void DevTools::ReadBlueNoiseBin(const int res) {
+	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
+	if (!hRes) return;
+
+	HGLOBAL hData = LoadResource(NULL, hRes);
+	void* pData = LockResource(hData);
+	DWORD dataSize = SizeofResource(NULL, hRes);
+	if (!pData || dataSize < sizeof(uint32_t)) return;
+
+	const char* bytes = reinterpret_cast<const char*>(pData);
+
+	// Read the size first
+	uint32_t size = 0;
+	std::memcpy(&size, bytes, sizeof(uint32_t));
+
+	// Check that the resource size matches expected
+	if (dataSize < sizeof(uint32_t) + size * sizeof(uint32_t)) return;
+
+	std::vector<uint32_t> result(size);
+	std::memcpy(result.data(), bytes + sizeof(uint32_t), size * sizeof(uint32_t));
+
+	int imgSize = (int)std::sqrt(size);
+
+	Log::WriteOneLine("size: " + Log::ToString((unsigned int)size, 3, ' '));
+	Image img(imgSize, imgSize, 1);
+
+	for (size_t i = 0; i < (size_t)size; ++i) {
+		double value = static_cast<double>(result[i]) / (size - 1);
+		value = std::floor(value * 256.);
+		value = value >= 256. ? 255. : value;
+
+		//const int x = i % imgSize;
+		//const int y = i / imgSize;
+
+		//Log::WriteOneLine(Log::ToString((unsigned int)result[i], 3, ' '));
+		img.SetData(i, static_cast<uint8_t>(value));
+	}
+
+	std::string outLoc = "dev/res/blueNoise" + Log::ToString(imgSize) + ".png";
+	img.Write(outLoc.c_str());
 }
 #endif // DEV_MODE

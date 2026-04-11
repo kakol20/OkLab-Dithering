@@ -98,7 +98,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					double currL = pixel.MonoGetLightness();
 
 					// normalise image min&max to palette min&max
-					currL = (currL - imgMinL) / (imgMaxL - imgMinL);
+					//currL = (currL - imgMinL) / (imgMaxL - imgMinL);
 					currL = (palette.back().MonoGetLightness() - palette.front().MonoGetLightness()) * currL;
 					currL += palette.front().MonoGetLightness();
 
