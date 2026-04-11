@@ -24,8 +24,8 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 std::vector<uint32_t> BN_Helper::GetMap(int N) {
 	int res = IDI_BN16; // default
 
-	if (N == 32) res = IDI_BN32;
-	if (N == 64) res = IDI_BN64;
+	if (N == 32) res	= IDI_BN32;
+	if (N == 64) res	= IDI_BN64;
 	if (N == 128) res = IDI_BN128;
 
 	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
