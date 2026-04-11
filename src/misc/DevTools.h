@@ -13,6 +13,7 @@ public:
 private:
 	static void GenerateGSTiles();
 	static void PaletteValues();
+	static void PaletteToImage(const char* name);
 
 	// Generate a palette using blue noise
 	static void GenerateBlueNoisePalette();

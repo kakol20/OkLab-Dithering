@@ -74,11 +74,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	//std::string paletteLocStr = "data/bw.palette";
-	std::string paletteLocStr = "data/custom256.palette";
 	//std::string paletteLocStr = "data/custom128.palette";
+	//std::string paletteLocStr = "data/custom256.palette";
 	//std::string paletteLocStr = "data/custom64.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
+	std::string paletteLocStr = "data/vga256.palette";
 	//std::string paletteLocStr = "data/wplace_premium.palette";
 	std::ifstream paletteLoc(paletteLocStr);
 	if (!(paletteLoc)) {

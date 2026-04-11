@@ -26,11 +26,11 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	GenerateBlueNoisePalette();
-	Log::EndLine();
-	Log::EndLine();
-	Log::Clear();
-	PaletteValues();
+	//GenerateBlueNoisePalette();
+	//Log::EndLine();
+	//Log::EndLine();
+	//Log::Clear();
+	//PaletteValues();
 	//ThresholdToImage();
 	//DebugThreshold();
 
@@ -44,6 +44,7 @@ void DevTools::Run() {
 	//ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
+	PaletteToImage("vga256");
 }
 
 void DevTools::GenerateGSTiles() {
@@ -101,6 +102,34 @@ void DevTools::PaletteValues() {
 	Log::WriteOneLine("Average Distance to Nearest: " + Log::ToString(total, 4));
 
 	Log::Save("dev/misc/colors.txt");
+}
+
+void DevTools::PaletteToImage(const char* name) {
+	Colour::SetMathMode(Colour::MathMode::OkLCh);
+	Palette pal(("data/" + static_cast<std::string>(name) + ".palette").c_str());
+
+	const unsigned int size = pal.size();
+
+	// ========== SAVE COLOURS ==========
+
+	// As Image
+
+	const int width = static_cast<int>(std::ceil(std::sqrt(size)));
+	const int height = static_cast<int>(std::ceil(static_cast<double>(size) / width));
+
+	Image palImg(width, height, 4);
+	palImg.Clear();
+	for (size_t i = 0; i < size; ++i) {
+		size_t imgI = i * 4;
+		Colour::sRGB_UInt srgbUint = pal.GetColour(i).GetsRGB_UInt();
+
+		palImg.SetData(imgI + 0, srgbUint.r);
+		palImg.SetData(imgI + 1, srgbUint.g);
+		palImg.SetData(imgI + 2, srgbUint.b);
+		palImg.SetData(imgI + 3, 255);
+	}
+
+	palImg.Write(("dev/misc/" + static_cast<std::string>(name) + "-pal.png").c_str());
 }
 
 void DevTools::GenerateBlueNoisePalette() {
