@@ -29,12 +29,12 @@ std::vector<uint32_t> BN_Helper::GetMap(int N) {
 	if (N == 128) res = IDI_BN128;
 
 	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
-	if (!hRes) return;
+	if (!hRes) return {};
 
 	HGLOBAL hData = LoadResource(NULL, hRes);
 	void* pData = LockResource(hData);
 	DWORD dataSize = SizeofResource(NULL, hRes);
-	if (!pData || dataSize < sizeof(uint32_t)) return;
+	if (!pData || dataSize < sizeof(uint32_t)) return {};
 
 	const char* bytes = reinterpret_cast<const char*>(pData);
 
@@ -43,7 +43,7 @@ std::vector<uint32_t> BN_Helper::GetMap(int N) {
 	std::memcpy(&size, bytes, sizeof(uint32_t));
 
 	// Check that the resource size matches expected
-	if (dataSize < sizeof(uint32_t) + size * sizeof(uint32_t)) return;
+	if (dataSize < sizeof(uint32_t) + size * sizeof(uint32_t)) return {};
 
 	std::vector<uint32_t> result(size);
 	std::memcpy(result.data(), bytes + sizeof(uint32_t), size * sizeof(uint32_t));
