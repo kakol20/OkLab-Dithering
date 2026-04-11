@@ -2,14 +2,10 @@
 
 #include "../../ext/bluenoise/noise2d.h"
 #include "../../res/resource.h"
-#include "../wrapper/Log.h"
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
-#include <fstream>
-#include <limits>
-#include <random>
+#include <cstring>
 #include <vector>
+#include <windows.h>
 
 std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 	Noise2D<uint32_t> noise_2D = Noise2D<uint32_t>(N, N, N * N);
@@ -26,9 +22,31 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 }
 
 std::vector<uint32_t> BN_Helper::GetMap(int N) {
-	int res = IDI_BN16;
+	int res = IDI_BN16; // default
 
-	if (N == 32) res = IDI_BN16;
+	if (N == 32) res = IDI_BN32;
+	if (N == 64) res = IDI_BN64;
+	if (N == 128) res = IDI_BN128;
 
-	return std::vector<uint32_t>();
+	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
+	if (!hRes) return;
+
+	HGLOBAL hData = LoadResource(NULL, hRes);
+	void* pData = LockResource(hData);
+	DWORD dataSize = SizeofResource(NULL, hRes);
+	if (!pData || dataSize < sizeof(uint32_t)) return;
+
+	const char* bytes = reinterpret_cast<const char*>(pData);
+
+	// Read the size first
+	uint32_t size = 0;
+	std::memcpy(&size, bytes, sizeof(uint32_t));
+
+	// Check that the resource size matches expected
+	if (dataSize < sizeof(uint32_t) + size * sizeof(uint32_t)) return;
+
+	std::vector<uint32_t> result(size);
+	std::memcpy(result.data(), bytes + sizeof(uint32_t), size * sizeof(uint32_t));
+
+	return result;
 }
