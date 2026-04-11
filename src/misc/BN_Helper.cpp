@@ -24,27 +24,24 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 	// --------------------------------------------------------
 	Log::WriteOneLine("Step 1: Initial random sparse pattern (~10%)");
 	Log::StartTime();
-
 	for (int i = 0; i < total; ++i) {
-		if (rand01(rng) < 0.25)
+		if (rand01(rng) < 0.1)
 			pattern[i] = true;
 
 		Log::DebugProgress((double)i, (double)total - 1., 5.);
 	}
 
-	double sigma = N / 8.;
+	double sigma = N / 6.0;
 
 	// --------------------------------------------------------
 	// Step 2: Void-and-cluster iterations
 	// --------------------------------------------------------
+
 	const int iterations = total * 2;
 
 	Log::WriteOneLine("Step 2: Void-and-cluster iterations");
 	Log::StartTime();
-
 	for (int iter = 0; iter < iterations; ++iter) {
-
-		/*
 		ComputeEnergy(pattern, energy, N, sigma);
 
 		// --- Find densest active pixel (cluster)
@@ -52,8 +49,7 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 		double maxEnergy = -1.0;
 
 		for (int i = 0; i < total; ++i) {
-			if (energy[i] > maxEnergy ||
-				(energy[i] == maxEnergy && (rng() & 1))) {
+			if (pattern[i] && energy[i] > maxEnergy) {
 				maxEnergy = energy[i];
 				removeIdx = i;
 			}
@@ -65,7 +61,7 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 
 		ComputeEnergy(pattern, energy, N, sigma);
 
-		// --- Find largest void
+		// --- Find largest void (lowest energy inactive pixel)
 		int addIdx = -1;
 		double minEnergy = std::numeric_limits<double>::infinity();
 
@@ -75,56 +71,7 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 				addIdx = i;
 			}
 
-			Log::DebugProgress((double)iter + (double(i) / double(total)),
-				(double)iterations - 1., 5.);
-		}
-
-		if (addIdx == -1) break;
-
-		pattern[addIdx] = true;
-		*/
-
-		ComputeEnergy(pattern, energy, N, sigma);
-
-		// --- Remove densest cluster (random tie-break)
-		int removeIdx = -1;
-		double maxEnergy = -1.0;
-
-		for (int i = 0; i < total; ++i) {
-			if (pattern[i]) {
-				double e = energy[i];
-
-				if (e > maxEnergy ||
-					(e == maxEnergy && (rng() & 1))) {
-					maxEnergy = e;
-					removeIdx = i;
-				}
-			}
-		}
-
-		if (removeIdx == -1) break;
-
-		pattern[removeIdx] = false;
-
-		ComputeEnergy(pattern, energy, N, sigma);
-
-		// --- Add largest void (random tie-break)
-		int addIdx = -1;
-		double minEnergy = std::numeric_limits<double>::infinity();
-
-		for (int i = 0; i < total; ++i) {
-			if (!pattern[i]) {
-				double e = energy[i];
-
-				if (e < minEnergy ||
-					(e == minEnergy && (rng() & 1))) {
-					minEnergy = e;
-					addIdx = i;
-				}
-			}
-
-			Log::DebugProgress((double)iter + (double(i) / double(total)),
-				(double)iterations - 1., 5.);
+			Log::DebugProgress((double)iter + (double(i) / double(total)), (double)iterations - 1., 5.);
 		}
 
 		if (addIdx == -1) break;
@@ -133,23 +80,62 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 	}
 
 	// --------------------------------------------------------
-	// Step 3: Ranking → threshold map (FIXED)
+	// Step 3: Ranking → threshold map
 	// --------------------------------------------------------
-	Log::WriteOneLine("Step 3: Ranking -> threshold map");
-	Log::StartTime();
-
 	std::vector<bool> tempPattern = pattern;
+
 	int rank = total - 1;
 
-	// ---------------------------
-	// Phase A: Remove all active pixels
-	// ---------------------------
-	while (true) {
+	Log::WriteOneLine("Step 3: Ranking -> threshold map");
+	Log::StartTime();
+	//while (rank >= 0) {
+	//	ComputeEnergy(tempPattern, energy, N, sigma);
+
+	//	int idx = -1;
+
+	//	if (std::any_of(tempPattern.begin(), tempPattern.end(), [](bool v) { return v; })) {
+	//		// Remove densest cluster
+	//		double maxEnergy = -1.0;
+
+	//		for (int i = 0; i < total; ++i) {
+	//			if (tempPattern[i] && energy[i] > maxEnergy) {
+	//				maxEnergy = energy[i];
+	//				idx = i;
+	//			}
+	//		}
+
+	//		tempPattern[idx] = false;
+	//	} else {
+	//		// Fill largest void
+	//		double minEnergy = std::numeric_limits<double>::infinity();
+
+	//		for (int i = 0; i < total; ++i) {
+	//			if (!tempPattern[i] && energy[i] < minEnergy) {
+	//				minEnergy = energy[i];
+	//				idx = i;
+	//			}
+	//		}
+
+	//		tempPattern[idx] = true;
+	//	}
+
+	//	if (idx == -1) break;
+
+	//	threshold[idx] = rank;
+
+	//	Log::DebugProgress(double(total - rank), double(total), 5.);
+
+	//	--rank;
+	//}
+
+	for (int rank = total - 1; rank >= 0; --rank) {
+
 		ComputeEnergy(tempPattern, energy, N, sigma);
 
 		int idx = -1;
 		double maxEnergy = -1.0;
 
+		// ALWAYS remove most clustered active pixel
 		for (int i = 0; i < total; ++i) {
 			if (tempPattern[i] && energy[i] > maxEnergy) {
 				maxEnergy = energy[i];
@@ -157,41 +143,20 @@ std::vector<uint32_t> BN_Helper::Generate(int N, uint32_t seed) {
 			}
 		}
 
-		if (idx == -1) break;
-
-		threshold[idx] = rank--;
-		tempPattern[idx] = false;
-
-		Log::DebugProgress(double(total - rank), double(total), 5.);
-	}
-
-	// ---------------------------
-	// Phase B: Fill remaining pixels
-	// ---------------------------
-	while (rank >= 0) {
-		ComputeEnergy(tempPattern, energy, N, sigma);
-
-		int idx = -1;
-		double minEnergy = std::numeric_limits<double>::infinity();
-
-		for (int i = 0; i < total; ++i) {
-			if (!tempPattern[i]) {
-				double e = energy[i];
-
-				if (e < minEnergy ||
-					(e == minEnergy && (rng() & 1))) {
-					minEnergy = e;
+		if (idx == -1) {
+			// safety: fallback to any remaining pixel
+			for (int i = 0; i < total; ++i) {
+				if (tempPattern[i]) {
 					idx = i;
+					break;
 				}
 			}
 		}
 
 		if (idx == -1) break;
 
-		threshold[idx] = rank--;
-		tempPattern[idx] = true;
-
-		Log::DebugProgress(double(total - rank), double(total), 5.);
+		threshold[idx] = rank;
+		tempPattern[idx] = false;
 	}
 
 	return threshold;
