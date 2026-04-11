@@ -24,7 +24,7 @@ private:
 	static void DebugThreshold();
 
 	static void GenerateBlueNoise(const uint32_t size, const char* filename);
-	static void ReadBlueNoiseBin();
+	static void ReadBlueNoiseBin(const int res);
 };
 
 

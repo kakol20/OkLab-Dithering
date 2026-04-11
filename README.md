@@ -108,4 +108,5 @@ Matrix used for ordered dithering
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
-[stb_image](https://github.com/nothings/stb) 
+[stb_image](https://github.com/nothings/stb)  
+[noise2d](https://github.com/johnconwell/noise2d)

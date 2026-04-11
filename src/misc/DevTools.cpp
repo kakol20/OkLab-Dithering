@@ -34,8 +34,14 @@ void DevTools::Run() {
 	//PaletteValues();
 	//DebugThreshold();
 
-	GenerateBlueNoise(16, "res/blueNoise16.bin");
-	ReadBlueNoiseBin();
+	//GenerateBlueNoise(16, "res/blueNoise16.bin");
+	//GenerateBlueNoise(32, "res/blueNoise32.bin");
+	//GenerateBlueNoise(64, "res/blueNoise64.bin");
+	//GenerateBlueNoise(128, "res/blueNoise128.bin");
+	ReadBlueNoiseBin(IDI_BN16);
+	ReadBlueNoiseBin(IDI_BN32);
+	ReadBlueNoiseBin(IDI_BN64);
+	ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
 }
@@ -319,8 +325,8 @@ void DevTools::GenerateBlueNoise(const uint32_t size, const char* filename) {
 	out.write(reinterpret_cast<const char*>(data.data()), dataSize * sizeof(uint32_t));
 }
 
-void DevTools::ReadBlueNoiseBin() {
-	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDI_BN16), RT_RCDATA);
+void DevTools::ReadBlueNoiseBin(const int res) {
+	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
 	if (!hRes) return;
 
 	HGLOBAL hData = LoadResource(NULL, hRes);
@@ -353,7 +359,7 @@ void DevTools::ReadBlueNoiseBin() {
 		//const int x = i % imgSize;
 		//const int y = i / imgSize;
 
-		Log::WriteOneLine(Log::ToString((unsigned int)result[i], 3, ' '));
+		//Log::WriteOneLine(Log::ToString((unsigned int)result[i], 3, ' '));
 		img.SetData(i, static_cast<uint8_t>(value));
 	}
 
