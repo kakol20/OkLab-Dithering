@@ -382,40 +382,6 @@ bool Colour::operator<(const Colour& other) const {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
 	} else {
-		/*std::vector<Colour> hueGroups{
-				Colour((uint8_t)255, 0, 0),
-				Colour((uint8_t)255, 255, 0),
-				Colour((uint8_t)0, 255, 0),
-				Colour((uint8_t)0, 255, 255),
-				Colour((uint8_t)0, 0, 255),
-				Colour((uint8_t)255, 0, 255)
-		};
-
-		size_t currHueGroup = 0;
-		size_t otherHueGroup = 0;
-
-		for (size_t i = 0; i < hueGroups.size(); ++i) {
-			if (!(m_oklch.h > 0.)) break;
-
-			if (m_oklch.h <= hueGroups[i].m_oklch.h) {
-				currHueGroup = i + 1;
-				break;
-			}
-		}
-		if (m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) currHueGroup = hueGroups.size() + 1;
-
-		for (size_t i = 0; i < hueGroups.size(); ++i) {
-			if (!(other.m_oklch.h > 0.)) break;
-
-			if (other.m_oklch.h <= hueGroups[i].m_oklch.h) {
-				otherHueGroup = i + 1;
-				break;
-			}
-		}
-		if (other.m_oklch.h > hueGroups[hueGroups.size() - 1].m_oklch.h) otherHueGroup = hueGroups.size() + 1;
-
-		if (currHueGroup != otherHueGroup) return currHueGroup < otherHueGroup;*/
-
 		const Colour red(static_cast<uint8_t>(255), 0, 0);
 		const double n = 12.;
 		const double offset = -red.m_oklch.h + (M_PI / n);

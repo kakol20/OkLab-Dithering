@@ -26,22 +26,22 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
+	GenerateBlueNoisePalette();
+	Log::EndLine();
+	Log::EndLine();
+	Log::Clear();
+	PaletteValues();
 	//ThresholdToImage();
-	//GenerateBlueNoisePalette();
-	//Log::EndLine();
-	//Log::EndLine();
-	//Log::Clear();
-	//PaletteValues();
 	//DebugThreshold();
 
 	//GenerateBlueNoise(16, "res/blueNoise16.bin");
 	//GenerateBlueNoise(32, "res/blueNoise32.bin");
 	//GenerateBlueNoise(64, "res/blueNoise64.bin");
 	//GenerateBlueNoise(128, "res/blueNoise128.bin");
-	ReadBlueNoiseBin(IDI_BN16);
-	ReadBlueNoiseBin(IDI_BN32);
-	ReadBlueNoiseBin(IDI_BN64);
-	ReadBlueNoiseBin(IDI_BN128);
+	//ReadBlueNoiseBin(IDI_BN16);
+	//ReadBlueNoiseBin(IDI_BN32);
+	//ReadBlueNoiseBin(IDI_BN64);
+	//ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
 }
@@ -76,7 +76,7 @@ void DevTools::GenerateGSTiles() {
 void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
-	Palette palette = "data/custom64.palette";
+	Palette palette = "data/custom256.palette";
 
 	// average distance to nearest
 	Colour::SetMathMode(Colour::MathMode::OkLab);
@@ -100,12 +100,12 @@ void DevTools::PaletteValues() {
 	total /= static_cast<double>(palette.size());
 	Log::WriteOneLine("Average Distance to Nearest: " + Log::ToString(total, 4));
 
-	Log::Save("dev/colors.txt");
+	Log::Save("dev/misc/colors.txt");
 }
 
 void DevTools::GenerateBlueNoisePalette() {
 	std::vector<Colour> palette;
-	const size_t size = 64;
+	const size_t size = 256;
 	palette.reserve(size);
 
 	//palette.emplace_back(1. / 7., 0., 0.);
@@ -115,10 +115,15 @@ void DevTools::GenerateBlueNoisePalette() {
 	//palette.emplace_back(5. / 7., 0., 0.);
 	//palette.emplace_back(6. / 7., 0., 0.);
 
-	palette.emplace_back(0.2, 0., 0.);
-	palette.emplace_back(0.4, 0., 0.);
-	palette.emplace_back(0.6, 0., 0.);
-	palette.emplace_back(0.8, 0., 0.);
+	//palette.emplace_back(0.2, 0., 0.);
+	//palette.emplace_back(0.4, 0., 0.);
+	//palette.emplace_back(0.6, 0., 0.);
+	//palette.emplace_back(0.8, 0., 0.);
+
+	const int count = 10;
+	for (int i = 1; i < count; ++i) {
+		palette.emplace_back(double(i) / count, 0., 0.);
+	}
 
 	// Set intial mandatory colours
 	palette.emplace_back(0., 0., 0.);
@@ -201,7 +206,7 @@ void DevTools::GenerateBlueNoisePalette() {
 		palImg.SetData(imgI + 3, 255);
 	}
 
-	palImg.Write(("dev/custom" + Log::ToString(size) + "-pal.png").c_str());
+	palImg.Write(("dev/misc/custom" + Log::ToString(size) + "-pal.png").c_str());
 }
 
 void DevTools::ThresholdToImage() {
