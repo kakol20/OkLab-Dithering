@@ -4,7 +4,7 @@
 
 class Palette {
 public:
-	Palette(const char* file);
+	Palette(const char* file, const bool grayscale = false);
 	~Palette();
 
 	size_t size() const { return m_size; };

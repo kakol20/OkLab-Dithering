@@ -365,10 +365,12 @@ int main(int argc, char* argv[]) {
 		folder += "\\grayscale-" + (std::string)settings["distanceMode"] + ".png";
 
 		image.Write(folder.c_str());
+
+		image.ToRGB();
 	}
 
 	//if (settings["mono"]) image.ToRGB();
-	Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
+	//Log::WriteOneLine("Is Grayscale: " + Log::ToString(image.IsGrayscale()));
 
 	if ((bool)settings["hideSemiTransparent"]) image.HideSemiTransparent(settings["hideThreshold"]);
 
@@ -383,7 +385,7 @@ int main(int argc, char* argv[]) {
 		Colour::SetMathMode(Colour::MathMode::OkLCh);
 	}
 	
-	Palette palette(paletteLocStr.c_str());
+	Palette palette(paletteLocStr.c_str(), settings["grayscale"]);
 
 	// ========== DITHERING ==========
 

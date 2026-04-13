@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <algorithm>
 
-Palette::Palette(const char* file) {
+Palette::Palette(const char* file, const bool grayscale) {
 	std::fstream p(file);
 
 	m_size = 0;
@@ -20,8 +20,16 @@ Palette::Palette(const char* file) {
 			hex.resize(6);
 			++m_size;
 
+			bool push = true;
+
 			Colour col(hex.c_str());
-			m_colours.push_back(col);
+
+			if (grayscale && !col.IsGrayscale()) push = false;
+
+			//Colour col(hex.c_str());
+			//m_colours.push_back(col);
+			
+			if (push) m_colours.emplace_back(col);
 		}
 
 		Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));

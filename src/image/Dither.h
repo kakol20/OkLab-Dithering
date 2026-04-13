@@ -44,7 +44,7 @@ public:
 
 private:
 
-	static Colour ClosestColour(const Colour& col, const Palette& palette, const bool grayscale = false);
+	static Colour ClosestColour(const Colour& col, const Palette& palette);
 
 	static std::string m_distanceMode, m_mathMode, m_matrixType, m_ditherAlphaType;
 	static bool m_mono, m_ditherAlpha;

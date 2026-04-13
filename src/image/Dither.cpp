@@ -225,7 +225,7 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			const double alpha = oldPixel.GetAlpha();
 
 			SetColourMathMode(m_distanceMode);
-			Colour newPixel = ClosestColour(oldPixel, palette, image.IsGrayscale());
+			Colour newPixel = ClosestColour(oldPixel, palette);
 			newPixel.SetAlpha(alpha);
 			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(newPixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
@@ -338,7 +338,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			SetColourMathMode(m_distanceMode);
 
-			pixel = ClosestColour(pixel, palette, image.IsGrayscale());
+			pixel = ClosestColour(pixel, palette);
 			pixel.SetAlpha(alpha);
 
 			if (alpha > 0. && alpha < 1.)
@@ -386,11 +386,12 @@ void Dither::SetSettings(
 	m_ditherAlphaType = ditherAlphaType;
 }
 
-Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bool grayscale) {
+Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
 	Colour closest = Colour::FromsRGB(0, 0, 0, 0);
 
 	double min = 0., max = 1.;
 
+	// TODO: Modify mono
 	if (m_mono) {
 		// get darkest and lightest colour in palette
 		min = palette.GetColour(0).MonoGetLightness();
@@ -403,19 +404,9 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 	}
 
 	size_t startI = 0;
-	if (grayscale && !m_mono) {
-		// if grayscale == true - first find earliest grayscale colour
-		for (size_t i = 0; i < palette.size(); ++i) {
-			++startI;
-			if (palette.GetColour(i).IsGrayscale()) {
-				closest = palette.GetColour(i);
-				break;
-			}
-		}
-	} else {
-		closest = palette.GetColour(0);
-		startI = 1;
-	}
+
+	closest = palette.GetColour(0);
+	startI = 1;
 
 	if (palette.size() == startI) return closest;
 
@@ -424,16 +415,11 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const bo
 	for (size_t i = startI; i < palette.size(); ++i) {
 		const Colour current = palette.GetColour(i);
 
-		// When grayscale == true - only check grayscale colours
-		// When grayscale == false - check all colours
-		if ((!grayscale) || current.IsGrayscale()) {
-			//double dist = col.MagSq(current);
-			double dist = m_mono ? col.MonoDistance(current, min, max) : col.MagSq(current);
+		double dist = m_mono ? col.MonoDistance(current, min, max) : col.MagSq(current);
 
-			if (dist < closestDist) {
-				closestDist = dist;
-				closest = current;
-			}
+		if (dist < closestDist) {
+			closestDist = dist;
+			closest = current;
 		}
 	}
 	closest.SetAlpha(col.GetAlpha());
@@ -592,13 +578,6 @@ void Dither::ImageToGrayscale(Image& image) {
 
 	for (int x = 0; x < image.GetWidth(); ++x) {
 		for (int y = 0; y < image.GetHeight(); ++y) {
-#ifdef _DEBUG
-			const bool debug = x == 10 && y == 10;
-			if (debug) {
-				bool test = true;
-			}
-#endif // _DEBUG
-
 			const size_t newIndex = newImage.GetIndex(x, y);
 			Colour col = Dither::GetColourFromImage(image, x, y);
 			const double l_d = col.MonoGetLightness();
