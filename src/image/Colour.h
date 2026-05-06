@@ -75,7 +75,7 @@ public:
 	/// <param name="Oklab"></param>
 	/// <param name="OkLab_Lightness">Only does maths on the lightness value</param>
 	/// <param name="Linear_RGB"></param>
-	enum class MathMode { sRGB, OkLab, OkLab_Lightness, Linear_RGB, OkLCh };
+	enum class MathMode { sRGB, OkLab, OkLab_Lightness, Linear_RGB, OkLCh, sRGB_Uint };
 
 	/// <summary>
 	/// <para>Clamp value based on m_mathMode</para>
@@ -97,7 +97,7 @@ public:
 
 	bool operator==(const Colour& other) const;
 	bool operator<(const Colour& other) const;
-	
+
 	inline bool operator!=(const Colour& other) const { return !(*this == other); };
 	inline bool operator>(const Colour& other) const { return other < *this; };
 	inline bool operator<=(const Colour& other) const { return !(*this > other); };
@@ -113,7 +113,7 @@ public:
 	static MathMode GetMathMode() { return m_mathMode; };
 
 	struct sRGB { double r, g, b; };
-	struct sRGB_UInt { uint8_t r, g, b, a; };
+	struct sRGB_UInt { uint8_t r, g, b; };
 	struct OkLab { double l, a, b; };
 	struct OkLCh { double l, c, h; };
 
@@ -175,6 +175,7 @@ private:
 	OkLab m_oklab;
 	sRGB m_srgb;
 	OkLCh m_oklch;
+	sRGB_UInt m_srgbUint;
 
 	double m_alpha;
 
@@ -200,15 +201,18 @@ private:
 	void OkLabToOkLCh();
 	void OkLChToOkLAB();
 
+	void sRGBToUint();
+	void UintTosRGB();
+
 public:
-	sRGB GetsRGB() const { return m_srgb; };
-	OkLab GetOkLab() const { return m_oklab; };
-	sRGB_UInt GetsRGB_UInt() const;
+	sRGB GetsRGB() const { return m_srgb; }
+	OkLab GetOkLab() const { return m_oklab; }
+	sRGB_UInt GetsRGB_UInt() const { return m_srgbUint; }
 
-	double GetAlpha() const { return m_alpha; };
-	void SetAlpha(const double alpha) { m_alpha = alpha; };
+	double GetAlpha() const { return m_alpha; }
+	void SetAlpha(const double alpha) { m_alpha = alpha; }
 
-	bool IsGrayscale() const { return m_isGrayscale; };
+	bool IsGrayscale() const { return m_isGrayscale; }
 
 	void SetHex(const char* hex);
 	void SetLRGB(const double r, const double g, const double b, const double a = 1.);

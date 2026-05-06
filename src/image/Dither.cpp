@@ -548,10 +548,17 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 	const size_t index = image.GetIndex(x, y);
 	Colour::sRGB_UInt colour_int = colour.GetsRGB_UInt();
 
+	double a_d = colour.GetAlpha() * 256.;
+	a_d = std::floor(a_d);
+	a_d = a_d > 255. ? 255. : a_d;
+	a_d = a_d < 0. ? 0. : a_d;
+
+	const uint8_t a = static_cast<uint8_t>(a_d);
+
 	if (image.IsGrayscale()) {
 		if (image.GetChannels() == 2) {
 			image.SetData(index, colour_int.r);
-			image.SetData(index + 1, colour_int.a); // keep alpha channel
+			image.SetData(index + 1, a); // keep alpha channel
 		} else {
 			image.SetData(index, colour_int.r);
 		}
@@ -560,7 +567,7 @@ void Dither::SetColourToImage(const Colour& colour, Image& image, const int x, c
 			image.SetData(index + 0, colour_int.r);
 			image.SetData(index + 1, colour_int.g);
 			image.SetData(index + 2, colour_int.b);
-			image.SetData(index + 3, colour_int.a);
+			image.SetData(index + 3, a);
 		} else {
 			image.SetData(index + 0, colour_int.r);
 			image.SetData(index + 1, colour_int.g);

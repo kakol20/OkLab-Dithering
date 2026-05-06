@@ -25,6 +25,7 @@ Colour::Colour() {
 	m_oklab = { 0., 0., 0. };
 	m_srgb = { 0, 0, 0 };
 	m_oklch = { 0., 0., 0. };
+	m_srgbUint = { 0, 0, 0 };
 }
 
 Colour::Colour(const Colour& other) {
@@ -34,6 +35,7 @@ Colour::Colour(const Colour& other) {
 	m_oklab = other.m_oklab;
 	m_srgb = other.m_srgb;
 	m_oklch = other.m_oklch;
+	m_srgbUint = other.m_srgbUint;
 }
 
 Colour::Colour(const double l, const double a, const double b, const double alpha) {
@@ -41,6 +43,7 @@ Colour::Colour(const double l, const double a, const double b, const double alph
 }
 
 Colour::Colour(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+	m_srgbUint = { r, g, b };
 	SetsRGB(r, g, b, a);
 }
 
@@ -48,8 +51,7 @@ Colour::Colour(const char* hex) {
 	SetHex(hex);
 }
 
-Colour::~Colour() {
-}
+Colour::~Colour() {}
 
 Colour& Colour::operator=(const Colour& other) {
 	if (this == &other) return *this;
@@ -59,6 +61,7 @@ Colour& Colour::operator=(const Colour& other) {
 	m_oklab = other.m_oklab;
 	m_srgb = other.m_srgb;
 	m_oklch = other.m_oklch;
+	m_srgbUint = other.m_srgbUint;
 	return *this;
 }
 
@@ -67,18 +70,27 @@ void Colour::Update() {
 		sRGBtoLRGB();
 		LRGBtoOkLab();
 		OkLabToOkLCh();
+		sRGBToUint();
 	} else if (m_mathMode == MathMode::Linear_RGB) {
 		LRGBtosRGB();
 		LRGBtoOkLab();
 		OkLabToOkLCh();
+		sRGBToUint();
 	} else if (m_mathMode == MathMode::OkLCh) {
 		OkLChToOkLAB();
 		OkLabtoLRGB();
 		LRGBtosRGB();
+		sRGBToUint();
+	} else if (m_mathMode == MathMode::sRGB_Uint) {
+		UintTosRGB();
+		sRGBtoLRGB();
+		LRGBtoOkLab();
+		OkLabToOkLCh();
 	} else {
 		OkLabtoLRGB();
 		LRGBtosRGB();
 		OkLabToOkLCh();
+		sRGBToUint();
 	}
 }
 
@@ -151,6 +163,16 @@ void Colour::Clamp() {
 		m_oklch.h = m_oklch.h < 0. ? 0. : m_oklch.h;
 		OkLChFallback();
 		break;
+	case Colour::MathMode::sRGB_Uint:
+		m_srgbUint.r = m_srgbUint.r > 255 ? 255 : m_srgbUint.r;
+		m_srgbUint.r = m_srgbUint.r < 0 ? 0 : m_srgbUint.r;
+
+		m_srgbUint.g = m_srgbUint.g > 255 ? 255 : m_srgbUint.g;
+		m_srgbUint.g = m_srgbUint.g < 0 ? 0 : m_srgbUint.g;
+
+		m_srgbUint.b = m_srgbUint.b > 255 ? 255 : m_srgbUint.b;
+		m_srgbUint.b = m_srgbUint.b < 0 ? 0 : m_srgbUint.b;
+		break;
 	default:
 		break;
 	}
@@ -160,6 +182,7 @@ void Colour::Clamp() {
 }
 
 Colour& Colour::operator/=(const Colour& other) {
+	double r = 0, g = 0, b = 0;
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		m_srgb.r /= other.m_srgb.r;
@@ -186,11 +209,34 @@ Colour& Colour::operator/=(const Colour& other) {
 		m_oklab.b /= other.m_oklab.b;
 		OkLabToOkLCh();
 		break;
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r) / other.m_srgbUint.r;
+		g = static_cast<double>(m_srgbUint.g) / other.m_srgbUint.g;
+		b = static_cast<double>(m_srgbUint.b) / other.m_srgbUint.b;
+
+		r = std::floor(r);
+		g = std::floor(g);
+		b = std::floor(b);
+
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		g = g > 255. ? 255. : g;
+		g = g < 0. ? 0. : g;
+
+		b = b > 255. ? 255. : b;
+		b = b < 0. ? 0. : b;
+
+		m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b) };
+		break;
+	default:
+		break;
 	}
 	return *this;
 }
 
 Colour& Colour::operator*=(const Colour& other) {
+	double r = 0, g = 0, b = 0;
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		m_srgb.r *= other.m_srgb.r;
@@ -217,11 +263,34 @@ Colour& Colour::operator*=(const Colour& other) {
 		m_oklab.b *= other.m_oklab.b;
 		OkLabToOkLCh();
 		break;
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r) * other.m_srgbUint.r;
+		g = static_cast<double>(m_srgbUint.g) * other.m_srgbUint.g;
+		b = static_cast<double>(m_srgbUint.b) * other.m_srgbUint.b;
+
+		r = std::floor(r);
+		g = std::floor(g);
+		b = std::floor(b);
+
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		g = g > 255. ? 255. : g;
+		g = g < 0. ? 0. : g;
+
+		b = b > 255. ? 255. : b;
+		b = b < 0. ? 0. : b;
+
+		m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b) };
+		break;
+	default:
+		break;
 	}
 	return *this;
 }
 
 Colour& Colour::operator+=(const Colour& other) {
+	double r = 0, g = 0, b = 0;
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		m_srgb.r += other.m_srgb.r;
@@ -248,11 +317,34 @@ Colour& Colour::operator+=(const Colour& other) {
 		m_oklab.b += other.m_oklab.b;
 		OkLabToOkLCh();
 		break;
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r) + other.m_srgbUint.r;
+		g = static_cast<double>(m_srgbUint.g) + other.m_srgbUint.g;
+		b = static_cast<double>(m_srgbUint.b) + other.m_srgbUint.b;
+
+		r = std::floor(r);
+		g = std::floor(g);
+		b = std::floor(b);
+
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		g = g > 255. ? 255. : g;
+		g = g < 0. ? 0. : g;
+
+		b = b > 255. ? 255. : b;
+		b = b < 0. ? 0. : b;
+
+		m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b) };
+		break;
+	default:
+		break;
 	}
 	return *this;
 }
 
 Colour& Colour::operator-=(const Colour& other) {
+	double r = 0, g = 0, b = 0;
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		m_srgb.r -= other.m_srgb.r;
@@ -279,11 +371,34 @@ Colour& Colour::operator-=(const Colour& other) {
 		m_oklab.b -= other.m_oklab.b;
 		OkLabToOkLCh();
 		break;
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r) - other.m_srgbUint.r;
+		g = static_cast<double>(m_srgbUint.g) - other.m_srgbUint.g;
+		b = static_cast<double>(m_srgbUint.b) - other.m_srgbUint.b;
+
+		r = std::floor(r);
+		g = std::floor(g);
+		b = std::floor(b);
+
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		g = g > 255. ? 255. : g;
+		g = g < 0. ? 0. : g;
+
+		b = b > 255. ? 255. : b;
+		b = b < 0. ? 0. : b;
+
+		m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b) };
+		break;
+	default:
+		break;
 	}
 	return *this;
 }
 
 Colour& Colour::operator*=(const double scalar) {
+	double r = 0, g = 0, b = 0;
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		m_srgb.r *= scalar;
@@ -309,6 +424,26 @@ Colour& Colour::operator*=(const double scalar) {
 		m_oklab.a *= scalar;
 		m_oklab.b *= scalar;
 		OkLabToOkLCh();
+		break;
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r) * scalar;
+		g = static_cast<double>(m_srgbUint.g) * scalar;
+		b = static_cast<double>(m_srgbUint.b) * scalar;
+
+		r = std::floor(r);
+		g = std::floor(g);
+		b = std::floor(b);
+
+		r = r > 255. ? 255. : r;
+		r = r < 0. ? 0. : r;
+
+		g = g > 255. ? 255. : g;
+		g = g < 0. ? 0. : g;
+
+		b = b > 255. ? 255. : b;
+		b = b < 0. ? 0. : b;
+
+		m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b) };
 		break;
 	default:
 		break;
@@ -362,7 +497,10 @@ bool Colour::operator==(const Colour& other) const {
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
 	case Colour::MathMode::OkLCh:
 		return std::tie(m_oklch.l, m_oklch.c, m_oklch.h, m_alpha) ==
-		std::tie(other.m_oklch.l, m_oklch.c, m_oklch.h, other.m_alpha);
+			std::tie(other.m_oklch.l, m_oklch.c, m_oklch.h, other.m_alpha);
+	case Colour::MathMode::sRGB_Uint:
+		return std::tie(m_srgbUint.r, m_srgbUint.g, m_srgbUint.b, m_alpha) ==
+			std::tie(other.m_srgbUint.r, other.m_srgbUint.g, other.m_srgbUint.b, other.m_alpha);
 	default:
 		return false;
 	}
@@ -381,6 +519,9 @@ bool Colour::operator<(const Colour& other) const {
 	} else if (m_mathMode == Colour::MathMode::Linear_RGB) {
 		return std::tie(m_lrgb.r, m_lrgb.g, m_lrgb.b, m_alpha) <
 			std::tie(other.m_lrgb.r, other.m_lrgb.g, other.m_lrgb.b, other.m_alpha);
+	} else if (m_mathMode == Colour::MathMode::sRGB_Uint) {
+		return std::tie(m_srgbUint.r, m_srgbUint.g, m_srgbUint.b, m_alpha) <
+			std::tie(other.m_srgbUint.r, other.m_srgbUint.g, other.m_srgbUint.b, other.m_alpha);
 	} else {
 		const Colour red(static_cast<uint8_t>(255), 0, 0);
 		const double n = 12.;
@@ -429,10 +570,9 @@ std::string Colour::OkLabDebug() const {
 }
 
 std::string Colour::sRGBUintDebug() const {
-	sRGB_UInt srgb_int = GetsRGB_UInt();
-	return Log::ToString((unsigned int)srgb_int.r, 3, ' ') + ' ' +
-		Log::ToString((unsigned int)srgb_int.g, 3, ' ') + ' ' +
-		Log::ToString((unsigned int)srgb_int.b, 3, ' ');
+	return Log::ToString((unsigned int)m_srgbUint.r, 3, ' ') + ' ' +
+		Log::ToString((unsigned int)m_srgbUint.g, 3, ' ') + ' ' +
+		Log::ToString((unsigned int)m_srgbUint.b, 3, ' ');
 }
 
 std::string Colour::OkLChDebug() const {
@@ -443,11 +583,9 @@ std::string Colour::OkLChDebug() const {
 }
 
 std::string Colour::GetHex() const {
-	sRGB_UInt srgbUint = GetsRGB_UInt();
-
-	const unsigned int r = static_cast<unsigned int>(srgbUint.r) << 16;
-	const unsigned int g = static_cast<unsigned int>(srgbUint.g) << 8;
-	const unsigned int b = static_cast<unsigned int>(srgbUint.b);
+	const unsigned int r = static_cast<unsigned int>(m_srgbUint.r) << 16;
+	const unsigned int g = static_cast<unsigned int>(m_srgbUint.g) << 8;
+	const unsigned int b = static_cast<unsigned int>(m_srgbUint.b);
 	const unsigned int col = r + g + b;
 
 	std::stringstream stream;
@@ -456,6 +594,9 @@ std::string Colour::GetHex() const {
 }
 
 double Colour::MagSq(const Colour& other) const {
+	double r = 0., g = 0., b = 0.;
+	double otherR = 0., otherG = 0., otherB = 0.;
+
 	switch (m_mathMode) {
 	case MathMode::sRGB:
 		return Maths::Pow2(m_srgb.r - other.m_srgb.r) +
@@ -471,11 +612,25 @@ double Colour::MagSq(const Colour& other) const {
 		return Maths::Pow2(m_lrgb.r - other.m_lrgb.r) +
 			Maths::Pow2(m_lrgb.g - other.m_lrgb.g) +
 			Maths::Pow2(m_lrgb.b - other.m_lrgb.b);
+	case MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r);
+		g = static_cast<double>(m_srgbUint.g);
+		b = static_cast<double>(m_srgbUint.b);
+
+		otherR = static_cast<double>(other.m_srgbUint.r);
+		otherG = static_cast<double>(other.m_srgbUint.g);
+		otherB = static_cast<double>(other.m_srgbUint.b);
+
+		return Maths::Pow2(r - otherR) +
+			Maths::Pow2(g - otherG) +
+			Maths::Pow2(b - otherB);
 	}
 	return 0.0;
 }
 
 double Colour::LengthSq() const {
+	double r = 0., g = 0., b = 0.;
+
 	switch (m_mathMode) {
 	case Colour::MathMode::sRGB:
 		return Maths::Pow2(m_srgb.r) +
@@ -491,12 +646,23 @@ double Colour::LengthSq() const {
 		return Maths::Pow2(m_lrgb.r) +
 			Maths::Pow2(m_lrgb.g) +
 			Maths::Pow2(m_lrgb.b);
+	case Colour::MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r);
+		g = static_cast<double>(m_srgbUint.g);
+		b = static_cast<double>(m_srgbUint.b);
+
+		return Maths::Pow2(r) +
+			Maths::Pow2(g) +
+			Maths::Pow2(b);
 	default:
 		return 0.;
 	}
 }
 
 double Colour::Dot(const Colour& other) const {
+	double r = 0., g = 0., b = 0.;
+	double otherR = 0., otherG = 0., otherB = 0.;
+
 	switch (m_mathMode) {
 	case Colour::MathMode::sRGB:
 		return m_srgb.r * other.m_srgb.r +
@@ -512,6 +678,17 @@ double Colour::Dot(const Colour& other) const {
 		return m_lrgb.r * other.m_lrgb.r +
 			m_lrgb.g * other.m_lrgb.g +
 			m_lrgb.b * other.m_lrgb.b;
+	case Colour::MathMode::sRGB_Uint:
+		r = static_cast<double>(m_srgbUint.r);
+		g = static_cast<double>(m_srgbUint.g);
+		b = static_cast<double>(m_srgbUint.b);
+
+		otherR = static_cast<double>(other.m_srgbUint.r);
+		otherG = static_cast<double>(other.m_srgbUint.g);
+		otherB = static_cast<double>(other.m_srgbUint.b);
+		return r * otherR +
+			g * otherG +
+			b * otherB;
 	default:
 		return 0.0;
 	}
@@ -530,21 +707,30 @@ double Colour::MonoGetLightness() const {
 		return 0.2126 * m_lrgb.r + 0.7152 * m_lrgb.g + 0.0722 * m_lrgb.b;
 	} else if (m_mathMode == MathMode::OkLCh) {
 		return m_oklch.l;
+	} else if (m_mathMode == MathMode::sRGB_Uint) {
+		double r = static_cast<double>(m_srgbUint.r);
+		double g = static_cast<double>(m_srgbUint.g);
+		double b = static_cast<double>(m_srgbUint.b);
+		return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 	} else {
 		return m_oklab.l;
 	}
 }
 
 void Colour::ToGrayscale() {
+	double l = MonoGetLightness();
 	if (m_mathMode == MathMode::sRGB) {
-		double l = MonoGetLightness();
 		m_srgb = { l, l, l };
 	} else if (m_mathMode == MathMode::Linear_RGB) {
-		double l = MonoGetLightness();
 		m_lrgb = { l, l, l };
 	} else if (m_mathMode == MathMode::OkLCh) {
 		m_oklch.c = 0.;
 		m_oklch.h = 0.;
+	} else if (m_mathMode == MathMode::sRGB_Uint) {
+		l = std::floor(l);
+		l = l > 255. ? 255 : l < 0. ? 0. : l;
+		const uint8_t l_uint8 = static_cast<uint8_t>(l);
+		m_srgbUint = { l_uint8, l_uint8, l_uint8 };
 	} else {
 		m_oklab.a = 0.;
 		m_oklab.b = 0.;
@@ -592,6 +778,7 @@ void Colour::PureBlack(const uint8_t alpha) {
 	m_lrgb = { 0., 0., 0. };
 	m_oklab = { 0., 0., 0. };
 	m_oklch = { 0., 0., 0. };
+	m_srgbUint = { 0, 0, 0 };
 	m_isGrayscale = true;
 
 	m_alpha = static_cast<double>(alpha) / 255.;
@@ -607,11 +794,12 @@ void Colour::OkLabFallback() {
 
 	Colour s0 = Colour::FromOkLab(m_oklab.l, m_oklab.a, m_oklab.b, m_alpha);
 	s0.OkLChFallback();
-	
+
 	m_oklab = s0.m_oklab;
 	OkLabToOkLCh();
 	OkLabtoLRGB();
 	LRGBtosRGB();
+	sRGBToUint();
 }
 
 void Colour::OkLChFallback() {
@@ -650,6 +838,7 @@ void Colour::OkLChFallback() {
 	OkLChToOkLAB();
 	OkLabtoLRGB();
 	LRGBtosRGB();
+	sRGBToUint();
 }
 
 void Colour::sRGBtoLRGB() {
@@ -787,32 +976,37 @@ void Colour::OkLChToOkLAB() {
 	};
 }
 
-Colour::sRGB_UInt Colour::GetsRGB_UInt() const {
+void Colour::sRGBToUint() {
 	double r = m_srgb.r * 256.;
 	double g = m_srgb.g * 256.;
 	double b = m_srgb.b * 256.;
-	double a = m_alpha * 256.;
 
 	r = std::floor(r);
 	g = std::floor(g);
 	b = std::floor(b);
-	a = std::floor(a);
 
 	r = r > 255. ? 255. : r;
 	g = g > 255. ? 255. : g;
 	b = b > 255. ? 255. : b;
-	a = a > 255. ? 255. : a;
 
 	r = r < 0. ? 0. : r;
 	g = g < 0. ? 0. : g;
 	b = b < 0. ? 0. : b;
-	a = a < 0. ? 0. : a;
 
 	//return { (uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a };
-	return { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), static_cast<uint8_t>(a) };
+	m_srgbUint = { static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b)};
+}
+
+void Colour::UintTosRGB() {
+	m_srgb = {
+		static_cast<double>(m_srgbUint.r) / 255.,
+		static_cast<double>(m_srgbUint.g) / 255.,
+		static_cast<double>(m_srgbUint.b) / 255.
+	};
 }
 
 void Colour::SetsRGB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+	m_srgbUint = { r, g, b };
 	m_alpha = (double)a / 255.;
 
 	if (m_alpha <= 0.) {
@@ -844,6 +1038,7 @@ void Colour::SetsRGB_D(const double r, const double g, const double b, const dou
 	sRGBtoLRGB();
 	LRGBtoOkLab();
 	OkLabToOkLCh();
+	sRGBToUint();
 }
 
 void Colour::SetOkLCh(const double l, const double c, const double h, const double a) {
@@ -860,6 +1055,7 @@ void Colour::SetOkLCh(const double l, const double c, const double h, const doub
 	OkLChToOkLAB();
 	OkLabtoLRGB();
 	LRGBtosRGB();
+	sRGBToUint();
 }
 
 void Colour::SetOkLab(const double l, const double a, const double b, const double alpha) {
@@ -877,6 +1073,7 @@ void Colour::SetOkLab(const double l, const double a, const double b, const doub
 	OkLabtoLRGB();
 	LRGBtosRGB();
 	OkLabToOkLCh();
+	sRGBToUint();
 }
 
 void Colour::SetHex(const char* hex) {
@@ -894,7 +1091,7 @@ void Colour::SetHex(const char* hex) {
 
 void Colour::SetLRGB(const double r, const double g, const double b, const double a) {
 	m_alpha = a;
-	
+
 	if (m_alpha <= 0) {
 		m_lrgb = { 0., 0., 0. };
 	} else {
@@ -907,4 +1104,5 @@ void Colour::SetLRGB(const double r, const double g, const double b, const doubl
 	LRGBtosRGB();
 	LRGBtoOkLab();
 	OkLabToOkLCh();
+	sRGBToUint();
 }
