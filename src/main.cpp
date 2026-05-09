@@ -162,7 +162,8 @@ int main(int argc, char* argv[]) {
 		{ "ditherAlpha", json::value_t::boolean},
 		{ "ditherAlphaFactor", json::value_t::number_unsigned },
 		{ "ditherAlphaType", json::value_t::string },
-		{ "shape", json::value_t::object }
+		{ "shape", json::value_t::object },
+		{ "normaliseCol", json::value_t::boolean }
 	};
 
 	bool allFound = true;
@@ -336,7 +337,8 @@ int main(int argc, char* argv[]) {
 		settings["matrixType"],
 		((bool)settings["hideSemiTransparent"] ? false : (bool)settings["ditherAlpha"]),
 		static_cast<unsigned int>(settings["ditherAlphaFactor"]),
-		settings["ditherAlphaType"]);
+		settings["ditherAlphaType"], 
+		static_cast<bool>(settings["normaliseCol"]));
 	Threshold::SetShape(sizes[0], sizes[1], points);
 
 	// ========== GET IMAGE ==========

@@ -9,8 +9,8 @@ Comments in settings.json not supported
 
 ```json
 {
-	"ditherType": "ordered",
-	"distanceMode": "srgb",
+	"ditherType": "fs",
+	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
@@ -30,7 +30,8 @@ Comments in settings.json not supported
 			[ 2, 1 ],
 			[ 1, 2 ]
 		]
-	}
+	},
+	"normaliseCol": true
 }
 ```
 
@@ -99,12 +100,18 @@ Matrix used for ordered dithering
 
 ### `shape`
 - Object type
-	- `size` - The size of a cell in the form of a 1D Array - `[width, height]`
-		- Will result in a threshold map size of `(N * width, N * height)`
-	- `points` - A 2D array of points to apply the threshold value relative to the origin `(0, 0)`
-		- In the form of `[[x, y]...]` 
-		- Points can extend beyond the cell's size
-		- Any point extending beyond the map's full size will be wrapped
+#### `size`
+- The size of a cell in the form of a 1D Array - `[width, height]`
+- Will result in a threshold map size of `(N * width, N * height)`
+#### `points`
+- A 2D array of points to apply the threshold value relative to the origin `(0, 0)`
+- In the form of `[[x, y]...]` 
+- Points can extend beyond the cell's size
+- Any point extending beyond the map's full size will be wrapped
+
+### normaliseCol
+- Used only when `mono == true`
+- When true will normalise colours in image using its brightest and darkest colour
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

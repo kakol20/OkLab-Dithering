@@ -33,7 +33,11 @@ public:
 	static void SetSettings(const std::string distanceType,
 		const std::string mathMode,
 		const bool mono,
-		const std::string matrixType, const bool ditherAlpha, const unsigned int ditherAlphaFactor, const std::string ditherAlphaType);
+		const std::string matrixType, 
+		const bool ditherAlpha, 
+		const unsigned int ditherAlphaFactor, 
+		const std::string ditherAlphaType, 
+		const bool normaliseCol);
 
 	static Colour GetColourFromImage(const Image& image, const int x, const int y);
 	static void SetColourToImage(const Colour& colour, Image& image, const int x, const int y);
@@ -47,7 +51,7 @@ private:
 	static Colour ClosestColour(const Colour& col, const Palette& palette);
 
 	static std::string m_distanceMode, m_mathMode, m_matrixType, m_ditherAlphaType;
-	static bool m_mono, m_ditherAlpha;
+	static bool m_mono, m_ditherAlpha, m_normaliseCol;
 	static unsigned int m_ditherAlphaFactor;
 
 	//static double GetThreshold(const int x, const int y);

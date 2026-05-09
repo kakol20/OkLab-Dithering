@@ -13,12 +13,13 @@
 #include <utility>
 #include <vector>
 
-bool Dither::m_mono = false;
 bool Dither::m_ditherAlpha = false;
+bool Dither::m_mono = false;
+bool Dither::m_normaliseCol = true;
 std::string Dither::m_distanceMode = "oklab";
+std::string Dither::m_ditherAlphaType = "ordered";
 std::string Dither::m_mathMode = "srgb";
 std::string Dither::m_matrixType = "bayer";
-std::string Dither::m_ditherAlphaType = "ordered";
 unsigned int Dither::m_ditherAlphaFactor = 1;
 
 void Dither::OrderedDither(Image& image, const Palette& palette) {
@@ -33,7 +34,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 	std::vector<Colour> colours;
 	colours.reserve(coloursSize);
 
-	double imgMinL = 0.0, imgMaxL = 0.0;
+	double imgMinL = -1., imgMaxL = -1.;
 
 	Log::StartTime();
 	Log::WriteOneLine("ORDERED DITHERING...");
@@ -48,8 +49,10 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			const size_t index = image.GetIndex(x, y);
 			//Colour pixel = GetColourFromImage(image, x, y);
 			colours.emplace_back(GetColourFromImage(image, x, y));
+			Log::DebugProgress(double(x + y * imgWidth), double(2 * imgHeight * imgWidth), 5.);
 
-			if (x == 0 && y == 0) {
+			if (colours.back().GetAlpha() <= 0.) continue;
+			if (imgMinL <= 0 || imgMaxL <= 0.) {
 				imgMinL = colours.back().MonoGetLightness();
 				imgMaxL = imgMinL;
 			} else {
@@ -57,8 +60,6 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				if (l < imgMinL) imgMinL = l;
 				if (l > imgMaxL) imgMaxL = l;
 			}
-
-			Log::DebugProgress(double(x + y * imgWidth), double(2 * imgHeight * imgWidth), 5.);
 		}
 	}
 
@@ -98,7 +99,9 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 					double currL = pixel.MonoGetLightness();
 
 					// normalise image min&max to palette min&max
-					//currL = (currL - imgMinL) / (imgMaxL - imgMinL);
+
+					if (m_normaliseCol) currL = (currL - imgMinL) / (imgMaxL - imgMinL);
+
 					currL = (palette.back().MonoGetLightness() - palette.front().MonoGetLightness()) * currL;
 					currL += palette.front().MonoGetLightness();
 
@@ -167,7 +170,7 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			Colour nearest = info.alpha > threshold ? info.p1 : info.p0;
 			nearest.SetAlpha(pixelAlpha);
 
-			if (image.HasAlphaChannel() && m_ditherAlpha) 
+			if (image.HasAlphaChannel() && m_ditherAlpha)
 				DitherAlpha(nearest, colours, x, y, imgWidth, imgHeight, pixelThreshold);
 
 			SetColourToImage(nearest, image, x, y);
@@ -369,14 +372,15 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 #endif
 }
 
-void Dither::SetSettings(
-	const std::string distanceType,
+void Dither::SetSettings(const std::string distanceType,
 	const std::string mathMode,
 	const bool mono,
 	const std::string matrixType,
 	const bool ditherAlpha,
 	const unsigned int ditherAlphaFactor,
-	const std::string ditherAlphaType) {
+	const std::string ditherAlphaType,
+	const bool normaliseCol) {
+	// ============================================================================
 	m_distanceMode = distanceType;
 	m_mathMode = mathMode;
 	m_mono = mono;
@@ -384,6 +388,7 @@ void Dither::SetSettings(
 	m_ditherAlpha = ditherAlpha;
 	m_ditherAlphaFactor = ditherAlphaFactor;
 	m_ditherAlphaType = ditherAlphaType;
+	m_normaliseCol = normaliseCol;
 }
 
 Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
