@@ -40,7 +40,8 @@ Comments in settings.json not supported
 #### `ditherType`
 - `ordered` for ordered dithering  
 	- With new ordered dithering method `mathMode` is not used
-- `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
+- `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering
+	- Ignores mono 
 - `none` for no dithering
 
 #### `distanceMode` and `mathMode`
@@ -111,7 +112,7 @@ Matrix used for ordered dithering
 
 ### normaliseCol
 - Used only when `mono == true`
-- When true will normalise colours in image using its brightest and darkest colour
+- When `true` will normalise colours in image using its brightest & darkest colour to the palette's brightest & darkest colour
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  

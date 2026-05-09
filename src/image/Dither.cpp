@@ -296,6 +296,8 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 	Log::StartTime();
 	Log::WriteOneLine("NO DITHER...");
 
+	double minL = -1, maxL = -1;
+
 	Log::WriteOneLine("  Copying Pixels");
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
@@ -312,6 +314,17 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 				Log::StartTime();
 			}
+
+			if (m_mono) {
+				const double currL = colours.back().MonoGetLightness();
+				if (minL < 0 && maxL < 0) {
+					minL = currL;
+					maxL = currL;
+					continue;
+				}
+				if (currL < minL) minL = currL;
+				if (currL > maxL) maxL = currL;
+			}
 		}
 	}
 
@@ -323,6 +336,7 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 
 			Colour ogPixel = colours[indexCol];
 			const double alpha = ogPixel.GetAlpha();
+			ogPixel.SetAlpha(1.);
 
 			Colour pixel = ogPixel;
 
@@ -337,17 +351,14 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 				continue;
 			}
 
-			if (m_mono) pixel.ToGrayscale();
+			//if (m_mono) pixel.ToGrayscale();
 
 			SetColourMathMode(m_distanceMode);
 
-			pixel = ClosestColour(pixel, palette);
-			pixel.SetAlpha(alpha);
-
-			if (alpha > 0. && alpha < 1.)
-				bool temp = true;
+			pixel = ClosestColour(pixel, palette, minL, maxL);
 
 			noDitherMem[ogPixel] = pixel;
+			pixel.SetAlpha(alpha);
 
 			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(pixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
@@ -365,11 +376,6 @@ void Dither::NoDither(Image& image, const Palette& palette) {
 		}
 	}
 	Log::WriteOneLine("  Mem Size: " + Log::ToString(noDitherMem.size()));
-#ifdef _DEBUG
-	{
-		bool temp = true;
-	}
-#endif
 }
 
 void Dither::SetSettings(const std::string distanceType,
@@ -391,45 +397,54 @@ void Dither::SetSettings(const std::string distanceType,
 	m_normaliseCol = normaliseCol;
 }
 
-Colour Dither::ClosestColour(const Colour& col, const Palette& palette) {
-	Colour closest = Colour::FromsRGB(0, 0, 0, 0);
-
-	double min = 0., max = 1.;
-
-	// TODO: Modify mono
+Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const double minL, const double maxL) {
 	if (m_mono) {
-		// get darkest and lightest colour in palette
-		min = palette.GetColour(0).MonoGetLightness();
-		max = min;
+		double colL = col.MonoGetLightness();
+
+		double palMinL = 0., palMaxL = 1.;
+		const Colour firstC = palette.front();
+		const Colour lastC = palette.back();
+		if (m_normaliseCol) {
+			colL = (colL - minL) / (maxL - minL);
+
+			palMinL = firstC.MonoGetLightness();
+			palMaxL = lastC.MonoGetLightness();
+		}
+
+		const double firstL = (firstC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
+		if (colL <= firstL) return firstC; // Colour lightness is less than or equal to first colour in palette
+		
+		const double lastL = (lastC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
+		if (colL >= lastL) return lastC; // Colour lightness is greater than or equal to last colour in palette
+
+		for (size_t i = 0; i < palette.size() - 1; ++i) {
+			const Colour currC = palette.GetColour(i);
+			const Colour nextC = palette.GetColour(i + 1);
+
+			const double currL = (currC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
+			const double nextL = (nextC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
+
+			if (!(colL >= currL && colL < nextL)) continue; // Colour lightness is not within current and next colours palette
+			if (colL - currL <= nextL - colL) return currC; // Colour is closer to current colour in palette
+			return nextC; // Colour is closer to next colour in palette
+		}
+	} else {
+		Colour closest = palette.GetColour(0);
+		double closestDist = col.MagSq(closest);
+
 		for (size_t i = 1; i < palette.size(); ++i) {
-			const double l = palette.GetColour(i).MonoGetLightness();
-			min = l < min ? l : min;
-			max = l > max ? l : max;
+			Colour current = palette.GetColour(i);
+			const double dist = col.MagSq(current);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closest = current;
+			}
 		}
+
+		closest.SetAlpha(col.GetAlpha());
+
+		return closest;
 	}
-
-	size_t startI = 0;
-
-	closest = palette.GetColour(0);
-	startI = 1;
-
-	if (palette.size() == startI) return closest;
-
-	double closestDist = m_mono ? col.MonoDistance(closest, min, max) : col.MagSq(closest);
-
-	for (size_t i = startI; i < palette.size(); ++i) {
-		const Colour current = palette.GetColour(i);
-
-		double dist = m_mono ? col.MonoDistance(current, min, max) : col.MagSq(current);
-
-		if (dist < closestDist) {
-			closestDist = dist;
-			closest = current;
-		}
-	}
-	closest.SetAlpha(col.GetAlpha());
-
-	return closest;
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight, const Threshold& threshold) {
@@ -601,14 +616,6 @@ void Dither::ImageToGrayscale(Image& image) {
 			} else {
 				col.SetOkLab(l_d, 0., 0.);
 			}
-
-#ifdef _DEBUG
-			if (debug) {
-				const Colour::sRGB_UInt testVal = col.GetsRGB_UInt();
-
-				bool test = true;
-			}
-#endif // _DEBUG
 
 			newImage.SetData(newIndex, col.GetsRGB_UInt().r);
 

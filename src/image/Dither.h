@@ -48,7 +48,15 @@ public:
 
 private:
 
-	static Colour ClosestColour(const Colour& col, const Palette& palette);
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="col"></param>
+	/// <param name="palette"></param>
+	/// <param name="minL">Minimum lightness of image</param>
+	/// <param name="maxL">Maximum lightness of image</param>
+	/// <returns></returns>
+	static Colour ClosestColour(const Colour& col, const Palette& palette, const double minL = 0., const double maxL = 1.);;
 
 	static std::string m_distanceMode, m_mathMode, m_matrixType, m_ditherAlphaType;
 	static bool m_mono, m_ditherAlpha, m_normaliseCol;
