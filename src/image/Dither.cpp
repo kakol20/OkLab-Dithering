@@ -52,14 +52,16 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 			Log::DebugProgress(double(x + y * imgWidth), double(2 * imgHeight * imgWidth), 5.);
 
 			if (colours.back().GetAlpha() <= 0.) continue;
-			if (imgMinL <= 0 || imgMaxL <= 0.) {
-				imgMinL = colours.back().MonoGetLightness();
-				imgMaxL = imgMinL;
-			} else {
-				double l = colours.back().MonoGetLightness();
-				if (l < imgMinL) imgMinL = l;
-				if (l > imgMaxL) imgMaxL = l;
+
+			const double currL = colours.back().MonoGetLightness();
+
+			if (imgMinL <= 0 && imgMaxL <= 0.) {
+				imgMinL = currL;
+				imgMaxL = currL;
+				continue;
 			}
+			if (currL < imgMinL) imgMinL = currL;
+			if (currL > imgMaxL) imgMaxL = currL;
 		}
 	}
 
@@ -98,24 +100,28 @@ void Dither::OrderedDither(Image& image, const Palette& palette) {
 				if (m_mono) {
 					double currL = pixel.MonoGetLightness();
 
-					// normalise image min&max to palette min&max
+					// normalise image min&max
 
 					if (m_normaliseCol) currL = (currL - imgMinL) / (imgMaxL - imgMinL);
 
-					currL = (palette.back().MonoGetLightness() - palette.front().MonoGetLightness()) * currL;
-					currL += palette.front().MonoGetLightness();
+					const double palMinL = palette.front().MonoGetLightness();
+					const double palMaxL = palette.back().MonoGetLightness();
 
 					for (size_t i = 0; i < palette.size() - 1; ++i) {
-						const double p0_l = palette.GetColour(i).MonoGetLightness();
-						const double p1_l = palette.GetColour(i + 1).MonoGetLightness();
+						double p0_l = palette.GetColour(i).MonoGetLightness();
+						double p1_l = palette.GetColour(i + 1).MonoGetLightness();
+
+						p0_l = (p0_l - palMinL) / (palMaxL - palMinL);
+						p1_l = (p1_l - palMinL) / (palMaxL - palMinL);
+
 						if (currL >= p0_l && currL <= p1_l) {
 							info.p0 = palette.GetColour(i);
 							info.p1 = palette.GetColour(i + 1);
 
 							const double p0_d = currL - p0_l;
-							const double p1_d = p1_l - currL;
+							//const double p1_d = p1_l - currL;
 
-							const double sum_d = p0_d + p1_d;
+							const double sum_d = p1_l - p0_l;
 
 							info.alpha = p0_d / sum_d;
 						}
@@ -445,7 +451,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const do
 
 		const double firstL = (firstC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
 		if (colL <= firstL) return firstC; // Colour lightness is less than or equal to first colour in palette
-		
+
 		const double lastL = (lastC.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
 		if (colL >= lastL) return lastC; // Colour lightness is greater than or equal to last colour in palette
 

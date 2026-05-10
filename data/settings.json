@@ -1,5 +1,5 @@
 {
-	"ditherType": "fs",
+	"ditherType": "ordered",
 	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
