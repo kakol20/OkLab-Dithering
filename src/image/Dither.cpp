@@ -195,12 +195,17 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 	Log::StartTime();
 	Log::WriteOneLine("FLOYD STEINBERG DITHERING...");
 
+	double imgMinL = -1., imgMaxL = -1.;
+
+	SetColourMathMode(m_distanceMode);
+
 	Log::WriteOneLine("  Copying Pixels");
 	for (int y = 0; y < imgHeight; ++y) {
 		for (int x = 0; x < imgWidth; ++x) {
 			const size_t index = image.GetIndex(x, y);
 			//Colour pixel = GetColourFromImage(image, x, y);
 			colours.emplace_back(GetColourFromImage(image, x, y));
+			if (m_mono) colours.back().ToGrayscale();
 
 			// -- Check Time --
 			if (Log::CheckTimeSeconds(5.)) {
@@ -211,8 +216,27 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 
 				Log::StartTime();
 			}
+
+			const double colL = colours.back().MonoGetLightness();
+			if (imgMinL < 0 && imgMaxL < 0) {
+				imgMinL = colL;
+				imgMaxL = colL;
+				continue;
+			}
+			if (colL < imgMinL) imgMinL = colL;
+			if (colL > imgMaxL) imgMaxL = colL;
 		}
 	}
+
+	if (m_normaliseCol) {
+		for (size_t i = 0; i < colours.size(); ++i) {
+			colours[i] = Colour::White * ((colours[i].MonoGetLightness() - imgMinL) / (imgMaxL - imgMinL));
+		}
+	}
+
+	SetColourMathMode(m_mathMode);
+	const double palMinL = palette.front().MonoGetLightness();
+	const double palMaxL = palette.back().MonoGetLightness();
 
 	// Dither
 	Log::WriteOneLine("  Dithering");
@@ -228,14 +252,22 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 			const double alpha = oldPixel.GetAlpha();
 
 			SetColourMathMode(m_distanceMode);
-			Colour newPixel = ClosestColour(oldPixel, palette);
+			Colour newPixel = ClosestColour(oldPixel, palette, 0, 1);
 			newPixel.SetAlpha(alpha);
 			if (image.HasAlphaChannel() && m_ditherAlpha) DitherAlpha(newPixel, colours, x, y, imgWidth, imgHeight, alphaThreshold);
 
 			SetColourToImage(newPixel, image, x, y);
 
 			SetColourMathMode(m_mathMode);
+
 			Colour quantError = oldPixel - newPixel;
+
+			if (m_mono) {
+				//double oldPixelVal = (oldPixel.MonoGetLightness() - palMinL) / (palMaxL - palMinL);
+				double newPixelVal = newPixel.MonoGetLightness();
+				newPixelVal = (newPixelVal - palMinL) / (palMaxL - palMinL);
+				quantError = Colour::White * (oldPixel.MonoGetLightness() - newPixelVal);
+			}
 
 			size_t neighbourIndex = 0;
 
@@ -445,6 +477,7 @@ Colour Dither::ClosestColour(const Colour& col, const Palette& palette, const do
 
 		return closest;
 	}
+	return col;
 }
 
 void Dither::DitherAlpha(Colour& col, std::vector<Colour>& colours, const int x, const int y, const int imgWidth, const int imgHeight, const Threshold& threshold) {

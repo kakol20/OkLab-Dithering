@@ -330,12 +330,12 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (settings["ditherType"] == "fs") settings["mono"] = false;
+	if (settings["ditherType"] == "fs") settings["mathMode"] = settings["distanceMode"];
 
 	Dither::SetSettings(
 		settings["distanceMode"],
 		settings["mathMode"],
-		settings["ditherType"] == "fs" ? false : (bool)settings["mono"],
+		(bool)settings["mono"],
 		settings["matrixType"],
 		((bool)settings["hideSemiTransparent"] ? false : (bool)settings["ditherAlpha"]),
 		static_cast<unsigned int>(settings["ditherAlphaFactor"]),
@@ -428,7 +428,9 @@ int main(int argc, char* argv[]) {
 
 	outputLoc += "-" + (std::string)settings["distanceMode"];
 
-	if (settings["ditherType"] != "none" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
+	if (settings["ditherType"] != "none" && 
+		settings["ditherType"] != "ordered" && 
+		!(settings["mono"] == true && settings["ditherType"] == "fs")) outputLoc += "-" + (std::string)settings["mathMode"];
 
 	if (image.HasAlphaChannel()) {
 		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];

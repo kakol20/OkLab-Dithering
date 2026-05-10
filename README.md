@@ -61,6 +61,7 @@ Comments in settings.json not supported
 	- Treats selected palette like it's a monochromatic palette  
 	- Will override `grayscale` setting
 	- NOTE: Due to the math - math mode `oklab` and `oklab_l` will produce the same result
+	- When `true` and `ditherType = fs` then mathMode is ignored
 
 #### `grayscale`
 - `true` or `false`  

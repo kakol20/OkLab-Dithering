@@ -17,6 +17,8 @@
 constexpr double M_TAU = M_PI * 2;
 
 Colour::MathMode Colour::m_mathMode = Colour::MathMode::OkLab_Lightness;
+const Colour Colour::Black = Colour(0., 0., 0.);
+const Colour Colour::White = Colour(1., 0., 0.);
 
 Colour::Colour() {
 	m_alpha = 1.;

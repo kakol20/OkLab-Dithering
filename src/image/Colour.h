@@ -170,6 +170,8 @@ public:
 	//static Colour Min(const Colour& a, const Colour& b);
 	void PureBlack(const uint8_t alpha = 255);
 
+	static const Colour Black, White;
+
 private:
 	LRGB m_lrgb;
 	OkLab m_oklab;
