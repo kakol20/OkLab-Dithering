@@ -1,12 +1,19 @@
 #include "../wrapper/Log.h"
 #include "Colour.h"
 #include "Palette.h"
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <unordered_map>
-#include <algorithm>
+#include <ios>
+#include <ostream>
 
-Palette::Palette(const char* file) {
+Palette::Palette() {
+	m_size = 0;
+}
+
+Palette::Palette(const char* file, const bool grayscale) {
 	std::fstream p(file);
 
 	m_size = 0;
@@ -20,8 +27,16 @@ Palette::Palette(const char* file) {
 			hex.resize(6);
 			++m_size;
 
+			bool push = true;
+
 			Colour col(hex.c_str());
-			m_colours.push_back(col);
+
+			if (grayscale && !col.IsGrayscale()) push = false;
+
+			//Colour col(hex.c_str());
+			//m_colours.push_back(col);
+			
+			if (push) m_colours.emplace_back(hex.c_str());
 		}
 
 		Log::WriteOneLine("Palette Size: " + Log::ToString(m_size, 0, '0'));
@@ -75,4 +90,34 @@ void Palette::CalculateAverageSpread() {
 	}
 	m_avgSpread *= 1. / static_cast<double>(count);
 	m_avgSpread.Update();
+}
+
+void Palette::Save(const char* file) {
+	const std::filesystem::path p = file;
+	const std::filesystem::path dir = p.parent_path();
+	if (!p.parent_path().empty() && !std::filesystem::exists(dir)) {
+		std::filesystem::create_directory(dir);
+	}
+
+	std::fstream output;
+	output.open(file, std::ios_base::out);
+
+	for (size_t i = 0; i < m_colours.size(); ++i) {
+		output << m_colours[i].GetHex();
+
+		if (i + 1 < m_colours.size()) output << '\n';
+	}
+	output << std::flush;
+}
+
+void Palette::SetToNearestUint() {
+	for (size_t i = 0; i < m_colours.size(); ++i) {
+		m_colours[i] = Colour::FromHex(m_colours[i].GetHex().c_str());
+	}
+}
+
+void Palette::UpdateEveryCol() {
+	for (size_t i = 0; i < m_colours.size(); ++i) {
+		m_colours[i].Update();
+	}
 }

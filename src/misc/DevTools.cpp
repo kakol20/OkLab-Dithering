@@ -3,6 +3,7 @@
 #include "DevTools.h"
 
 #include "../../ext/json/json.hpp"
+#include "../../res/resource.h"
 #include "../image/Colour.h"
 #include "../image/Image.h"
 #include "../image/Palette.h"
@@ -12,23 +13,38 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <string>
+#include <cstring>
 #include <vector>
-#include <fstream>
+#include <windows.h>
+
+#include "../misc/BN_Helper.h"
 
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	//GenerateBlueNoise();
 	//GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
 	//Log::Clear();
 	//PaletteValues();
-	DebugThreshold();
+	//ThresholdToImage();
+	//DebugThreshold();
+
+	//GenerateBlueNoise(16, "res/blueNoise16.bin");
+	//GenerateBlueNoise(32, "res/blueNoise32.bin");
+	//GenerateBlueNoise(64, "res/blueNoise64.bin");
+	//GenerateBlueNoise(128, "res/blueNoise128.bin");
+	//ReadBlueNoiseBin(IDI_BN16);
+	//ReadBlueNoiseBin(IDI_BN32);
+	//ReadBlueNoiseBin(IDI_BN64);
+	//ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
+	PaletteToImage("vga256");
 }
 
 void DevTools::GenerateGSTiles() {
@@ -61,7 +77,7 @@ void DevTools::GenerateGSTiles() {
 void DevTools::PaletteValues() {
 	//Log::Write("Test\n");
 
-	Palette palette = "data/custom64.palette";
+	Palette palette = "data/custom256.palette";
 
 	// average distance to nearest
 	Colour::SetMathMode(Colour::MathMode::OkLab);
@@ -85,12 +101,40 @@ void DevTools::PaletteValues() {
 	total /= static_cast<double>(palette.size());
 	Log::WriteOneLine("Average Distance to Nearest: " + Log::ToString(total, 4));
 
-	Log::Save("dev/colors.txt");
+	Log::Save("dev/misc/colors.txt");
+}
+
+void DevTools::PaletteToImage(const char* name) {
+	Colour::SetMathMode(Colour::MathMode::OkLCh);
+	Palette pal(("data/" + static_cast<std::string>(name) + ".palette").c_str());
+
+	const unsigned int size = pal.size();
+
+	// ========== SAVE COLOURS ==========
+
+	// As Image
+
+	const int width = static_cast<int>(std::ceil(std::sqrt(size)));
+	const int height = static_cast<int>(std::ceil(static_cast<double>(size) / width));
+
+	Image palImg(width, height, 4);
+	palImg.Clear();
+	for (size_t i = 0; i < size; ++i) {
+		size_t imgI = i * 4;
+		Colour::sRGB_UInt srgbUint = pal.GetColour(i).GetsRGB_UInt();
+
+		palImg.SetData(imgI + 0, srgbUint.r);
+		palImg.SetData(imgI + 1, srgbUint.g);
+		palImg.SetData(imgI + 2, srgbUint.b);
+		palImg.SetData(imgI + 3, 255);
+	}
+
+	palImg.Write(("dev/misc/" + static_cast<std::string>(name) + "-pal.png").c_str());
 }
 
 void DevTools::GenerateBlueNoisePalette() {
 	std::vector<Colour> palette;
-	const size_t size = 64;
+	const size_t size = 256;
 	palette.reserve(size);
 
 	//palette.emplace_back(1. / 7., 0., 0.);
@@ -100,10 +144,15 @@ void DevTools::GenerateBlueNoisePalette() {
 	//palette.emplace_back(5. / 7., 0., 0.);
 	//palette.emplace_back(6. / 7., 0., 0.);
 
-	palette.emplace_back(0.2, 0., 0.);
-	palette.emplace_back(0.4, 0., 0.);
-	palette.emplace_back(0.6, 0., 0.);
-	palette.emplace_back(0.8, 0., 0.);
+	//palette.emplace_back(0.2, 0., 0.);
+	//palette.emplace_back(0.4, 0., 0.);
+	//palette.emplace_back(0.6, 0., 0.);
+	//palette.emplace_back(0.8, 0., 0.);
+
+	const int count = 10;
+	for (int i = 1; i < count; ++i) {
+		palette.emplace_back(double(i) / count, 0., 0.);
+	}
 
 	// Set intial mandatory colours
 	palette.emplace_back(0., 0., 0.);
@@ -186,20 +235,38 @@ void DevTools::GenerateBlueNoisePalette() {
 		palImg.SetData(imgI + 3, 255);
 	}
 
-	palImg.Write(("dev/custom" + Log::ToString(size) + "-pal.png").c_str());
+	palImg.Write(("dev/misc/custom" + Log::ToString(size) + "-pal.png").c_str());
 }
 
-void DevTools::GenerateBlueNoise() {
-	const std::string type = "bluenoise32";
-	const int size = 32;
+void DevTools::ThresholdToImage() {
+	const int size = 128;
+	//const std::string type = "bluenoise" + Log::ToString(size);
+	const std::string type = "ign";
+
 
 	Threshold blueNoise;
 	blueNoise.GenerateThreshold(type);
 
+	double min = 255.;
+	double max = 0.;
+
 	Image img(size, size, 1);
-	for (int x = 0; x < size; ++x) {
-		for (int y = 0; y < size; ++y) {
+
+	// get min and max
+	for (int y = 0; y < size; ++y) {
+		for (int x = 0; x < size; ++x) {
 			double val = blueNoise.GetThreshold(x, y) + 0.5;
+			
+			if (val < min) min = val;
+			if (val > max) max = val;
+		}
+	}
+
+	// save to image and normalise
+	for (int y = 0; y < size; ++y) {
+		for (int x = 0; x < size; ++x) {
+			double val = blueNoise.GetThreshold(x, y) + 0.5;
+			val = (val - min) / (max - min);
 			val = std::floor(val * 255.);
 			val = val > 255. ? 255. : val < 0. ? 0. : val;
 
@@ -211,6 +278,7 @@ void DevTools::GenerateBlueNoise() {
 	std::string outputLoc = "dev/" + type + ".png";
 	img.Write(outputLoc.c_str());
 }
+
 void DevTools::Misc() {
 	Colour::SetMathMode(Colour::MathMode::OkLab);
 	Colour col1((uint8_t)0, 0, 0);
@@ -223,6 +291,7 @@ void DevTools::Misc() {
 
 	Log::HoldConsole();
 }
+
 void DevTools::DebugThreshold() {
 	std::ifstream settingsLoc("data/settings.json");
 	if (!(settingsLoc)) {
@@ -269,5 +338,66 @@ void DevTools::DebugThreshold() {
 	}
 
 	img.Write("dev/bayershape16.png");
+}
+
+void DevTools::GenerateBlueNoise(const uint32_t size, const char* filename) {
+	Random::Seed = 20260410;
+
+	const std::filesystem::path p = filename;
+	const std::filesystem::path dir = p.parent_path();
+	if (!p.parent_path().empty() && !std::filesystem::exists(dir)) {
+		std::filesystem::create_directory(dir);
+	}
+
+	std::ofstream out(filename, std::ios::binary);
+	if (!out) return;
+
+	std::vector<uint32_t> data = BN_Helper::Generate((int)size, Random::Seed);
+
+	uint32_t dataSize = static_cast<uint32_t>(data.size());
+	out.write(reinterpret_cast<const char*>(&dataSize), sizeof(dataSize));
+	out.write(reinterpret_cast<const char*>(data.data()), dataSize * sizeof(uint32_t));
+}
+
+void DevTools::ReadBlueNoiseBin(const int res) {
+	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(res), RT_RCDATA);
+	if (!hRes) return;
+
+	HGLOBAL hData = LoadResource(NULL, hRes);
+	void* pData = LockResource(hData);
+	DWORD dataSize = SizeofResource(NULL, hRes);
+	if (!pData || dataSize < sizeof(uint32_t)) return;
+
+	const char* bytes = reinterpret_cast<const char*>(pData);
+
+	// Read the size first
+	uint32_t size = 0;
+	std::memcpy(&size, bytes, sizeof(uint32_t));
+
+	// Check that the resource size matches expected
+	if (dataSize < sizeof(uint32_t) + size * sizeof(uint32_t)) return;
+
+	std::vector<uint32_t> result(size);
+	std::memcpy(result.data(), bytes + sizeof(uint32_t), size * sizeof(uint32_t));
+
+	int imgSize = (int)std::sqrt(size);
+
+	Log::WriteOneLine("size: " + Log::ToString((unsigned int)size, 3, ' '));
+	Image img(imgSize, imgSize, 1);
+
+	for (size_t i = 0; i < (size_t)size; ++i) {
+		double value = static_cast<double>(result[i]) / (size - 1);
+		value = std::floor(value * 256.);
+		value = value >= 256. ? 255. : value;
+
+		//const int x = i % imgSize;
+		//const int y = i / imgSize;
+
+		//Log::WriteOneLine(Log::ToString((unsigned int)result[i], 3, ' '));
+		img.SetData(i, static_cast<uint8_t>(value));
+	}
+
+	std::string outLoc = "dev/res/blueNoise" + Log::ToString(imgSize) + ".png";
+	img.Write(outLoc.c_str());
 }
 #endif // DEV_MODE

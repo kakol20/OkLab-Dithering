@@ -1,17 +1,19 @@
 #include "Threshold.h"
 
+#include "../misc/BN_Helper.h"
+#include "../misc/Random.h"
+#include "../wrapper/Log.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
-//#include "../misc/Random.h"
-//#include <cstdlib>
-//#include <utility>
 
 const std::array<uint8_t, 9> Threshold::m_parkerDither{
 		29,  1, 47,
@@ -54,17 +56,19 @@ void Threshold::GenerateThreshold(const std::string& matrixType) {
 	m_matrixType = matrixType;
 
 	if (IsValidBayerSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(5);
 
 		m_bayerSize = std::stoi(numberPart);
 		m_bayer = GenerateBayerHalf(m_bayerSize);
 	} else if (IsValidBlueNoiseSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(9);
 
 		m_blueNoiseSize = std::stoi(numberPart);
-		GenerateBlueNoise(m_blueNoiseSize);
-	}
-	else if (IsValidBayerShapeSetting(m_matrixType)) {
+		m_blueNoise = BN_Helper::GetMap(m_blueNoiseSize);
+	} else if (IsValidBayerShapeSetting(m_matrixType)) {
+		Log::WriteOneLine("Generating Threshold Map");
 		std::string numberPart = m_matrixType.substr(10);
 
 		m_bayerSize = std::stoi(numberPart);
@@ -144,8 +148,12 @@ bool Threshold::IsValidBlueNoiseSetting(const std::string& matrixType) {
 
 	const int size = std::stoi(matrixType.substr(9));
 
-	if (size < 2) return false;
-	return true;
+	if (size == 16) return true;
+	if (size == 32) return true;
+	if (size == 64) return true;
+	if (size == 128) return true;
+
+	return false;
 }
 
 bool Threshold::IsValidBayerShapeSetting(const std::string& matrixType) {
@@ -238,83 +246,4 @@ void Threshold::GenerateBayerShape() {
 			}
 		}
 	}
-}
-
-void Threshold::GenerateBlueNoise(const int size) {
-	// https://blog.demofox.org/2019/06/25/generating-blue-noise-textures-with-void-and-cluster/
-
-	const int N = size * size;
-	std::vector<double> noise = GenerateBlueNoiseField(size, 20260304);
-
-	std::vector<int> idx(N);
-	std::iota(idx.begin(), idx.end(), 0);
-
-	// Rank pixels by noise value
-	std::sort(idx.begin(), idx.end(),
-		[&](int a, int b) {
-			return noise[a] < noise[b];
-		});
-
-	// Build permutation
-	m_blueNoiseSize = size;
-	m_blueNoise = std::vector<unsigned int>(N);
-	for (int i = 0; i < N; ++i) {
-		m_blueNoise[idx[i]] = i;
-	}
-}
-
-std::vector<double> Threshold::GenerateBlueNoiseField(const int n, const uint32_t seed) {
-	const int N = n * n;
-	std::vector<double> field(N);
-
-	std::mt19937 rng(seed);
-	std::uniform_real_distribution<double> dist(0., 1.);
-
-	// Initial White Noise
-	for (int i = 0; i < N; ++i)
-		field[i] = dist(rng);
-
-	// Repulsion iterations
-	const int iterations = 10;
-	const double sigma2 = (n * n) * 0.0025;
-
-	for (int it = 0; it < iterations; ++it) {
-		std::vector<double> next = field;
-
-		for (int y = 0; y < n; ++y) {
-			for (int x = 0; x < n; ++x) {
-				int i = y * n + x;
-				double force = 0.;
-
-				for (int oy = -3; oy <= 3; ++oy) {
-					for (int ox = -3; ox <= 3; ++ox) {
-						if (ox == 0 && oy == 0) continue;
-
-						int nx = Wrap(x + ox, n);
-						int ny = Wrap(y + oy, n);
-						int j = ny * n + nx;
-
-						double d2 = ToroidalDist2(x, y, nx, ny, n);
-						double w = std::exp(-d2 / sigma2);
-						
-						force += (field[i] - field[j]) * w;
-					}
-				}
-				next[i] += 0.1 * force;
-			}
-		}
-		field.swap(next);
-	}
-
-	return field;
-}
-
-inline double Threshold::ToroidalDist2(int x0, int y0, int x1, int y1, int n) {
-	int dx = std::abs(x1 - x0);
-	int dy = std::abs(y1 - y0);
-
-	dx = std::min(dx, n - dx);
-	dy = std::min(dy, n - dy);
-
-	return static_cast<double>(dx * dx + dy * dy);
 }

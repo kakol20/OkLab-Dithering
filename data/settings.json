@@ -4,9 +4,9 @@
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
-	"mono": false,
+	"mono": true,
 	"grayscale": false,
-	"matrixType": "parkerdither",
+	"matrixType": "bayer128",
 	"ditherAlpha": true,
 	"ditherAlphaFactor": 1,
 	"ditherAlphaType": "ordered",
@@ -20,5 +20,6 @@
 			[ 2, 1 ],
 			[ 1, 2 ]
 		]
-	}
+	},
+	"normaliseCol": true
 }

@@ -9,8 +9,8 @@ Comments in settings.json not supported
 
 ```json
 {
-	"ditherType": "ordered",
-	"distanceMode": "srgb",
+	"ditherType": "fs",
+	"distanceMode": "oklab",
 	"mathMode": "lrgb",
 	"hideSemiTransparent": false,
 	"hideThreshold": 127,
@@ -30,7 +30,8 @@ Comments in settings.json not supported
 			[ 2, 1 ],
 			[ 1, 2 ]
 		]
-	}
+	},
+	"normaliseCol": true
 }
 ```
 
@@ -39,7 +40,8 @@ Comments in settings.json not supported
 #### `ditherType`
 - `ordered` for ordered dithering  
 	- With new ordered dithering method `mathMode` is not used
-- `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering  
+- `floyd` or `floyd-steinberg` or `steinberg` or `fs` for Floyd-Steinberg dithering
+	- Ignores mono 
 - `none` for no dithering
 
 #### `distanceMode` and `mathMode`
@@ -59,6 +61,7 @@ Comments in settings.json not supported
 	- Treats selected palette like it's a monochromatic palette  
 	- Will override `grayscale` setting
 	- NOTE: Due to the math - math mode `oklab` and `oklab_l` will produce the same result
+	- When `true` and `ditherType = fs` then mathMode is ignored
 
 #### `grayscale`
 - `true` or `false`  
@@ -73,6 +76,7 @@ Matrix used for ordered dithering
 	- Be careful of high values of N
 - `blueNoiseN`
 	- Where N is the size of the blue noise matrix
+	- N can only be: `16, 32, 64 or 128`
 - `ign` Interleaved Gradient Noise  
 - `parkerDither` based on Matt Parker [Parker Square](https://www.youtube.com/watch?v=kT4p1GXq4HY)  
 - `heart` a custom threshold map in the shape of pixel hearts
@@ -98,13 +102,20 @@ Matrix used for ordered dithering
 
 ### `shape`
 - Object type
-	- `size` - The size of a cell in the form of a 1D Array - `[width, height]`
-		- Will result in a threshold map size of `(N * width, N * height)`
-	- `points` - A 2D array of points to apply the threshold value relative to the origin `(0, 0)`
-		- In the form of `[[x, y]...]` 
-		- Points can extend beyond the cell's size
-		- Any point extending beyond the map's full size will be wrapped
+#### `size`
+- The size of a cell in the form of a 1D Array - `[width, height]`
+- Will result in a threshold map size of `(N * width, N * height)`
+#### `points`
+- A 2D array of points to apply the threshold value relative to the origin `(0, 0)`
+- In the form of `[[x, y]...]` 
+- Points can extend beyond the cell's size
+- Any point extending beyond the map's full size will be wrapped
+
+### normaliseCol
+- Used only when `mono == true`
+- When `true` will normalise colours in image using its brightest & darkest colour to the palette's brightest & darkest colour
 
 # Credits
 [JSON for Modern C++ version 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)  
-[stb_image](https://github.com/nothings/stb) 
+[stb_image](https://github.com/nothings/stb)  
+[noise2d](https://github.com/johnconwell/noise2d)
