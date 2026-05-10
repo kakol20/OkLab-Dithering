@@ -36,8 +36,11 @@ public:
 	
 	template<typename... Args>
 	Colour& emplace_back(Args&&... args) {
+		++m_size;
 		return m_colours.emplace_back(std::forward<Args>(args)...);
 	}
+
+	void reserve(const size_t size) { m_colours.reserve(size); }
 
 	void Sort() { std::sort(m_colours.begin(), m_colours.end()); }
 

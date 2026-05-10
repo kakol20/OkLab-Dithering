@@ -26,7 +26,7 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	//GenerateBlueNoisePalette();
+	GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
 	//Log::Clear();
@@ -44,7 +44,7 @@ void DevTools::Run() {
 	//ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
-	PaletteToImage("vga256");
+	//PaletteToImage("vga256");
 }
 
 void DevTools::GenerateGSTiles() {
@@ -108,7 +108,7 @@ void DevTools::PaletteToImage(const char* name) {
 	Colour::SetMathMode(Colour::MathMode::OkLCh);
 	Palette pal(("data/" + static_cast<std::string>(name) + ".palette").c_str());
 
-	const unsigned int size = pal.size();
+	const unsigned int size = static_cast<unsigned int>(pal.size());
 
 	// ========== SAVE COLOURS ==========
 
@@ -133,23 +133,11 @@ void DevTools::PaletteToImage(const char* name) {
 }
 
 void DevTools::GenerateBlueNoisePalette() {
-	std::vector<Colour> palette;
-	const size_t size = 256;
+	Palette palette;
+	const size_t size = 64;
 	palette.reserve(size);
 
-	//palette.emplace_back(1. / 7., 0., 0.);
-	//palette.emplace_back(2. / 7., 0., 0.);
-	//palette.emplace_back(3. / 7., 0., 0.);
-	//palette.emplace_back(4. / 7., 0., 0.);
-	//palette.emplace_back(5. / 7., 0., 0.);
-	//palette.emplace_back(6. / 7., 0., 0.);
-
-	//palette.emplace_back(0.2, 0., 0.);
-	//palette.emplace_back(0.4, 0., 0.);
-	//palette.emplace_back(0.6, 0., 0.);
-	//palette.emplace_back(0.8, 0., 0.);
-
-	const int count = 10;
+	const int count = 5;
 	for (int i = 1; i < count; ++i) {
 		palette.emplace_back(double(i) / count, 0., 0.);
 	}
@@ -163,6 +151,9 @@ void DevTools::GenerateBlueNoisePalette() {
 	palette.emplace_back((uint8_t)0, 255, 255);
 	palette.emplace_back((uint8_t)0, 0, 255);
 	palette.emplace_back((uint8_t)255, 0, 255);
+
+	Colour::SetMathMode(Colour::MathMode::OkLCh);
+	palette.Sort();
 
 	// ========== GENERATE ==========
 
@@ -182,15 +173,12 @@ void DevTools::GenerateBlueNoisePalette() {
 			const uint8_t currColG = static_cast<uint8_t>(Random::RandUInt(0, 255));
 			const uint8_t currColB = static_cast<uint8_t>(Random::RandUInt(0, 255));
 
-			if (currColR == 48 && currColG == 169 && currColB == 32) {
-				bool temp = true;
-			}
-
 			Colour currCol(currColR, currColG, currColB);
 			double closestDist = 0;
 
 			for (size_t k = 0; k < palette.size(); ++k) {
-				double currentDist = currCol.MagSq(palette[k]);
+				//double currentDist = currCol.MagSq(palette[k]);
+				double currentDist = currCol.MagSq(palette.GetColour(k));
 
 				if (k == 0) closestDist = currentDist;
 				if (currentDist < closestDist) closestDist = currentDist;
@@ -202,19 +190,14 @@ void DevTools::GenerateBlueNoisePalette() {
 			}
 		}
 
-		palette.push_back(furthestCol);
+		palette.emplace_back(furthestCol);
 	}
 
 	// ========== SAVE COLOURS ==========
 	// As palette file
 	Colour::SetMathMode(Colour::MathMode::OkLCh);
-	std::sort(palette.begin(), palette.end());
-	for (size_t i = 0; i < palette.size(); ++i) {
-		Log::Write(palette[i].GetHex());
-
-		if (i < palette.size() - 1) Log::EndLine();
-	}
-	Log::Save("data/custom" + Log::ToString(size) + ".palette");
+	palette.Sort();
+	palette.Save(("data/custom" + Log::ToString(size) + ".palette").c_str());
 
 	// As Image
 	const double size_d = std::ceil(std::sqrt(static_cast<double>(palette.size())));
@@ -227,7 +210,7 @@ void DevTools::GenerateBlueNoisePalette() {
 	palImg.Clear();
 	for (size_t i = 0; i < palette.size(); ++i) {
 		size_t imgI = i * 4;
-		Colour::sRGB_UInt srgbUint = palette[i].GetsRGB_UInt();
+		Colour::sRGB_UInt srgbUint = palette.GetColour(i).GetsRGB_UInt();
 
 		palImg.SetData(imgI + 0, srgbUint.r);
 		palImg.SetData(imgI + 1, srgbUint.g);
@@ -243,7 +226,6 @@ void DevTools::ThresholdToImage() {
 	//const std::string type = "bluenoise" + Log::ToString(size);
 	const std::string type = "ign";
 
-
 	Threshold blueNoise;
 	blueNoise.GenerateThreshold(type);
 
@@ -256,7 +238,7 @@ void DevTools::ThresholdToImage() {
 	for (int y = 0; y < size; ++y) {
 		for (int x = 0; x < size; ++x) {
 			double val = blueNoise.GetThreshold(x, y) + 0.5;
-			
+
 			if (val < min) min = val;
 			if (val > max) max = val;
 		}

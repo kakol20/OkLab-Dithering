@@ -544,7 +544,7 @@ bool Colour::operator<(const Colour& other) const {
 		otherH = (std::floor((n * otherH) / M_TAU) * M_TAU) / (n - 1.);
 
 		// check grayscale
-		if (m_oklch.c == 0) currH = -1.;
+		if (m_oklch.c <= 1. / 100.) currH = -1.;
 		if (other.m_oklch.c == 0) otherH = -1.;
 
 		if (currH != otherH) return currH < otherH;
