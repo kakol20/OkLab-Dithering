@@ -234,9 +234,11 @@ void Dither::FloydDither(Image& image, const Palette& palette) {
 		}
 	}
 
-	if (m_normaliseCol) {
+	if (m_normaliseCol && m_mono) {
 		for (size_t i = 0; i < colours.size(); ++i) {
+			const double alpha = colours[i].GetAlpha();
 			colours[i] = Colour::White * ((colours[i].MonoGetLightness() - imgMinL) / (imgMaxL - imgMinL));
+			colours[i].SetAlpha(alpha);
 		}
 	}
 

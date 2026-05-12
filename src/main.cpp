@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//std::string imageLoc = "data/alphaTest.png";
+	std::string imageLoc = "data/alphaTest.png";
 	//std::string imageLoc = "data/alphaTest-gradient.png";
 	//std::string imageLoc = "data/alphaTest-tiles.png";
 	std::string imageLoc = "data/grayscale.png";
@@ -75,11 +75,11 @@ int main(int argc, char* argv[]) {
 
 	//std::string paletteLocStr = "data/bw.palette";
 	//std::string paletteLocStr = "data/custom128.palette";
-	//std::string paletteLocStr = "data/custom256.palette";
+	std::string paletteLocStr = "data/custom256.palette";
 	//std::string paletteLocStr = "data/custom64.palette";
 	//std::string paletteLocStr = "data/gameboy.palette";
 	//std::string paletteLocStr = "data/minecraft_map_sc.palette";
-	std::string paletteLocStr = "data/minecraft_map_staircase_gs.palette";
+	//std::string paletteLocStr = "data/minecraft_map_staircase_gs.palette";
 	//std::string paletteLocStr = "data/vga256.palette";
 	//std::string paletteLocStr = "data/wplace_premium.palette";
 	std::ifstream paletteLoc(paletteLocStr);
@@ -331,8 +331,6 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (settings["ditherType"] == "fs") settings["mathMode"] = settings["distanceMode"];
-
 	Dither::SetSettings(
 		settings["distanceMode"],
 		settings["mathMode"],
@@ -356,9 +354,9 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (settings["mono"] || !settings["grayscale"]) {
+	if (settings["mono"] || !bool(settings["grayscale"])) {
 		image.ToRGB();
-	} else if (settings["grayscale"] && image.GetChannels() >= 3) {
+	} else if ((bool)settings["grayscale"] && image.GetChannels() >= 3) {
 		Dither::SetColourMathMode(settings["distanceMode"]);
 		//Dither::ImageToGrayscale(image);
 		Dither::ImageToGrayscale(image);
@@ -398,8 +396,6 @@ int main(int argc, char* argv[]) {
 	Log::WriteOneLine("===== DITHERING =====");
 
 	if (settings["ditherType"] == "ordered") {
-		//Dither::SetColourMathMode(settings["mathMode"]);
-		//palette.CalculateAverageSpread();
 		Dither::OrderedDither(image, palette);
 	} else if (settings["ditherType"] == "fs") {
 		Dither::FloydDither(image, palette);
@@ -430,8 +426,7 @@ int main(int argc, char* argv[]) {
 	outputLoc += "-" + (std::string)settings["distanceMode"];
 
 	if (settings["ditherType"] != "none" && 
-		settings["ditherType"] != "ordered" && 
-		!(settings["mono"] == true && settings["ditherType"] == "fs")) outputLoc += "-" + (std::string)settings["mathMode"];
+		settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["mathMode"];
 
 	if (image.HasAlphaChannel()) {
 		if (settings["ditherAlpha"] && settings["ditherAlphaType"] == "ordered" && settings["ditherType"] != "ordered") outputLoc += "-" + (std::string)settings["matrixType"];
