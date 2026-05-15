@@ -545,7 +545,7 @@ bool Colour::operator<(const Colour& other) const {
 
 		// check grayscale
 		if (m_oklch.c <= 1. / 100.) currH = -1.;
-		if (other.m_oklch.c == 0) otherH = -1.;
+		if (other.m_oklch.c <= 1. / 100.) otherH = -1.;
 
 		if (currH != otherH) return currH < otherH;
 
