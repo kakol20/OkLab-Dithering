@@ -26,7 +26,7 @@
 using json = nlohmann::json;
 
 void DevTools::Run() {
-	GenerateBlueNoisePalette();
+	//GenerateBlueNoisePalette();
 	//Log::EndLine();
 	//Log::EndLine();
 	//Log::Clear();
@@ -44,7 +44,7 @@ void DevTools::Run() {
 	//ReadBlueNoiseBin(IDI_BN128);
 
 	//Misc();
-	//PaletteToImage("vga256");
+	PaletteToImage("minecraft_map_base");
 }
 
 void DevTools::GenerateGSTiles() {
