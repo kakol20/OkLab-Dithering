@@ -1,0 +1,30 @@
+{
+	"ditherType": "ordered",
+	"distanceMode": "lrgb",
+	"mathMode": "lrgb",
+	"hideSemiTransparent": false,
+	"hideThreshold": 127,
+	"mono": true,
+	"grayscale": false,
+	"matrixType": "bayer128",
+	"ditherAlpha": true,
+	"ditherAlphaFactor": 1,
+	"ditherAlphaType": "ordered",
+	"shape": {
+		"size": [ 3, 2 ],
+		"points": [
+			[ 0, 0 ],
+			[ 2, 0 ],
+			[ 0, 1 ],
+			[ 1, 1 ],
+			[ 2, 1 ],
+			[ 1, 2 ]
+		]
+	},
+	"normaliseCol": true,
+
+	"count": 128,
+	"seed": 1,
+	"maxIter": 1000,
+	"removeDuplicates": true
+}
